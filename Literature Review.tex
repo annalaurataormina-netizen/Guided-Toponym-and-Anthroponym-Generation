@@ -11,6 +11,38 @@
 \ourchapter{Literature Review}\label{ch:literature review}
 % summarise
 
+Words, including anthroponyms and toponyms, can be seen as sequences of characters. Traditional feedforward networks have typically shown to be unsuitable for this task for several reasons. First, they expect a fixed-size input, which is inappropriate or, at least, inconvenient when it comes to varying-length sequences, such as words. Second, words are such that the order of characters matters, so training a word as a "bag of characters" would lose all positional information. Finally, this type of networks treats characters in different parts of the word as different due to lack of weight sharing. In the perhaps more intuitive example of a sentence, the meaning of a word should generally and approximately be the same whether it appears at the beginning or at the end of a sentence. As a result, the task of sequence modelling has often become a task of temporal sequence modelling. However, traditional feed-forward networks have proven unsuitable even for this task, as they lack an explicit mechanism for representing time if not as an additional dimension of the input, which leads to similar shortcomings as the ones mentioned above relatively to the use of feed-forward networks for the more generic task of sequence modelling.\\
+
+Recurrent Neural Networks ("RNNs"), introduced by \cite{elman_finding_1990}, represent time by incorporating recurrent connections that, at each timestep, feed a hidden state back into the network, effectively giving the network a form of memory. When applied to a sequential task such as name generation, this formulation is autoregressive: the sequence is generated one character at a time, with each character conditioned on all preceding characters via a hidden state, that carries forward a summary of the sequence seen so far. 
+
+In a modern vanilla RNN used in the context of character sequence generation, at each timestep, the hidden state is updated as a function of the current input and the previous hidden state, with the recurrent connection acting as an implicit memory.
+However, vanilla RNNs suffer from the vanishing or exploding gradient problem, whereby gradients tend to diminish or blow up exponentially as they are backpropagated through time, making it difficult to capture dependencies across longer sequences.\\
+
+Long Short-Term Memory networks ("LSTMs"), introduced by \cite{hochreiter_long_1997}, have gained increasing popularity over vanilla RNNs thanks to their ability to learn long-term dependencies and are now widely used for a variety of tasks. Just like vanilla RNNs, they are also characterised by a repeating module, however this module contains three gating mechanisms, i.e., a "forget" gate, an "input" gate and, finally, an "output" gate. To the hidden state that is typical of RNNs, LSTMs add a cell state, which is responsible for long-term memory, leaving short-term memory a responsibility of the hidden state. At each timestep, the network updates the cell state by deciding, based on the input and on the previous hidden state, what to forget of the previous cell state and what to remember of the input. The network also updates the hidden state based on the context, represented by the output gate and the cell state.\\
+
+As shown by Graves \cite{graves_generating_2013}, LSTMs can be used to generate sequences of characters autoregressively. At each timestep, the network takes a character embedding as input and outputs a probability distribution over the vocabulary of possible next characters, produced by passing the hidden state through a softmax activation function. However, the question arises as to what input should be fed into the network. During training, teacher forcing is often used, so the output is ignored and the network is instead given the correct character or, rather, its embedding, as input. At inference time, a common approach consists in using greedy decoding, whereby the character with the highest probability is always picked and fed back into the network. \cite{graves_generating_2013} proposes an interesting alternative to the greedy approach which consists in sampling from the network's output distribution and feeding the sample back to the network. While the network itself remains deterministic since weights and biases are fixed, this sampling step introduces stochasticity into the model. When RNNs are used as building blocks of generative models, this "fuzziness" can become a strength of the model, allowing it to produce diverse and novel outputs. Another approach consists in using beam search, whereby a number $B$ of partial sequences is kept at each step based on a score, kept at each step based on a score, trading off computational cost for higher quality sequences compared to greedy decoding.\\
+
+Autoencoders constitute a type of neural network architecture designed to efficiently compress (or encode) input data, then reconstruct (or decode) the original input from this compressed representation, also called code or latent representation. Autoencoders are considered a form of self-supervised learning because the ground truth measured to measure their output against is the original input. In training, they are optimized to minimize reconstruction loss: the divergence between the reconstructed data point and the original input data. In essence, this forces the model to learn weights that result in a latent representation that only retains the most essential, meaningful features or, in other words, to model the latent space. Autoencoders are typically composed of an encoder, a "bottleneck" and a decoder.\\
+
+When Recurrent Neural Networks (RNNs) are used as the building blocks for an autoencoder, the architecture is typically referred to as a Recurrent Autoencoder (RAE) or Sequence-to-Sequence (Seq2Seq) model. The encoder typically takes a character embedding as input and 
+
+%autoregressive, character-by-character
+
+
+%Characters <START> and <END>.
+
+
+%Autoencoders seem like the most natural starting point. Autoencoders compress the input into a latent space representation. They learn what is relevant and to reconstruct the input, learning to separate the signal from the noise.
+
+%generate new, synthetic data.\\
+
+%Assuming that we know the true distribution we want p* we want to estimate a parameterized version that registers high values for names of places or names of people. Likelihood of data x given the model parameters. We adjust to maximize the likelihood. 
+
+%we want to maximise the likelihood of the data that we actually observed.\\
+
+%representation learning problem.\\
+
+
 %\tocsubsectionstar{Future Work} %optional
 
 %\subsection*{Closing Comments}
