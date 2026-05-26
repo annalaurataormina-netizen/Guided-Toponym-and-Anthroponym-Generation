@@ -1,0 +1,27 @@
+\documentclass[Main.tex]{subfiles}
+
+%these make the chapter/section numbers correct if built individually
+%obviously you'd have to adjust these to be accurate.
+\setcounter{chapter}{2}
+\setcounter{section}{3}
+
+\externaldocument{Project Plan}
+
+\begin{document}
+\ourchapter{Project Plan}\label{ch:project plan}
+% summarise
+
+The dataset will be sourced from Wikidata, a structured knowledge base that stores entities (in this case, places, people) and their properties in a queryable format. For toponyms, each entry will consist of a primary place name paired with a country, a cultural label. For anthroponyms, entries will additionally include gender, country of birth, language, year of birth. Since Wikidata contains names in many scripts, non-Latin names will be romanised (e.g. Chinese to pinyin) and the character set will be normalised by stripping diacritics and either removing names containing rare characters or keeping those names and replacing those characters with more common characters (taking a condensed form of Unicode). Known challenges include the messiness of person name data — individuals may have multiple names, ambiguous nationalities, or names recorded in several scripts — and the uneven distribution of names across cultures, which may require oversampling or combining smaller cultural groups. Anomaly detection could be employed to flag and eventually excluded certain names. Analysing and understanding data would be crucial, such as length of names or frequency of letters. The focus will be on characters rather than phonemes mainly for the convenience of dealing with the former.\\
+
+Crucially, the task is a sequence modeling task, which involves learning from ordered data, where context (other characters) plays a vital role. The goal is to predict the next character in a sequence, generating a coherent continuation. From a model architecture perspective, the use of Recurrent Neural Networks (RNNs) sounds appropriate for this kind of task. RNNs process sequences element by element, maintaining a hidden state vector that acts as a memory of past elements. Vanishing gradients are not an issue here since these are short sequences. We would opt for RNNs over transformers because name sequences are short enough that attention over distant positions provides no meaningful benefit, and our dataset size favours simpler inductive biases.\\
+
+We propose a vanilla RNN as the sequence model, motivated by the short length of name sequences. We compare against an LSTM or GRU baseline to verify whether gated memory provides any benefit for this task.
+
+
+Variational Autoencoders
+
+%\tocsubsectionstar{Future Work} %optional
+
+%\subsection*{Closing Comments}
+
+\end{document}

@@ -1,0 +1,46 @@
+\documentclass[Main.tex]{subfiles}
+
+%this is optional, but it allows subfiles to link to other pdfs if you wanted to build chapters individually
+\externaldocument{Conclusion}
+
+\begin{document}
+% make sure you're using labels for sections, and `\cref` to reference them later (or `\Cref` at the start of a sentence)
+\ourchapter{Introduction}\label{ch:introduction}
+
+% no point in numbering these, but put them in table of contents
+%\tocsubsectionstar{Contributions}
+
+\tocsubsectionstar{Outline}
+
+Names are deceptively simple - a handful of characters - yet they encode rich cultural, linguistic, and phonetic patterns that immediately signal origin and identity to a native speaker. The goal of this project is to produce a model that is able to generate new toponyms (place names) and anthroponyms (person names), guided at prediction time by an initial set of examples. Use cases could vary and include generation of names for fictional settings or generation of names for branding purposes.\\
+
+A good model would be able to learn what makes a sequence of characters an anthroponym or a toponym from a given culture and to create new, albeit plausible, names from a given culture. This model should then be able to creatively come up with new names.\\
+
+It is clear that the task of creating is a sequence modelling
+
+
+Autoencoders seem like the most natural starting point. Autoencoders compress the input into a latent space representation. They learn what is relevant and to reconstruct the input, learning to separate the signal from the noise.
+
+generate new, synthetic data.\\
+
+Assuming that we know the true distribution we want p* we want to estimate a parameterized version that registers high values for names of places or names of people. Likelihood of data x given the model parameters. We adjust to maximize the likelihood. 
+
+we want to maximise the likelihood of the data that we actually observed.\\
+
+representation learning problem.\\
+
+Considerations such as prefix and suffix identification could be included, along with cultural alignment, the aesthetics of language generation, character set choice, and so on.\\
+The main challenges include: 
+•	Creating a sufficiently robust, diverse, and well-labelled (culturally/linguistically) dataset of names (Wikidata is a proposed source).
+•	Allowing for sufficiently varied language forms, styles, and orthographies in the model outputs.
+•	Ensuring that output names are phonetically/orthographically similar to the provided set of examples (this is the crux of the problem).
+•	Evaluating the model results (a common challenge in creative generation tasks), either as a user-based or statistical evaluation.
+Depending on desired student focus, this project could be focussed entirely on ML/AI modelling and approaches, or potentially include a software engineering component of producing a web interface for the resulting model.\\
+
+
+
+
+% this is also optional, it allows the bibliography to print on a per-chapter level.
+%\ifSubfilesClassLoaded{\pagebreak\printbibliography}{}
+
+\end{document}
