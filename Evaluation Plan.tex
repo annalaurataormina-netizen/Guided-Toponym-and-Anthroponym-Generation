@@ -1,0 +1,30 @@
+\documentclass[Main.tex]{subfiles}
+
+%these make the chapter/section numbers correct if built individually
+%obviously you'd have to adjust these to be accurate.
+\setcounter{chapter}{2}
+\setcounter{section}{3}
+
+\externaldocument{Introduction}
+
+\begin{document}
+\ourchapter{Evaluation Plan}\label{ch:evaluation plan}
+% summarise
+
+This chapter outlines the evaluation methodology used to assess the performance of the proposed generative model. Given that the task involves several objectives, evaluation must account for multiple dimensions. A combination of human evaluation and quantitative metrics is proposed.\\
+
+As a baseline, the model should be able to reconstruct the input as faithfully as possible. Despite not being the core objective of this model, reconstruction quality provides an indication that the latent representation retains sufficient information about the input sequence. In the context of text generation, Levenshtein or edit distance can be used to measure reconstruction loss or, in other words, the difference between the input and the output sequence.\\
+
+One of the key goals of this model is to generate sequences of characters that are pronounceable to a native speaker. Pronounceability is primarily assessed through human evaluation, where participants rate the relative ease or difficulty with which a generated sequence could be spoken aloud by speakers of a given language or cultural background. To complement this subjective assessment, additional proxy measures are used to provide a more quantitative signal of linguistic plausibility. Character-level language model perplexity (PPL) is employed to measure how likely a sequence is under a model trained on real name corpora; lower perplexity indicates greater conformity to learned character-level distributions and is therefore used as a proxy for pronounceability. In addition, character-level $n$-gram models are used to approximate phonotactic regularities by comparing the frequency of observed character sequences against those in the training data.\\
+
+Another key objective of the model is to generate sequences that are both diverse and novel, avoiding repetition and mode collapse to a limited set of outputs. Novelty is defined with respect to both the training data and the conditioning examples provided at inference time. In the former case, novelty is measured using the minimum Levenshtein (edit) distance between a generated sequence and its nearest neighbour in the training set, where larger distances indicate greater deviation from memorised training examples. In the conditional setting, novelty is additionally assessed with respect to the input prompts provided at inference time, ensuring that the model does not simply replicate or trivially transform conditioning examples. Diversity, on the other hand, measures variation among generated samples and is quantified using metrics such as duplicate rate and pairwise Levenshtein distance between generated sequences, where higher average distances indicate reduced mode collapse and greater output variability.\\
+
+Finally, the model should be able 
+
+% mention that this is expected to be eurocentric or to focus on large cultures
+
+% add citations
+% add cultural
+% check consistency with the introduction
+
+\end{document}
