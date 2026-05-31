@@ -1,7 +1,7 @@
 \documentclass[Main.tex]{subfiles}
 
 %this is optional, but it allows subfiles to link to other pdfs if you wanted to build chapters individually
-\externaldocument{Conclusion}
+%\externaldocument{Conclusion}
 
 \begin{document}
 % make sure you're using labels for sections, and `\cref` to reference them later (or `\Cref` at the start of a sentence)
@@ -12,21 +12,21 @@
 
 %\tocsubsectionstar{Outline}
 
-Names, being short sequences of characters, are deceptively simple, yet they encode rich phonetic, morphological and cultural patterns that enable native speakers to immediately recognise their origin. The aim of this project is to develop a model that is capable of generating novel, yet plausible toponyms (place names) or anthroponyms (person names) that resemble those that come from the same culture. Potential applications range from creating names for fictional worlds to devising names for branding and marketing purposes.\\
+Names, being short sequences of characters, are deceptively simple, yet they encode rich phonetic and morphological patterns that enable native speakers to immediately recognise their origin. The aim of this project is to develop a model that is capable of generating novel, yet plausible \textit{toponyms}, i.e., place names, or \textit{anthroponyms}, i.e., person names, from both existing and fictional cultures. Potential applications range from creating names for fictional characters or settings to devising names for branding and marketing purposes.\\
 
-To address this task, we propose a VAE-based generative model for character-level name generation. The encoder compresses an input name into a latent space, from which the decoder generates novel names autoregressively. The latent space is semantically meaningful and carries cultural structure. By sampling from the latent space, the model can then generate novel names that feel authentic to the target culture. By interpolating between existing cultures or exploring novel regions of the latent space, the model can generate anthroponyms or toponyms from fictional cultures.\\
+To address this task, we propose a VAE-based generative model for character-level name generation. The encoder compresses an input name into a latent space representation, from which the decoder generates novel names autoregressively. If the latent space carries cultural meaning, then sampling from the latent space allows to generate novel, plausible anthroponyms or toponyms, while interpolating between existing cultures or exploring novel regions of the latent space allows to generate anthroponyms or toponyms from fictional cultures.\\
 
-The task involves several challenges. First, constructing a sufficiently robust, diverse and culturally balanced dataset of anthroponyms and toponyms is non-trivial: cultural annotations are often incomplete or ambiguous, some cultures are significantly under-represented, and names frequently exhibit cross-cultural influences that complicate clear cultural attribution. Second, the model must handle varied language forms, orthographies and scripts, including the treatment of diacritics and non-Latin characters. Third, generated names must be not only phonetically plausible but also culturally coherent and consistent. Finally, evaluating the quality of generated names is difficult, as there is no ground truth for creative generation tasks and standard metrics for pronounceability and cultural coherence are imperfect proxies for human judgement.\\
+This task involves several challenges. First, constructing a sufficiently robust, diverse and culturally balanced dataset of anthroponyms and toponyms is non-trivial: cultural annotations are often incomplete or ambiguous, some cultures are significantly under-represented, and names frequently exhibit cross-cultural influences that complicate clear cultural attribution. Second, the model must handle varied language forms, orthographies and scripts, including the treatment of diacritics and non-Latin characters. Third, generated names must be not only phonetically plausible but also culturally coherent and consistent. Finally, evaluating the quality of generated names is difficult, as there is no ground truth for creative generation tasks and most quantitative metrics for pronounceability and cultural coherence are imperfect proxies for human judgement.\\
 
 The goals of the project can be organised into three levels of priority.
 The primary objective is for the model to generate character sequences that native speakers perceive as pronounceable and plausible anthroponyms or toponyms. These generated names should exhibit phonetic, morphological, and cultural coherence, and the model should support a sufficiently broad and diverse range of languages and cultures.
 The second objective concerns novelty and diversity. Generated names should not merely reproduce items from the training data, but instead display sufficient variation and originality with respect both to existing names and to other generated outputs.
 The third objective is generalisation beyond directly represented cultures or languages. In particular, the model should be capable of cultural conditioning and of generating names for partially fictional or non-existing cultures while preserving internal linguistic coherence.
-Although not a primary goal, the model should also support a broad range of orthographic and morphological features, including the handling of prefixes, suffixes, diacritics, and extended character sets.\\
+Although not a primary goal, the model should also support a broad range of orthographic and morphological features, including the handling of prefixes, suffixes and diacritics.\\
+
+It is worth noting that, throughout this report, the terms \textit{culture} and \textit{language} are sometimes used interchangeably. While culture and language are distinct concepts — a culture may encompass multiple languages, and a language may be shared across multiple cultures — in the context of name generation they serve as approximate proxies for one another. This is because personal names are primarily shaped by the linguistic conventions, naming practices, and historical influences of the communities in which they originate.\\
 
 % no Londres in the database
-
-% check consistency with the introduction
 
 % this is also optional, it allows the bibliography to print on a per-chapter level.
 %\ifSubfilesClassLoaded{\pagebreak\printbibliography}{}

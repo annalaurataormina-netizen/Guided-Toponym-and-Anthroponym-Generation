@@ -16,7 +16,7 @@
 \usepackage{amsmath}
 \usepackage{xcolor}
 \usepackage{microtype}
-\usepackage{semantic}
+%\usepackage{semantic}
 \usepackage{newunicodechar}
 \usepackage{tikz}
 \usepackage{pgfplots}
@@ -34,7 +34,6 @@
 \usepackage[nounderscore]{syntax}
 \usepackage{minted}
 \usepackage{subfiles}
-\usepackage{titlesec}
 \usepackage{pifont}% http://ctan.org/pkg/pifont
 \usepackage{textcomp}
 \usepackage[autostyle]{csquotes}
@@ -45,8 +44,6 @@
 \usepackage{multicol}
 \usepackage{changepage}
 \usepackage{titlesec}
-
-\let\cite\parencite
 
 %\DeclareOuterCiteDelims{parencite}{\bibopenbracket}{\bibclosebracket}
 %\DeclareInnerCiteDelims{textcite}{\bibopenbracket}{\bibclosebracket}
@@ -67,7 +64,7 @@
 \pgfplotsset{compat=1.18}
 \usepgfplotslibrary{fillbetween}
 
-\setstretch{1} %was 1.15, which is more readable, but reduces your page count
+\setstretch{1.15} %was 1, which is less readable
 
 \definecolor[named]{ImperialBlue}{HTML}{003e74}
 \definecolor[named]{ForestGreen}{HTML}{009B55}
@@ -118,7 +115,7 @@
 \newcommand{\secondmarker}{Prof. Someone Else} %FIXME:
 \newcommand{\degree}{Master of Science in Computing} %FIXME: pick relevant one!
 
-\lhead{\maintitle: \mainsubtitle}
+%\lhead{\maintitle: \mainsubtitle}
 \rhead{\textsc{\chaptertitle}}
 \lfoot{\you}
 \renewcommand{\footrulewidth}{0.4pt}

@@ -2,8 +2,7 @@
 
 %these make the chapter/section numbers correct if built individually
 %obviously you'd have to adjust these to be accurate.
-\setcounter{chapter}{2}
-\setcounter{section}{3}
+\setcounter{section}{1}
 
 \externaldocument{Literature Review}
 
@@ -11,27 +10,24 @@
 \ourchapter{Literature Review}\label{ch:literature review}
 % summarise
 
-\tocsubsectionstar{Sequence Modelling}
+\subsection{Sequence Modelling}
 Anthroponyms and toponyms are short sequences of characters whose internal order carries meaningful phonetic and morphological structure, as well as cultural meaning, making them natural candidates for sequential modelling. Before the advent of neural approaches, sequence generation was dominated by Markov chain models and n-gram language models, which capture only local character dependencies and struggle to model longer-range phonetic and morphological structure. Traditional feedforward neural networks are also ill-suited for this task, as they require fixed-size inputs and outputs \cite{sutskever_sequence_2014}, making them inappropriate for variable-length sequences. Recurrent Neural Networks (RNNs) were specifically designed to address these limitations \cite{elman_finding_1990} and dominated sequence modelling for two decades. More recently, Transformer-based architectures have achieved state-of-the-art results across many sequence modelling tasks \cite{vaswani_attention_2017}; however, for short sequences such as names, the self-attention mechanism may introduce unnecessary complexity relative to recurrent approaches, which remain a natural fit for character-level generation.\\
 
 %for several reasons \cite{elman_finding_1990}. First, they require that the dimensionality of the input and outputs is known and fixed, which is problematic for variable-length sequences such as names. Second, they treat input positions independently, meaning that representing a name as a bag of characters would discard all positional information. Third, the lack of weight sharing means the same character is treated differently depending on its position in the sequence, preventing the model from generalising across positions.
 
-\tocsubsectionstar{Recurrent Neural Networks}
+\subsection{Recurrent Neural Networks}
 A Recurrent Neural Network (RNN), introduced by \cite{elman_finding_1990}, represents time implicitly through its effects on processing, by incorporating recurrent connections that give the network a form of dynamic memory. When applied to a sequential task such as name generation, this formulation is autoregressive: the sequence is generated one character at a time, with each character conditioned on all preceding characters \cite{graves_generating_2013, elman_finding_1990}. At each timestep, the hidden state, which acts as context, is updated as a function of the current learned character embedding and the previous hidden state, with the recurrent connection acting as an implicit memory that carries forward a summary of the sequence seen so far. For a simple RNN with one hidden layer, the hidden layer activation and the output are computed by iterating the following equation from $t = 1$ to $T$:
-
 \begin{align}
     h_t &= \mathcal{H}(W_{xh}\, x_t + W_{hh}\, h_{t-1} + b_h) \\
     y_t &= \mathcal{Y}(W_{hy}\, h_t + b_y)
 \end{align}
 
-In deeper architectures with multiple hidden layers, skip connections from the input to all hidden layers and from all hidden layers to the output are often employed \cite{graves_generating_2013}, reducing the number of processing steps between the bottom and top of the network and further mitigating the vanishing gradient problem. The probability given by the network to the input sequence $\mathbf{x}$ is
-
+In deeper architectures with multiple hidden layers, skip connections from the input to all hidden layers and from all hidden layers to the output are often employed \cite{graves_generating_2013}, reducing the number of processing steps between the bottom and top of the network and further mitigating the vanishing gradient problem. The probability given by the network to the input sequence $\mathbf{x}$ is:
 \begin{equation}
     \Pr(x) = \prod_{t=1}^{T} \Pr(x_{t+1} \mid y_t)
 \end{equation}
 
-The network is trained by minimising the negative log-likelihood of the correct output sequence
-
+The network is trained by minimising the negative log-likelihood of the correct output sequence:
 \begin{equation}
 \mathcal{L} = -\sum_{t=1}^{T} \log \Pr(x_{t+1} \mid y_t)
 \end{equation}
@@ -39,7 +35,6 @@ The network is trained by minimising the negative log-likelihood of the correct 
 Vanilla RNNs have been found to suffer from the vanishing or exploding gradient problem, whereby gradients tend to diminish or increase exponentially as they are backpropagated through time, making it difficult to capture long-range dependencies within sequences \cite{bengio_learning_1994}. Long Short-Term Memory (LSTM) networks \cite{hochreiter_long_1997} and Gated Recurrent Unit (GRU) networks \cite{cho_learning_2014}have emerged and become increasingly popular alternatives to vanilla RNNs, as both architectures introduce gating mechanisms that better control the flow of information through the network, mitigating the vanishing gradient problem and enabling the model to better capture long-range dependencies in the data.\\
 
 Similarly to vanilla RNNs, LSTMs feature a repeated module, however this module consists of three gating mechanisms, a "forget" gate, an "input" gate and, finally, an "output" gate. To the hidden state that is typical of RNNs, LSTMs add a cell state, which is responsible for long-term memory, leaving short-term memory a responsibility of the hidden state. Fig. 3.1 illustrates a single LTSM memory cell.\\
-
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.6\textwidth]{images/LSTM.png}
@@ -48,7 +43,6 @@ Similarly to vanilla RNNs, LSTMs feature a repeated module, however this module 
 \end{figure}
 
 At each timestep, the network updates the cell state $c_t$ by deciding, based on the input, $x_t$ and on the previous hidden state, $h_{t-1}$, what to forget of the previous cell state, $c_{t-1}$ via the forget gate $f_t$, and how much of the new candidate information to write into the cell state via the input gate $i_t$. "The network also updates the hidden state $h_t$ by filtering the cell state $c_t$ through the output gate $o_t$, which controls how much of the long-term memory is exposed as the current hidden state. The LSTM hidden layer function $\mathcal{H}$ is implemented by the following equations \cite{graves_generating_2013}:\\
-
 \begin{align}
     i_t &= \sigma(W_{xi}x_t + W_{hi}h_{t-1} + W_{ci}c_{t-1} + b_i) \\
     f_t &= \sigma(W_{xf}x_t + W_{hf}h_{t-1} + W_{cf}c_{t-1} + b_f) \\
@@ -63,7 +57,7 @@ During training, teacher forcing is often used to train the weights of an RNN. T
 
 Another common decoding strategy in Seq2Seq tasks is beam search. At each timestep, beam search expands all possible continuations of the current partial sequences, ranks them according to their cumulative log-probability under the model, and retains only the top $k$ candidates, where $k$, the beam size, is a hyperparameter. This allows the model to explore multiple hypotheses simultaneously rather than committing to a single path in a greedy fashion. Since sequence log-probability is directly related to perplexity, beam search can equivalently be viewed as maintaining the hypotheses with the lowest perplexity (or, equivalently, highest likelihood) under the model.\\
 
-\tocsubsectionstar{Autoencoders}
+\subsection{Autoencoders}
 Autoencoders constitute a type of neural network architecture designed to efficiently compress (or encode) input data, then reconstruct (or decode) the original input from a compressed representation, also known as code or latent representation. During training, autoencoders are typically optimised via backpropagation to minimise reconstruction loss, i.e., the discrepancy between the reconstructed data and the original input, in a self-supervised fashion. This pushes the model to learn a compact and meaningful latent representation. Autoencoders are typically composed of two parametrised functions: an encoder $E_\phi:\mathcal{X}\rightarrow\mathcal{Z}$, parametrised by $\phi$, and a decoder, $D_\theta:\mathcal{Z}\rightarrow\mathcal{Y}$, parametrised by $\theta$. The encoder comprises layers that yield an increasingly compressed representation of the input data through dimensionality reduction. Between encoder and decoder is a bottleneck (or “code”), which contains the most compact representation of the input: it is both the output layer of the encoder network and the input layer of the decoder network. The decoder decompresses the encoded representation of data, ultimately reconstructing the original input. For any input $\mathbf{x} \in \mathcal{X}$, its latent representation is $\mathbf{z} = E_\phi(\mathbf{x})$ and the decoded representation is $\mathbf{x}'= D_\theta(\mathbf{z})$.\\
 
 When an RNN are used as a building block for an autoencoder in a sequence generation task, the architecture is typically referred to as a Recurrent Autoencoder (RAE) or Sequence-to-Sequence (Seq2Seq) model \cite{sutskever_sequence_2014}. In these models, both the encoder and decoder are recurrent neural networks, commonly implemented using LSTMs. The encoder processes the input sequence token by token - here, character by character - and compresses it into a fixed-dimensional vector representation, while the decoder generates the output sequence autoregressively, one token at a time.
@@ -71,7 +65,6 @@ At $t=1$, the encoder receives a start-of-sequence embedding as input and initia
 In Seq2Seq tasks, a Bidirectional RNN (BRNN) \cite{schuster_bidirectional_1997} can be used as the encoder. A BRNN consists of two recurrent networks: one processes the input sequence in the forward temporal direction, while the other processes the sequence in reverse order. The hidden states from both directions are then combined, enabling the encoder to capture both past and future contextual information for each timestep.\\
 
 In Seq2Seq tasks, cross-entropy loss is typically used to compute the reconstruction loss. Minimising this loss is equivalent to maximising the conditional log-likelihood of the correct output sequence given the latent representation $\mathbf{z}$ and the previous ground-truth characters, if using teacher forcing, thereby encouraging the decoder to faithfully reconstruct the original input sequence. At each timestep $t$, the decoder outputs a probability distribution over the vocabulary of possible next characters via a softmax activation function. The cross-entropy loss measures the discrepancy between this predicted distribution and the true next character, represented as a one-hot vector. The total reconstruction loss over an output sequence of length $T$ is therefore given by:
-
 \begin{equation}
 \mathcal{L}_{\text{reconstruction}} = -\sum_{t=1}^{T} \log p_\theta(y_t \mid y_{1}, \ldots, y_{t-1}, \mathbf{z})
 \end{equation}
@@ -80,29 +73,25 @@ where $\mathbf{z}$ is the latent vector produced by the encoder and $y_t$ is the
 
 Via backpropagation, the model parameters $\phi*$ and $\theta*$ that minimise the cross-entropy loss are learned during training. Since the output sequence includes start and end of sequence tokens, total sequence length for a name of length $L$ is $T=L+2$.
 
-\tocsubsectionstar{Variational Autoencoders}
+\subsection{Variational Autoencoders}
 Variational Autoencoders (VAEs) are a class of latent variable generative models \cite{kingma_auto-encoding_2022} that aim to model the data distribution $p(\mathbf{x})$, from which new samples resembling the observed data can be generated. As shown in \cite{bowman_generating_2016} in the context of sentence generation, standard autoencoders are not effective at extracting global semantic features and do not learn a smooth, interpretable space: following a path or homotopy between the encoding for two sentences, the intermediate sentences generally appear to be ungrammatical and do not transition smoothly from one to the other. This is because autoencoders are discriminative models. In contrast to discriminative models, which learn a conditional distribution $p(\mathbf{y} \mid \mathbf{x})$ mapping inputs to labels, generative models, such as VAEs, learn the underlying distribution of the data $p(\mathbf{x})$ itself. As such, while autoencoders traditionally learn discrete latent space models and limit themselves to map the input into a vector of fixed dimensionality, VAEs are based on a regularised version of the standard autoencoder, meaning that they enforce a prior distribution or geometry over the latent space. As a result, the model can learn a continuous latent space, from which new, proper samples can be drawn.\\
 
 We assume that the observed variable $\mathbf{x}$ is drawn from an unknown true distribution $p^{*}(\mathbf{x})$. Since the true data generating process is unknown, this distribution is approximated using a parametric model $p_\theta(\mathbf{x})$ with parameters $\theta$, where the optimal parameters $\theta^*$ is such that:
-
 \begin{equation}
-    \theta^{*} = \arg\max_{\theta} \prod_{i=1}^{n} p_\theta(\mathbf{x}^{(i)}) =\arg\max_{\theta} \sum_{i=1}^{n} \log p_\theta(\mathbf{x}^{(i)}) ,
+\theta^{*} = \arg\max_{\theta} \prod_{i=1}^{n} p_\theta(\mathbf{x}^{(i)}) =\arg\max_{\theta} \sum_{i=1}^{n} \log p_\theta(\mathbf{x}^{(i)}) ,
 \end{equation}
 
-where $n$ is the number of observations. VAEs introduce latent variables $\mathbf{z}$ and define a joint distribution over both the observed variables $\mathbf{x}$ and the latent variables $\mathbf{z}$
-
+where $n$ is the number of observations. VAEs introduce latent variables $\mathbf{z}$ and define a joint distribution over both the observed variables $\mathbf{x}$ and the latent variables $\mathbf{z}$:
 \begin{equation}
 p_\theta(\mathbf{x}, \mathbf{z}) = p_\theta(\mathbf{x} \mid \mathbf{z}) p(\mathbf{z}),
 \end{equation}
 
-where \(p_\theta(\mathbf{x} \mid \mathbf{z})\) is the likelihood and $p(\mathbf{z})$ is the prior distribution over $\mathbf{z}$, since it is not conditioned on any observations. The prior $p(\mathbf{z})$ is often chosen to be a standard multivariate Gaussian $\mathcal{N}(\mathbf{0}, \mathbf{I})$ — a hypersphere centred at the origin in the latent space. The marginal likelihood or model evidence is 
-
+where \(p_\theta(\mathbf{x} \mid \mathbf{z})\) is the likelihood and $p(\mathbf{z})$ is the prior distribution over $\mathbf{z}$, since it is not conditioned on any observations. The prior $p(\mathbf{z})$ is often chosen to be a standard multivariate Gaussian $\mathcal{N}(\mathbf{0}, \mathbf{I})$ — a hypersphere centred at the origin in the latent space. The marginal likelihood or model evidence is:
 \begin{equation}
 p_\theta(\mathbf{x}) = \int p_\theta(\mathbf{x} \mid \mathbf{z}) p(\mathbf{z}) d\mathbf{z} = \int p_\theta(\mathbf{x}, \mathbf{z}) d\mathbf{z},
 \end{equation}
 
-which is generally intractable, as it requires integrating over all possible values of the latent variable $\mathbf{z}$. Its intractability is related to the intractability of the posterior distribution over latent variables
-
+which is generally intractable, as it requires integrating over all possible values of the latent variable $\mathbf{z}$. Its intractability is related to the intractability of the posterior distribution over latent variables:
 \begin{equation}
 p_\theta(\mathbf{z} \mid \mathbf{x})
 =
@@ -111,13 +100,11 @@ p_\theta(\mathbf{z} \mid \mathbf{x})
 \end{equation}
 
 which is also intractable. The VAE addresses this intractability by introducing $q_\phi(\mathbf{z} \mid \mathbf{x})$ whose parameters $\phi$ can be optimised such that:
-
 \begin{equation}
-    q_\phi(\mathbf{z} \mid \mathbf{x}) \approx p_\theta(\mathbf{z} \mid \mathbf{x})
+q_\phi(\mathbf{z} \mid \mathbf{x}) \approx p_\theta(\mathbf{z} \mid \mathbf{x})
 \end{equation}
 
 A VAE can be viewed as two coupled, but independently parameterised models: the encoder or recognition model $q_\phi(\mathbf{z} \mid \mathbf{x})$, and the decoder or generative model $p_\theta(\mathbf{x} \mid \mathbf{z})$, where $\phi$ denotes the parameters of the recognition model, while $\theta$ denotes the parameters of the generative model.\\
-
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.6\textwidth]{images/VAE.png}
@@ -125,29 +112,26 @@ A VAE can be viewed as two coupled, but independently parameterised models: the 
     \label{fig:vae}
 \end{figure}
 
-For any choice of inference model $q_\phi(\mathbf{z} \mid \mathbf{x})$, the log-likelihood of the data is
-
+For any choice of inference model $q_\phi(\mathbf{z} \mid \mathbf{x})$, the log-likelihood of the data is:
 \begin{align}
-    \log p_\theta(\mathbf{x}) 
-    &= \underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})} \left[ \log \frac{p_\theta(\mathbf{x}, \mathbf{z})}{q_\phi(\mathbf{z}|\mathbf{x})} \right]}_{\mathcal{L}_{\theta,\phi}(\mathbf{x}) \ (\text{ELBO})}
-    + \underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})} \left[ \log \frac{q_\phi(\mathbf{z}|\mathbf{x})}{p_\theta(\mathbf{z}|\mathbf{x})} \right]}_{D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x}))},
+\log p_\theta(\mathbf{x}) 
+&= \underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})} \left[ \log \frac{p_\theta(\mathbf{x}, \mathbf{z})}{q_\phi(\mathbf{z}|\mathbf{x})} \right]}_{\mathcal{L}_{\theta,\phi}(\mathbf{x}) \ (\text{ELBO})}
++ \underbrace{\mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})} \left[ \log \frac{q_\phi(\mathbf{z}|\mathbf{x})}{p_\theta(\mathbf{z}|\mathbf{x})} \right]}_{D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x}))},
 \end{align}
 
 where the first term is the variational lower bound, often called the evidence lower bound (ELBO) and the second term is the Kullback-Leibler (KL) divergence between $q_\phi(\mathbf{z}|\mathbf{x})$ and $p_\theta(\mathbf{z}|\mathbf{x})$, which is non-negative. Since the KL divergence is non-negative, the ELBO constitutes a lower bound on the log-likelihood of the data.\\
 
-Maximizating the ELBO $\mathcal{L}_{\theta,\phi}(\mathbf{x})$ w.r.t. the parameters $\theta$ and $\phi$, will concurrently approximately maximise the marginal likelihood $p_\theta(\mathbf{x})$, leading to a better generative model, and minimise the KL divergence of the approximation $q_\phi(\mathbf{z} \mid \mathbf{x})$ from the true posterior $p_\theta(\mathbf{z} \mid \mathbf{x})$, leading to a better $q_\phi(\mathbf{z} \mid \mathbf{x})$. As a result, the VAE uses the ELBO as its maximisation objective. Rearranging equation (3.16) and expanding the joint distribution $p_\theta(\mathbf{x},\mathbf{z})=p_\theta(\mathbf{x} \mid \mathbf{z})p(\mathbf{z})$ gives:
-
+Maximizating the ELBO $\mathcal{L}_{\theta,\phi}(\mathbf{x})$ w.r.t. the parameters $\theta$ and $\phi$, will concurrently approximately maximise the marginal likelihood $p_\theta(\mathbf{x})$, leading to a better generative model, and minimise the KL divergence of the approximation $q_\phi(\mathbf{z} \mid \mathbf{x})$ from the true posterior $p_\theta(\mathbf{z} \mid \mathbf{x})$, leading to a better $q_\phi(\mathbf{z} \mid \mathbf{x})$. As a result, the VAE uses the ELBO as its maximisation objective. Rearranging equation (3.16) and expanding the joint distribution $p_\theta(\mathbf{x},\mathbf{z})=p_\theta(\mathbf{x} \mid \mathbf{z})p(\mathbf{z})$ yields:
 \begin{equation}
-    \log p_\theta(\mathbf{x}) - D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})) = \mathbb{E}_{\mathbf{z} \sim q_\phi(\mathbf{z}|\mathbf{x})} \log p_\theta(\mathbf{x}|\mathbf{z}) - D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})).
+\log p_\theta(\mathbf{x}) - D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})) = \mathbb{E}_{\mathbf{z} \sim q_\phi(\mathbf{z}|\mathbf{x})} \log p_\theta(\mathbf{x}|\mathbf{z}) - D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})).
 \end{equation}
 
 
 The negation of the above defines the loss function of VAE:
-
 \begin{align}
-    \mathcal{L}_{\text{VAE}}(\theta, \phi) &= -\log p_\theta(\mathbf{x}) + D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})) \\
-    &= -\mathbb{E}_{\mathbf{z} \sim q_\phi(\mathbf{z}|\mathbf{x})} \log p_\theta(\mathbf{x}|\mathbf{z}) + D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})) \\
-    \theta^{*}, \phi^{*} &= \arg\min_{\theta, \phi} \mathcal{L}_{\text{VAE}},
+\mathcal{L}_{\text{VAE}}(\theta, \phi) &= -\log p_\theta(\mathbf{x}) + D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})) \\
+&= -\mathbb{E}_{\mathbf{z} \sim q_\phi(\mathbf{z}|\mathbf{x})} \log p_\theta(\mathbf{x}|\mathbf{z}) + D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})) \\
+\theta^{*}, \phi^{*} &= \arg\min_{\theta, \phi} \mathcal{L}_{\text{VAE}},
 \end{align}
 
 which consists of two terms, (i) reconstruction and (ii) KL regularization.\\
@@ -157,7 +141,6 @@ $\mathcal{L}_{\text{VAE}}(\theta, \phi)$ is known as the variational lower bound
 For continuous latent variables and a differentiable encoder and generative model, the ELBO can be straightforwardly differentiated w.r.t. both $\phi$ and $\theta$ through a change of variables. This is often called the reparameterization trick. This allows joint optimization w.r.t. all parameters ($\phi$ and $\theta$) using stochastic gradient descent (SGD).\\
 
 The expectation term in the loss function involves sampling from the approximate posterior distribution $\mathbf{z} \sim q_\phi(\mathbf{z} \mid \mathbf{x})$. Since sampling is a stochastic operation, it is not directly differentiable, which prevents gradients from flowing through it during backpropagation. This issue is addressed using the reparameterisation trick, which expresses the latent variable $\mathbf{z}$ as a deterministic function of the encoder outputs and an auxiliary noise variable $\boldsymbol{\epsilon}$. The noise variable $\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ is independent of the model parameters $\phi$, and all stochasticity is delegated to it, enabling gradient-based optimisation of the encoder and decoder parameters. A common choice for the approximate posterior is a multivariate Gaussian with diagonal covariance, parameterised by the encoder network, which outputs the mean and standard deviation vectors $\boldsymbol{\mu}_\phi(\mathbf{x})$ and $\boldsymbol{\sigma}_\phi(\mathbf{x})$:
-
 \begin{align}
 q_\phi(\mathbf{z}|\mathbf{x}) &= \mathcal{N}\!\big(\mathbf{z}; \boldsymbol{\mu}_\phi(\mathbf{x}), \mathrm{diag}(\boldsymbol{\sigma}^2_\phi(\mathbf{x}))\big).
 \end{align}
@@ -168,15 +151,14 @@ Sampling from this distribution can then be rewritten using the reparameterisati
 \end{align}
 where $\odot$ denotes element-wise multiplication.\\
 
-\tocsubsectionstar{Posterior collapse, $\beta$-VAE and homotopy}
+\subsection{Posterior collapse, $\beta$-VAE and homotopy}
 While VAEs can learn a compressed, probabilistic representation of high-dimensional data, this representation is often not very interpretable \cite{higgins_-vae_2017}. A disentangled representation, defined as one where single latent units are sensitive to changes in single generative factors, while being relatively invariant to changes in other factors \cite{bengio_representation_2014}, leads to better interpretability.\\
 
 While variational autoencoders became extremely popular early on in continuous domains, \cite{bowman_generating_2016} shows that a discrete task such as sequence modelling poses additional challenges to the task. One would expect that a model that encodes useful information in the latent variable $\mathbf{z}$ will have a non-zero KL divergence term and a relatively small cross-entropy term. If the KL divergence is zero, the model yields the same $\mu$ and $\sigma$ and the latent representation $z$ is uninformative. The intuition is that a powerful-enough decoder might not need the latent representation $mathbf{z}$ at all to (re)construct the sentence autoregressively with little reconstruction error. As a result, a vanilla VAE, when used for a discrete task like text generation, tends to collapse to a RNNLM. This is often referred to as posterior collapse.\\
 
 To overcome the limitations above, the $\beta$-VAE \cite{higgins_-vae_2017} extends the standard VAE by solely introducing a hyperparameter $\beta$ into the loss function:
-
 \begin{equation}
-    \mathcal{L}_{\beta\text{-VAE}}(\theta, \phi, \beta) = -\log p_\theta(\mathbf{x}) + \beta D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})),
+\mathcal{L}_{\beta\text{-VAE}}(\theta, \phi, \beta) = -\log p_\theta(\mathbf{x}) + \beta D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p_\theta(\mathbf{z}|\mathbf{x})),
 \end{equation}
 
 where $\beta = 1$ corresponds to the original formulation of the VAE loss by \cite{kingma_auto-encoding_2022}. A $\beta > 1$ puts a stronger constraint on the latent bottleneck, encouraging the model to learn disentangled and interpretable representations of the conditionally independent data generative factors.\\ 
@@ -187,20 +169,18 @@ Another remedy to posterior collapse used in \cite{bowman_generating_2016} is to
 
 In the context of VAE, \cite{bowman_generating_2016} introduce and explore the concept of \textit{homotopy} within sentence generation. The volume-filling and smooth nature of the latent space is such that it allows to interpolate between codes to generate a latent representation which can then be passed on to the autoencoder. In this context, a homotopy between two codes $z_1$ and $z_2$ is the set of points on the line between them, inclusive of those, $z(t) = z_1(1−t)+z_2t$ for $t \in [0,1]$. Examining these homotopies allows to get a sense of how this code space is organised and how the model deforms a sentence to transition between the two sentences at the opposite ends of the line.\\
 
-\tocsubsectionstar{Conditional Variational Autoencoders}
+\subsection{Conditional Variational Autoencoders}
 
 While a vanilla VAE can generate plausible outputs for both continuous and discrete tasks, the generation process is unguided as samples are drawn from the prior $p(\mathbf{z}) = \mathcal{N}(\mathbf{0}, \mathbf{I})$ without any control over the properties of the output. Conditional generative models address this by incorporating additional contextual information to steer generation toward a desired outcome or to achieve, in other words, \textit{controlled} generation. The Conditional Variational Autoencoder (CVAE) \cite{sohn_learning_2015} extends the VAE framework to allow for structured output prediction: by conditioning both the encoder and decoder on an observed variable $\mathbf{x}$, the model learns a structured, semantically rich latent space. As a result, samples from a given region of the code are decoded into outputs that feature specific properties.\\
 
 A CVAE is trained to maximise the conditional log-likelihood of the data $\log p_\theta(\mathbf{y}|\mathbf{x})$, where $\mathbf{x}$ denotes the input variables and $\mathbf{y}$ denotes the output variables. The variational lower bound is modified as follows:
-
 \begin{equation}
-    \log p_\theta(\mathbf{y}|\mathbf{x}) \geq -D_{\text{KL}}\left(q_\phi(\mathbf{z}|\mathbf{x}, \mathbf{y}) \| p_\theta(\mathbf{z}|\mathbf{x})\right) + \mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x},\mathbf{y})}\left[\log p_\theta(\mathbf{y}|\mathbf{x}, \mathbf{z})\right],
+\log p_\theta(\mathbf{y}|\mathbf{x}) \geq -D_{\text{KL}}\left(q_\phi(\mathbf{z}|\mathbf{x}, \mathbf{y}) \| p_\theta(\mathbf{z}|\mathbf{x})\right) + \mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x},\mathbf{y})}\left[\log p_\theta(\mathbf{y}|\mathbf{x}, \mathbf{z})\right],
 \end{equation}
 
 where $\mathbf{z}$ denotes the latent variables. The empirical lower bound used to train the model is:
-
 \begin{equation}
-    \tilde{\mathcal{L}}_{\text{CVAE}}(\mathbf{x}, \mathbf{y}; \theta, \phi) = -D_{\text{KL}}\left(q_\phi(\mathbf{z}|\mathbf{x}, \mathbf{y}) \| p_\theta(\mathbf{z}|\mathbf{x})\right) + \frac{1}{L}\sum_{l=1}^{L} \log p_\theta(\mathbf{y}|\mathbf{x}, \mathbf{z}^{(l)})
+\tilde{\mathcal{L}}_{\text{CVAE}}(\mathbf{x}, \mathbf{y}; \theta, \phi) = -D_{\text{KL}}\left(q_\phi(\mathbf{z}|\mathbf{x}, \mathbf{y}) \| p_\theta(\mathbf{z}|\mathbf{x})\right) + \frac{1}{L}\sum_{l=1}^{L} \log p_\theta(\mathbf{y}|\mathbf{x}, \mathbf{z}^{(l)})
 \end{equation}
 where $\mathbf{z}^{(l)} = g_\phi(\mathbf{x}, \mathbf{y}, \boldsymbol{\epsilon}^{(l)})$, $\boldsymbol{\epsilon}^{(l)} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ and $L$ is the number of samples.\\
 
@@ -216,19 +196,17 @@ Compared to the vanilla VAE, the CVAE introduces two key differences. First, the
 
 \cite{zhang_variational_2016} extends the CVAE framework to discrete sequential data by replacing the visual components with RNN encoder-decoders, applying it to neural machine translation and demonstrating improvements over vanilla Seq2Seq models. In both cases, the CVAE learns a structured latent space conditioned on the input, enabling the model to generate diverse outputs with specific properties at inference time.\\
 
-\tocsubsectionstar{Variational Autoencoders with Contrastive Learning}
+\subsection{Variational Autoencoders with Contrastive Learning}
 Another approach to learning a structured, semantically rich latent space is to augment the VAE training objective with a contrastive loss. Contrastive representation learning aims to learn an embedding space in which distances between samples reflect semantic similarity by pulling semantically similar data together and pushing apart semantically different data. This can be applied in both supervised and unsupervised settings, depending on how similarity is defined.\\
 
 Triplet loss was originally proposed in \cite{schroff_facenet_2015}  in the context of supervised learning and uses one positive and one negative per anchor. Given one anchor input $\textbf{x}_{i}$, one positive sample $\textbf{x}_{i}^{+}$ and one negative sample $\textbf{x}_{i}^{-}$ are selected, such that $\textbf{x}_i$ and $\textbf{x}_{i}^{+}$ belong to the same class $\textbf{x}_{i}$ and $\textbf{x}_{i}^{-}$ belong to different classes. Triplet loss learns to minimise the distance between the anchor $\textbf{x}_{i}$ and the positive sample $\textbf{x}_{i}^{+}$ and to maximise the distance between the anchor $\textbf{x}_{i}$ and negative sample $\textbf{x}_{i}^{-}$ at the same time via the following equation:
-
 \begin{equation}
-    \mathcal{L}_{\text{triplet}}(\mathbf{x}, \mathbf{x}^{+}, \mathbf{x}^{-}) = \sum_{\mathbf{x} \in \mathcal{X}} \max\left(0, \|f(\mathbf{x}) - f(\mathbf{x}^{+})\|_{2}^{2} - \|f(\mathbf{x}) - f(\mathbf{x}^{-})\|_{2}^{2} + \epsilon\right)
+\mathcal{L}_{\text{triplet}}(\mathbf{x}, \mathbf{x}^{+}, \mathbf{x}^{-}) = \sum_{\mathbf{x} \in \mathcal{X}} \max\left(0, \|f(\mathbf{x}) - f(\mathbf{x}^{+})\|_{2}^{2} - \|f(\mathbf{x}) - f(\mathbf{x}^{-})\|_{2}^{2} + \epsilon\right)
 \end{equation}
  
 where the margin parameter $\epsilon$ is the minimum gap that must exist between the distance to the positive and the distance to the negative.\\
 
 Drawing on the work in \cite{gutmann_noise-contrastive_nodate}, \cite{oord_representation_2018} introduces the InfoNCE objective. Given a set of samples $\{x_i\}_{i=1}^N$, where only one is a positive sample $x^+$ and the remaining are negative samples, InfoNCE minimises the following loss:
-
 \begin{equation}
 \mathcal{L}_{\mathrm{InfoNCE}}
 =
@@ -245,7 +223,6 @@ f(\mathbf{x}^{+}, \mathbf{c})
 where $f(\mathbf{x}, \mathbf{c})$ denotes a scoring function measuring the compatibility between sample $\mathbf{x}$ and context representation $\mathbf{c}$.\\
 
 \cite{khosla_supervised_2021} suggest another version of contrastive learning for the supervised setting called SupCon. SupCon can be seen as a generalization of the triplet loss from \cite{schroff_facenet_2015}. Supervised contrastive loss $\mathcal{L}_{\mathrm{supcon}}$ utilises multiple positive and negative samples:
-
 \begin{equation}
 \mathcal{L}^{\mathrm{sup}}_{\mathrm{out}}
 =
@@ -263,12 +240,19 @@ where $f(\mathbf{x}, \mathbf{c})$ denotes a scoring function measuring the compa
 
 where $I$ is the size of the batch, $P(i)$ denotes the set of indices corresponding to positive samples for anchor $i$, $A(i)$ denotes the set of all candidate samples excluding the anchor itself, $\tau$ is a temperature hyperparameter, and $\mathbf{z}_i$ represents the projected embedding of sample $i$.\\
 
-\tocsubsectionstar{Adversarial Variational Autoencoders}
-Drawing inspiration from adversarial training methods for generative models, \cite{bowman_generating_2016} evaluate the output sentences of the variational autoencoder by training a classifier to distinguish between generated and true sentences, thereby defining an adversarial error. This approach is motivated by the discrete nature of text, which results in the non-differentiability of the discrete RNN decoder, which prevents the direct application of the adversarial criterion during training. \cite{bowman_generating_2016} also identify extending adversarial evaluation to a fully adversarial training objective as a direction for future work.\\
+\subsection{Adversarial Variational Autoencoders}
 
-\cite{hu_toward_2018} proposes a new solution to the problem of controlled generation of text or, in other words, of generating plausible sequences with specified attributes and obtains meaningful results with restricted sentence length, and improved accuracy on sentiment and tense attributes. This task is challenging for two main reasons. The first challenge is linked to the discrete nature of text. The secodn challenge related to learning disentangled latent representations. The approach in \cite{hu_toward_2018} enhances VAEs with an extended wake-sleep procedure (\cite{hinton_wake-sleep_1995}) where where the sleep phase enables incorporation of generated samples for learning both the generator and discriminators in an alternating manner. The model proposed by \cite{hu_toward_2018} yields meaningful generation with restricted sentence length, and improved accuracy on sentiment and tense attributes. In the future we would like to improve the modeling and training as above, and extend to generate longer sentences/paragraphs and control more attributes with fine-grained structures. Our approach combines VAEs with attribute discriminators and imposes explicit independency constraints on attribute controls, enabling disentangled latent code. Semi-supervised learning within the joint VAE/wake-sleep.
+Adversarial approaches to variational autoencoders aim to improve generative quality by introducing discriminator-based training signals. In the context of text generation, \cite{bowman_generating_2016} evaluate VAE-generated sentences by training a classifier to distinguish between real and generated samples, thereby defining an adversarial-style evaluation metric. This is motivated by the discrete nature of text, where the RNN decoder produces sequences of discrete tokens, making the sampling process non-differentiable and preventing direct backpropagation of adversarial objectives through the generator. As a result, this work highlights adversarial evaluation as a proxy for assessing generative quality, and identifies fully adversarial training of text VAEs as a direction for future research.\\
 
-%\tocsubsectionstar{Future Work} %optional
+Building on this idea, \cite{hu_toward_2018} propose a framework for controllable text generation that combines variational autoencoders with adversarially trained discriminators. The model addresses two key challenges: learning meaningful latent representations for text, and enabling control over specific semantic attributes such as sentiment or tense. To this end, the authors extend the wake-sleep algorithm \cite{hinton_wake-sleep_1995}, where the generative model produces synthetic samples (“dreams”) that are used to train auxiliary discriminators, while the inference model is updated using reconstruction-based objectives. In addition, attribute discriminators are introduced to enforce that generated sentences exhibit desired properties, while regularization terms encourage disentanglement between latent variables and controllable attributes. This hybrid training procedure results in improved controllability and more meaningful latent representations, although performance remains limited to relatively short and constrained sentence generation. The objectives of the generator $G$ and of the discriminator $D$ are respectively as follows:
+\begin{align}
+\mathcal{L}_G &= \mathcal{L}_{\text{VAE}} + \lambda_c \mathcal{L}_{\text{Attr},c} + \lambda_z \mathcal{L}_{\text{Attr},z} \\
+\mathcal{L}_D &= \mathcal{L}_s + \lambda_u \mathcal{L}_u,
+\end{align}
+
+where $\lambda_c$, $\lambda_z$ and $\lambda_u$ are all balancing parameters. $\mathcal{L}_{VAE}$ denotes the standard objective of a vanilla variational encoder. $\mathcal{L}_{\text{Attr},c}$ it measures how well generated text matches the desired attribute using a classifier. $\mathcal{L}_{\text{Attr},z}$ incentives the model to learn disentangled representations. $\mathcal{L}_s$ is the supervised classification loss on labeled real data. $\mathcal{L}_u$ is the unsupervised loss on synthesized (generated) samples used to regularize the discriminator.
+
+%\subsection{Future Work} %optional
 
 %\subsection*{Closing Comments}
 
