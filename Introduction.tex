@@ -1,0 +1,28 @@
+\documentclass[Main.tex]{subfiles}
+
+%this is optional, but it allows subfiles to link to other pdfs if you wanted to build chapters individually
+%\externaldocument{Conclusion}
+
+\begin{document}
+% make sure you're using labels for sections, and `\cref` to reference them later (or `\Cref` at the start of a sentence)
+\ourchapter{Introduction}\label{ch:introduction}
+
+% no point in numbering these, but put them in table of contents
+%\tocsubsectionstar{Contributions}
+
+%\tocsubsectionstar{Outline}
+
+Being relatively short sequences of characters, names are deceptively simple, yet they encode rich phonetic and morphological patterns that enable native speakers to immediately recognise their cultural or linguistic origin. The aim of this project is to develop a model that is capable of generating novel yet plausible \textit{toponyms}, i.e., place names, or \textit{anthroponyms}, i.e., person names, that are consistent with the phonetic and morphological conventions of both existing and fictional cultures. Potential applications range from creating names for literary characters or settings to devising names for branding and marketing purposes.\\
+
+To address this task, we intend to investigate a VAE-based generative model for character-level name generation, where both the encoder and the decoder are implemented as LSTMs. The encoder maps an input name to a latent representation, from which the decoder generates novel sequences autoregressively. If the learned latent space captures culturally meaningful patterns, sampling from it may enable the generation of novel yet plausible anthroponyms and toponyms. At the same time, interpolation between existing cultures, or exploration of previously unseen regions of the latent space, may provide a mechanism for generating names associated with fictional cultures. Crucially, the task is a sequence modeling task, which involves learning from ordered data, where context, i.e., other characters, plays a vital role. The goal is to predict the next character in a sequence, generating a coherent continuation. From a model architecture perspective, the use of Recurrent Neural Networks (RNNs) sounds appropriate for this kind of task. RNNs process sequences element by element, maintaining a hidden state vector that acts as a memory of past elements.\\
+
+This task involves several challenges. First, constructing a sufficiently robust, diverse, and balanced dataset of toponyms and anthroponyms is non-trivial: some groups are significantly under-represented, names frequently exhibit cross-cultural influences that complicate attribution, and inferring culture or language is not always straightforward. In addition, names may exist in multiple linguistic forms or as \textit{exonyms} (e.g., \textit{London} and \textit{Londres}), further complicating consistent cultural labelling. Second, the inherently discrete nature of the tasks introduces a number of complications when it comes to training the model. Third, the model should be able to accommodate as wide a character set as possible, including a number of diacritics and rare characters. Fourth, a central challenge lies in learning culturally conditioned generation, where the model must produce names that are not only phonetically plausible but also coherent with a target culture. Finally, evaluating generated names is inherently difficult, as creative generation tasks lack a clear ground truth and quantitative measures of pronounceability or cultural coherence are imperfect proxies for human judgement, motivating the use of human evaluation in addition to other quantitative metrics.\\
+
+The goals of the project can be organised into three levels of priority. The primary objective is for the model to generate character sequences that native speakers perceive as pronounceable and plausible anthroponyms or toponyms. These generated names should exhibit phonetic, morphological, and cultural coherence, while supporting a sufficiently broad and diverse range of languages or cultures. The second objective concerns novelty and diversity. Generated names should not merely reproduce items from the training data, but instead exhibit originality and variation with respect to existing names and across generated samples. The third objective concerns generalisation beyond directly represented cultures or languages. In particular, the model should support cultural conditioning and be capable of generating names associated with fictional cultures. Although not a primary objective, the model should also accommodate a wide range of orthographic and morphological phenomena, including prefixes, suffixes, and diacritics.\\
+
+This report is structured as follows. Chapter 2 provides a summary of related work. Chapter 3 describes the project goals in more detail and outlines the evaluation methodology used to assess the performance of the proposed generative model. Finally, Chapter 4 presents the project plan. It is worth noting that, throughout this report, the terms \textit{culture} and \textit{language} are sometimes used interchangeably. While culture and language are distinct concepts — a culture may encompass multiple languages, and a language may be shared across multiple cultures — in the context of name generation they serve as approximate proxies for one another. This is because personal names are primarily shaped by the linguistic conventions, naming practices, and historical influences of the communities in which they originate.\\
+
+% this is also optional, it allows the bibliography to print on a per-chapter level.
+%\ifSubfilesClassLoaded{\pagebreak\printbibliography}{}
+
+\end{document}
