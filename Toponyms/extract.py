@@ -20,6 +20,7 @@ SELECT DISTINCT ?item ?type WHERE {
 
 '''
 SPARQL query to get countries and languages.
+The result of this query is not saved yet.
 
 SELECT ?country ?lang WHERE {
   ?country wdt:P31 wd:Q6256 .
@@ -44,65 +45,59 @@ def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
         return None
 
 def main():
-	
-	count = 0
 
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-	qids = get_qids()
+    qids = get_qids()
 
-	with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as input:
-		with open('/vol/bitbucket/at2225/toponyms.json', 'w') as output:
+    with gzip.open('latest-all.json.gz', 'rt') as input:
+        with open('toponyms.json', 'w') as output:
 
-			for line in input:
+            for line in input:
 
-				if count >= 1000:
-					return
+                line = line.strip().rstrip(',')
+                if line in ('[', ']', ''):
+                    continue
 
-				count += 1
+                line = json.loads(line)
 
-				line = line.strip().rstrip(',')
-				if line in ('[', ']', ''):
-					continue
+                # Get the list of claims for the entity.
+                claims = line.get('claims', {})
+                # Get the P31 ('instance of') claims.
+                p31 = claims.get('P31', [])
 
-				line = json.loads(line)
-
-				# Get the list of claims for the entity.
-				claims = line.get('claims', {})
-				# Get the P31 ('instance of') claims.
-				p31 = claims.get('P31', [])
-
-				match = False
+                match = False
 
                 # Go through 'instance of' claims.
-				for claim in p31:
-					try:
+                for claim in p31:
+
+                    try:
                         # Check if entity is instance of any of the gids selected as toponyms.
-						val = claim['mainsnak']['datavalue']['value']['id']
-						if val in qids:
-							match = True
-							type_ = qids[val]
-							break
-					except (KeyError, TypeError):
-						pass
+                        val = claim['mainsnak']['datavalue']['value']['id']
+                        if val in qids:
+                            match = True
+                            type_ = qids[val]
+                            break
+
+                    except (KeyError, TypeError):
+                        pass
 
                 # Entity is a toponym.
-				if match:
-					entity = {
+                if match:
+                    entity = {
                         'id': line.get('id', None),
-                        'name': '',
+                        'name': line[''],
                         'country': get_clean_claims(claims, "P17"),
                         'region': get_clean_claims(claims, "P131"),
                         'language': get_clean_claims(claims, "P37"),
                         'type': type_
                     }
 
-					output.write(json.dumps(entity) + '\n')
+                    output.write(json.dumps(entity) + '\n')
 
 if __name__ == '__main__':
     main()
 
 '''
 Notes:
-- How to deal with the huge dump? Is the dump even the right approach?
 - How to infer name? Ideally, should use the language of the place itself but seems messy.
 '''
