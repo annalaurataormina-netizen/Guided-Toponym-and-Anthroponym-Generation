@@ -11,7 +11,7 @@ SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 (
 Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
 P279* is to get subclasses recursively.
 Order matters due to the way get_gids() processes them.
-The result of this query is saved in Toponyms/query.json.
+The result of this query is saved in toponyms/query.json.
 
 SELECT DISTINCT ?item ?type WHERE {
   {?item wdt:P279* wd:Q486972 . BIND("settlement" AS ?type)}
@@ -26,7 +26,7 @@ SELECT DISTINCT ?item ?type WHERE {
 '''
 SPARQL query to get all the subclasses of Q1243157 ('given name') and Q101352 ('family name').
 P279* is to get subclasses recursively.
-The result of this query is saved in Anthroponyms/query.json.
+The result of this query is saved in anthroponyms/query.json.
 
 SELECT DISTINCT ?item ?type WHERE {
   {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
@@ -52,8 +52,8 @@ def get_qids(path: str) -> Dict[str,str]:
 def main():
 
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids_toponyms = get_qids("Toponyms/query.json")
-    qids_anthroponyms = get_qids("Anthroponyms/query.json")
+    qids_toponyms = get_qids("toponyms/query.json")
+    qids_anthroponyms = get_qids("anthroponyms/query.json")
 
     with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
