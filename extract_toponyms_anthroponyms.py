@@ -2,6 +2,11 @@ import gzip, json
 from typing import Dict, Optional
 
 '''
+To get the latest Wikidata dump:
+wget https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz -P /vol/bitbucket/at2225/
+'''
+
+'''
 SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
 Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
 P279* is to get subclasses recursively.
@@ -55,13 +60,13 @@ def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
 def main():
 
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids_toponyms = get_qids_for_toponyms("Toponyms/query.json")
-    qids_anthroponyms = get_qids_for_anthroponyms("Anthroponyms/query.json")
+    qids_toponyms = get_qids("Toponyms/query.json")
+    qids_anthroponyms = get_qids("Anthroponyms/query.json")
 
-    with gzip.open('/vol/bitbucket/latest-all.json.gz', 'rt') as dump:
+    with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
-        with gzip.open('toponyms.jsonl.gz', 'wt') as toponyms:
-            with gzip.open('anthroponyms.jsonl.gz', 'wt') as anthroponyms:
+        with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'wt') as toponyms:
+            with gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'wt') as anthroponyms:
 
                 for line in dump:
 
