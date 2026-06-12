@@ -24,28 +24,15 @@ P279* is to get subclasses recursively.
 The result of this query is saved in Anthroponyms/query.json.
 
 SELECT DISTINCT ?item ?type WHERE {
-  {?item wdt:P279* wd:Q1243157 . BIND("given name" AS ?type)}
+  {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
+  UNION {?item wdt:P279* wd:Q11879590 . BIND("female given name" AS ?type)}
   UNION {?item wdt:P279* wd:Q101352 . BIND("family name" AS ?type)}
 }
 '''
 
 # Returns the list of qids to be used to obtain toponyms from the dump based on the "instance of" field.
-def get_qids_for_toponyms() -> Dict[str,str]:
-    with open("Toponyms/query.json") as file:
-        items = json.load(file)
-        qids = {}
-        for item in items:
-            item_id = item['item'].split('/')[-1]
-            item_type = item['type']
-            if item_id in qids.keys():
-                qids[item_id].append(item_type)
-            else:
-                qids[item_id] = [item_type]
-        return qids
-
-# Returns the list of qids to be used to obtain anthroponyms from the dump based on the "instance of" field.
-def get_qids_for_anthroponyms() -> Dict[str,str]:
-    with open("Anthroponyms/query.json") as file:
+def get_qids(path: str) -> Dict[str,str]:
+    with open(path) as file:
         items = json.load(file)
         qids = {}
         for item in items:
@@ -68,8 +55,8 @@ def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
 def main():
 
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids_toponyms = get_qids_for_toponyms()
-    qids_anthroponyms = get_qids_for_anthroponyms()
+    qids_toponyms = get_qids_for_toponyms("Toponyms/query.json")
+    qids_anthroponyms = get_qids_for_anthroponyms("Anthroponyms/query.json")
 
     with gzip.open('/vol/bitbucket/latest-all.json.gz', 'rt') as dump:
 
@@ -120,7 +107,7 @@ def main():
                         entity = {
                             'id': line.get('id', None),
                             'type': type_,
-                            'line': line,
+                            'info': line,
                         }
 
                         toponyms.write(json.dumps(entity) + '\n')
@@ -131,7 +118,7 @@ def main():
                         entity = {
                             'id': line.get('id', None),
                             'type': type_,
-                            'line': line,
+                            'info': line,
                         }
                         
                         anthroponyms.write(json.dumps(entity) + '\n')
