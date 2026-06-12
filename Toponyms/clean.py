@@ -2,23 +2,6 @@ import gzip, json
 from typing import Dict, Optional
 
 '''
-SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
-Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
-P279* is to get subclasses recursively.
-Order matters due to the way get_gids() processes them.
-The result of this query is saved in query.json.
-
-SELECT DISTINCT ?item ?type WHERE {
-  {?item wdt:P279* wd:Q486972 . BIND("settlement" AS ?type)}
-  UNION {?item wdt:P279* wd:Q56061 . BIND("region" AS ?type)}
-  UNION {?item wdt:P279* wd:Q271669 . BIND("landform" AS ?type)}
-  UNION {?item wdt:P279* wd:Q15324 . BIND("body of water" AS ?type)}
-  UNION {?item wdt:P279* wd:Q23442 . BIND("island" AS ?type)}
-  UNION {?item wdt:P279* wd:Q6256 . BIND("country" AS ?type)}
-}
-'''
-
-'''
 SPARQL query to get countries and languages.
 The result of this query is not saved yet.
 
@@ -28,13 +11,6 @@ SELECT ?country ?lang WHERE {
   ?language wdt:P218 ?lang .
 }
 '''
-
-# Returns the list of qids to be used to obtain toponyms from the dump based on the "instance of" field.
-def get_qids() -> Dict[str,str]:
-    with open("query.json") as file:
-        items = json.load(file)
-        qids = {item['item'].split('/')[-1]: item['type'] for item in items}
-    return qids
 
 # Returns the list of values for a given property on an entity's claims.
 def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
@@ -46,17 +22,10 @@ def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
 
 def main():
 
-    # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids = get_qids()
-
-    with gzip.open('latest-all.json.gz', 'rt') as input:
+    with gzip.open('toponyms.jsonl.gz', 'rt') as input:
         with open('toponyms.json', 'w') as output:
 
             for line in input:
-
-                line = line.strip().rstrip(',')
-                if line in ('[', ']', ''):
-                    continue
 
                 line = json.loads(line)
 
