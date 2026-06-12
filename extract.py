@@ -49,14 +49,6 @@ def get_qids(path: str) -> Dict[str,str]:
                 qids[item_id] = [item_type]
         return qids
 
-# Returns the list of values for a given property on an entity's claims.
-def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
-    try:
-        result = [claim['mainsnak']['datavalue']['value']['id'] for claim in claims[pid]]
-        return result if result else None
-    except (KeyError, IndexError, TypeError):
-        return None
-
 def main():
 
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.

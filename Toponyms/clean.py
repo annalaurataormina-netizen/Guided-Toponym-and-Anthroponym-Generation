@@ -22,51 +22,29 @@ def get_clean_claims(claims: Dict, pid: str) -> Optional[list[str]]:
 
 def main():
 
-    with gzip.open('toponyms.jsonl.gz', 'rt') as input:
-        with open('toponyms.json', 'w') as output:
+    with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
+        with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
 
-            for line in input:
+            for entity in input:
 
-                line = json.loads(line)
+                '''
+                entity['name'] = ''
+                entity['country'] = ''
+                entity['region'] = ''
+                entity['language'] = ''
+                '''
 
-                # Get the list of claims for the entity.
-                claims = line.get('claims', {})
-                # Get the P31 ('instance of') claims.
-                p31 = claims.get('P31', [])
+                print(entity['info'].keys())
 
-                match = False
+                '''
+                    'country': get_clean_claims(claims, "P17"),
+                    'region': get_clean_claims(claims, "P131"),
+                    'language': get_clean_claims(claims, "P37"),
+                '''
 
-                # Go through 'instance of' claims.
-                for claim in p31:
+                output.write(json.dumps(entity) + '\n')
 
-                    try:
-                        # Check if entity is instance of any of the gids selected as toponyms.
-                        val = claim['mainsnak']['datavalue']['value']['id']
-                        if val in qids:
-                            match = True
-                            type_ = qids[val]
-                            break
-
-                    except (KeyError, TypeError):
-                        pass
-
-                # Entity is a toponym.
-                if match:
-                    entity = {
-                        'id': line.get('id', None),
-                        'name': line[''],
-                        'country': get_clean_claims(claims, "P17"),
-                        'region': get_clean_claims(claims, "P131"),
-                        'language': get_clean_claims(claims, "P37"),
-                        'type': type_
-                    }
-
-                    output.write(json.dumps(entity) + '\n')
+                break
 
 if __name__ == '__main__':
     main()
-
-'''
-Notes:
-- How to infer name? Ideally, should use the language of the place itself but seems messy.
-'''
