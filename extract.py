@@ -1,4 +1,5 @@
-import gzip, json
+import gzip
+import json
 from typing import Dict
 
 '''
@@ -6,55 +7,63 @@ To get the latest Wikidata dump:
 wget https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz -P /vol/bitbucket/at2225/
 '''
 
-'''
-SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
-Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
-P279* is to get subclasses recursively.
-Order matters due to the way get_gids() processes them.
-The result of this query is saved in toponyms/query.json.
+import requests
 
-SELECT DISTINCT ?item ?type WHERE {
-  {?item wdt:P279* wd:Q486972 . BIND("settlement" AS ?type)}
-  UNION {?item wdt:P279* wd:Q56061 . BIND("region" AS ?type)}
-  UNION {?item wdt:P279* wd:Q271669 . BIND("landform" AS ?type)}
-  UNION {?item wdt:P279* wd:Q15324 . BIND("body of water" AS ?type)}
-  UNION {?item wdt:P279* wd:Q23442 . BIND("island" AS ?type)}
-  UNION {?item wdt:P279* wd:Q6256 . BIND("country" AS ?type)}
-}
-'''
-
-'''
-SPARQL query to get all the subclasses of Q1243157 ('given name') and Q101352 ('family name').
-P279* is to get subclasses recursively.
-The result of this query is saved in anthroponyms/query.json.
-
-SELECT DISTINCT ?item ?type WHERE {
-  {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
-  UNION {?item wdt:P279* wd:Q11879590 . BIND("female given name" AS ?type)}
-  UNION {?item wdt:P279* wd:Q101352 . BIND("family name" AS ?type)}
-}
-'''
 
 # Returns the list of qids to be used to obtain anthroponyms or toponyms
 # from the dump based on the "instance of" field.
-def get_qids(path: str) -> Dict[str,str]:
-    with open(path) as file:
-        items = json.load(file)
-        qids = {}
-        for item in items:
-            item_id = item['item'].split('/')[-1]
-            item_type = item['type']
-            if item_id in qids.keys():
-                qids[item_id].append(item_type)
-            else:
-                qids[item_id] = [item_type]
-        return qids
+def get_qids(target: str) -> Dict[str, str]:
+    url = 'https://query.wikidata.org/sparql'
+
+    '''
+    SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
+    Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
+    P279* is to get subclasses recursively.
+    Order matters due to the way get_gids() processes them.
+    '''
+    if target == 'toponyms':
+        query = '''
+        SELECT DISTINCT ?item ?type WHERE {
+          {?item wdt:P279* wd:Q486972 . BIND("settlement" AS ?type)}
+          UNION {?item wdt:P279* wd:Q56061 . BIND("region" AS ?type)}
+          UNION {?item wdt:P279* wd:Q271669 . BIND("landform" AS ?type)}
+          UNION {?item wdt:P279* wd:Q15324 . BIND("body of water" AS ?type)}
+          UNION {?item wdt:P279* wd:Q23442 . BIND("island" AS ?type)}
+          UNION {?item wdt:P279* wd:Q6256 . BIND("country" AS ?type)}
+        }
+        '''
+
+    '''
+    SPARQL query to get all the subclasses of Q1243157 ('given name') and Q101352 ('family name').
+    P279* is to get subclasses recursively.
+    '''
+    if target == 'anthroponyms':
+        query = '''
+        SELECT DISTINCT ?item ?type WHERE {
+          {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
+          UNION {?item wdt:P279* wd:Q11879590 . BIND("female given name" AS ?type)}
+          UNION {?item wdt:P279* wd:Q101352 . BIND("family name" AS ?type)}
+        }
+        '''
+
+    r = requests.get(url, params={'format': 'json', 'query': query})
+    data = r.json()['results']['bindings']
+
+    qids = {}
+    for item in data:
+        item_id = item['item']['value'].split('/')[-1]
+        item_type = item['type']['value']
+        if item_id in qids.keys():
+            qids[item_id].append(item_type)
+        else:
+            qids[item_id] = [item_type]
+    return qids
+
 
 def main():
-
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids_toponyms = get_qids("toponyms/query.json")
-    qids_anthroponyms = get_qids("anthroponyms/query.json")
+    qids_toponyms = get_qids('toponyms')
+    qids_anthroponyms = get_qids('anthroponyms')
 
     with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
@@ -101,10 +110,12 @@ def main():
 
                     # Entity is a toponym.
                     if toponym:
-
                         entity = {
+                            # The value is a string containing the ID.
                             'id': line.get('id', None),
+                            # The value is a list of unique types.
                             'type': type_,
+                            # The value is all the information as pulled from WikiData for that item.
                             'info': line,
                         }
 
@@ -112,14 +123,14 @@ def main():
 
                     # Entity is an anthroponym.
                     if anthroponym:
-
                         entity = {
                             'id': line.get('id', None),
                             'type': type_,
                             'info': line,
                         }
-                        
+
                         anthroponyms.write(json.dumps(entity) + '\n')
+
 
 if __name__ == '__main__':
     main()
