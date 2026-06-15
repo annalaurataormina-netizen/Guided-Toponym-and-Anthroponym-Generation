@@ -1,9 +1,9 @@
-import gzip, json
+import gzip
+import json
 import random
 
 
 def main():
-
     ids = []
     types = {}
 
@@ -24,6 +24,7 @@ def main():
     print('# missing name: ', len(ids))
     print('First 100 IDs (shuffled list): ', random.sample(ids, 100))
     print('breakdown by type: ', types)
+
 
 if __name__ == '__main__':
     main()

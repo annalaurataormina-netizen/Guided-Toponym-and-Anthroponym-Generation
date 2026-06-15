@@ -2,62 +2,13 @@ import gzip
 import json
 import os
 import sys
-from typing import Optional, Dict, List
 
 from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_monolingual_claims, get_claims
-
-import requests
-
-
-def get_country_languages() -> Dict[str, List[str]]:
-    url = 'https://query.wikidata.org/sparql'
-
-    '''
-    SPARQL query to get countries and languages.
-    '''
-    query = '''
-    SELECT ?country ?lang WHERE {
-      ?country wdt:P31 wd:Q6256 .
-      ?country wdt:P37 ?language .
-      ?language wdt:P218 ?lang .
-    }
-    '''
-    headers = {'User-Agent': 'YourProjectName/1.0 (your-email@imperial.ac.uk)'}
-    r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
-    data = r.json()
-
-    country_languages = {}
-
-    for item in data['results']['bindings']:
-
-        country = item['country']['value'].split('/')[-1]
-        lang = item['lang']['value']
-
-        if country in country_languages.keys():
-            country_languages[country].append(lang)
-
-        else:
-            country_languages[country] = [lang]
-
-        if 'Q128' not in country_languages.keys():
-            country_languages['Q128'] = 'zh'
-
-    return country_languages
-
+from utils import get_monolingual_claims, get_claims, get_country_languages, get_languages
 
 COUNTRY_LANGUAGES = get_country_languages()
-
-
-def get_languages(countries: list) -> Optional[List[str]]:
-    if not countries:
-        return None
-    languages = []
-    for country in countries:
-        languages.extend(COUNTRY_LANGUAGES.get(country, []))
-    return list(set(languages)) if languages else None
 
 
 def main():
@@ -86,7 +37,7 @@ def main():
 
                 # P1705 is missing for virtually all toponyms. If missing, resort to labels.
                 if entity['name'] is None:
-                    languages = get_languages(entity['country'])
+                    languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
                     labels = entity['info'].get('labels', None)
                     entity['name'] = (
                         {Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
