@@ -1,5 +1,6 @@
 import gzip, json
-from langcodes import Language
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_monolingual_claims, get_claims
 
 def main():
