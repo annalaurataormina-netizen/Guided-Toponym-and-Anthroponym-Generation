@@ -63,8 +63,8 @@ def get_qids(target: str) -> Dict[str, str]:
 
 def main():
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    # qids_toponyms = get_qids('toponyms')
-    # qids_anthroponyms = get_qids('anthroponyms')
+    qids_toponyms = get_qids('toponyms')
+    qids_anthroponyms = get_qids('anthroponyms')
 
     with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
@@ -97,7 +97,6 @@ def main():
                             try:
                                 val = claim['mainsnak']['datavalue']['value']['id']
 
-                                '''
                                 if val in qids_toponyms and anthroponym is False and human is False:
                                     toponym = True
                                     type_.extend(qids_toponyms[val])
@@ -107,7 +106,6 @@ def main():
                                     anthroponym = True
                                     type_.extend(qids_anthroponyms[val])
                                     type_ = list(set(type_))
-                                '''
 
                                 if val == 'Q5' and toponym is False and anthroponym is False:
                                     human = True
@@ -117,7 +115,6 @@ def main():
                             except (KeyError, TypeError):
                                 pass
 
-                        '''
                         # Entity is a toponym.
                         if toponym:
                             entity = {
@@ -140,7 +137,6 @@ def main():
                             }
     
                             anthroponyms.write(json.dumps(entity) + '\n')
-                        '''
 
                         # Entity is a human.
                         if human:
