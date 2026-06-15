@@ -25,8 +25,8 @@ def get_country_languages() -> Dict[str, List[str]]:
       ?language wdt:P218 ?lang .
     }
     '''
-
-    r = requests.get(url, params={'format': 'json', 'query': query})
+    headers = {'User-Agent': 'YourProjectName/1.0 (your-email@imperial.ac.uk)'}
+    r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()
 
     country_languages = {}
