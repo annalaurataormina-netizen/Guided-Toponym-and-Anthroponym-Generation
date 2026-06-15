@@ -39,8 +39,8 @@ def main():
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
 
                 entity['country'] = get_claims(entity['info']['claims'], 'P17')
-                entity['name'] = {{Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
-                                   native_labels.items()} if native_labels else None}
+                entity['name'] = ({Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
+                                   native_labels.items()} if native_labels else None)
 
                 if entity['id'] == None:
                     missing_id_counter += 1

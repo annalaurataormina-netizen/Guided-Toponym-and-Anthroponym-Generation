@@ -13,7 +13,7 @@ def get_claims(claims: Dict, pid: str) -> Optional[list[str]]:
 # Returns the list of values for a given property among entity's monolingual claims.
 def get_monolingual_claims(claims: Dict, pid: str) -> Optional[list[str]]:
     try:
-        result = {claim['m\ainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text']
+        result = {claim['mainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text']
                   for claim in claims[pid]}
         return result if result else None
     except (KeyError, IndexError, TypeError):
