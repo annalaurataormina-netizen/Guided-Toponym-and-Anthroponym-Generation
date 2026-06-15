@@ -1,5 +1,6 @@
 import gzip, json
-from typing import Dict, Optional
+from langcodes import Language
+from utils import get_monolingual_claims, get_claims
 
 '''
 SPARQL query to get countries and languages.
@@ -12,42 +13,36 @@ SELECT ?country ?lang WHERE {
 }
 '''
 
-# Returns the list of values for a given property on an entity's claims.
-def get_claims(claims: Dict, pid: str) -> Optional[list[str]]:
-	try:
-		result = [claim['mainsnak']['datavalue']['value']['id'] for claim in claims[pid]]
-		return result if result else None
-	except (KeyError, IndexError, TypeError):
-		return None
-
-# Returns the list of values for a given property on an entity's claims.
-def get_monolingual_claims(claims: Dict, pid: str) -> Optional[list[str]]:
-	try:
-		result = {claim['mainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text'] for claim in claims[pid]}
-		return result if result else None
-	except (KeyError, IndexError, TypeError):
-		return None
-
 def main():
+
+	counter = 0
 
 	with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
 		with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
 
 			for line in input:
 
+				counter += 1
+
+				if counter > 1000:
+					return
+
 				entity = json.loads(line)
 
-				entity['name'] = get_monolingual_claims(entity['info']['claims'], 'P1705')
+				native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
+
 				entity['country'] = get_claims(entity['info']['claims'], 'P17')
+				entity['name'] = {Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
+								  native_labels.items()}
 
 				#print(entity.keys())
 				#print(entity['info'].keys())
 				#print(entity['info']['claims'].keys())
 
-				print(entity['id'])
-				print(entity['type'])
-				print(entity['name'])
-				print(entity['country'])
+				#print(entity['id'])
+				#print(entity['type'])
+				#print(entity['name'])
+				#print(entity['country'])
 
 				output.write(json.dumps(entity) + '\n')
 

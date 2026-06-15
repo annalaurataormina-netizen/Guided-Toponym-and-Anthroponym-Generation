@@ -1,21 +1,6 @@
 import gzip, json
-from typing import Dict, Optional
-
-# Returns the list of values for a given property on an entity's claims.
-def get_claims(claims: Dict, pid: str) -> Optional[list[str]]:
-	try:
-		result = [claim['mainsnak']['datavalue']['value']['id'] for claim in claims[pid]]
-		return result if result else None
-	except (KeyError, IndexError, TypeError):
-		return None
-
-# Returns the list of values for a given property on an entity's claims.
-def get_monolingual_claims(claims: Dict, pid: str) -> Optional[list[str]]:
-	try:
-		result = {claim['mainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text'] for claim in claims[pid]}
-		return result if result else None
-	except (KeyError, IndexError, TypeError):
-		return None
+from langcodes import Language
+from utils import get_monolingual_claims, get_claims
 
 def main():
 
@@ -26,17 +11,20 @@ def main():
 
 				entity = json.loads(line)
 
-				entity['name'] = get_monolingual_claims(entity['info']['claims'], 'P1705')
-				entity['country'] = get_claims(entity['info']['claims'], 'P17')
+                #entity['name'] = get_monolingual_claims(entity['claims'], 'P17')
+				#entity['language'] = get_monolingual_claims(entity['info']['claims'], 'P1705')
 
 				#print(entity.keys())
 				#print(entity['info'].keys())
 				#print(entity['info']['claims'].keys())
+                #print(entity['info']['claims']['P407'])
 
-				print(entity['id'])
-				print(entity['type'])
-				print(entity['name'])
-				print(entity['country'])
+                #print(entity['id'])
+				#print(entity['type'])
+				#print(entity['name'])
+				#print(entity['country'])
+
+                #break
 
 				output.write(json.dumps(entity) + '\n')
 

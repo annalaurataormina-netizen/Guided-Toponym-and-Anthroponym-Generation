@@ -35,7 +35,8 @@ SELECT DISTINCT ?item ?type WHERE {
 }
 '''
 
-# Returns the list of qids to be used to obtain toponyms from the dump based on the "instance of" field.
+# Returns the list of qids to be used to obtain anthroponyms or toponyms
+# from the dump based on the "instance of" field.
 def get_qids(path: str) -> Dict[str,str]:
     with open(path) as file:
         items = json.load(file)
