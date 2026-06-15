@@ -27,11 +27,11 @@ def get_country_languages() -> Dict[str, List[str]]:
     '''
 
     r = requests.get(url, params={'format': 'json', 'query': query})
-    data = r.json()['results']['bindings']
+    data = r.json()
 
     country_languages = {}
 
-    for item in data:
+    for item in data['results']['bindings']:
 
         country = item['country']['value'].split('/')[-1]
         lang = item['lang']['value']
