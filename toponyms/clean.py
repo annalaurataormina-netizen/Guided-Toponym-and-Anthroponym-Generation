@@ -17,15 +17,16 @@ def main():
 
 	counter = 0
 
+	missing_id_counter = 0
+	missing_name_counter = 0
+	missing_country_counter = 0
+
 	with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
 		with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
 
 			for line in input:
 
 				counter += 1
-
-				if counter > 1000:
-					return
 
 				entity = json.loads(line)
 
@@ -34,6 +35,15 @@ def main():
 				entity['country'] = get_claims(entity['info']['claims'], 'P17')
 				entity['name'] = {Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
 								  native_labels.items()}
+
+				if entity['id'] == None:
+					missing_id_counter += 1
+
+				if entity['name'] == None:
+					missing_name_counter += 1
+
+				if entity['country'] == None:
+					missing_country_counter += 1
 
 				#print(entity.keys())
 				#print(entity['info'].keys())
@@ -45,6 +55,11 @@ def main():
 				#print(entity['country'])
 
 				output.write(json.dumps(entity) + '\n')
+
+	print('# of items: ', counter)
+	print('# of items missing ID: ', missing_id_counter)
+	print('# of items missing name: ', missing_name_counter)
+	print('# of items missing country: ', missing_country_counter)
 
 if __name__ == '__main__':
     main()
