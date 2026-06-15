@@ -1,5 +1,5 @@
 import gzip, json
-from typing import Dict, Optional
+from typing import Dict
 
 '''
 To get the latest Wikidata dump:
