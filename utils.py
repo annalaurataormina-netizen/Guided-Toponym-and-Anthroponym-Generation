@@ -1,6 +1,6 @@
 import gzip
 import json
-from typing import Dict, Optional, List
+from typing import Dict, List
 
 import requests
 
@@ -126,7 +126,7 @@ def get_country_languages() -> Dict[str, List[str]]:
 # Based on a mapping, returns a list of unique languages for a list of countries.
 def get_languages(mapping: dict, countries: list) -> List[str]:
     if not countries:
-        return None
+        return []
     languages = []
     for country in countries:
         languages.extend(mapping.get(country, []))
