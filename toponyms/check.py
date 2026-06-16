@@ -31,6 +31,7 @@ def main():
     print('# missing name: ', len(ids))
     print('First 100 IDs (shuffled list): ', random.sample(ids, 100))
     print('breakdown by type: ', types)
+    print('breakdown by country: ', countries)
 
 
 if __name__ == '__main__':
