@@ -32,25 +32,24 @@ def main():
                 # The value is a list of IDs for the countries.
                 entity['country'] = get_claims(entity['info']['claims'], 'P17')
                 # The value is a dictionary where each entry is of this type: "Italian": {'name': 'Anna Laura', 'code': 'it'}.
-                entity['name'] = ({Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
-                                   native_labels.items()} if native_labels else None)
+                entity['name'] = {Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
+                                  native_labels.items()}
 
                 # P1705 is missing for virtually all toponyms. If missing, resort to labels.
-                if entity['name'] is None:
+                if not entity['name']:
                     languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
                     labels = entity['info'].get('labels', None)
-                    entity['name'] = (
-                        {Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
-                         for lang in
-                         languages if labels and labels.get(lang, None) is not None} if languages else None)
+                    entity['name'] = {
+                        Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
+                        for lang in languages if labels and labels.get(lang, None) is not None}
 
                 if entity['id'] is None:
                     missing_id_counter += 1
 
-                if entity['name'] is None:
+                if not entity['name']:
                     missing_name_counter += 1
 
-                if entity['country'] is None:
+                if not entity['country']:
                     missing_country_counter += 1
 
                 # print(entity.keys())

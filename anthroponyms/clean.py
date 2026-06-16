@@ -6,7 +6,7 @@ import sys
 from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_claims, get_monolingual_claims, get_place_country
+from utils import get_claims, get_monolingual_claims, get_time_claims, get_place_country
 
 PLACE_COUNTRY = get_place_country()
 
@@ -17,6 +17,7 @@ def main():
 
     missing_id_counter = 0
     missing_name_counter = 0
+    missing_occurrences_counter = 0
 
     with gzip.open('/vol/bitbucket/at2225/humans.jsonl.gz', 'rt') as humans:
 
@@ -36,10 +37,14 @@ def main():
             family_names = get_claims(entity['info']['claims'], 'P734')
 
             # Gender
-            gender = get_claims(entity['info']['claims'], 'P21')[0]
+            genders = get_claims(entity['info']['claims'], 'P21')
+            if genders:
+                gender = genders[0]
+            else:
+                gender = None
 
             # Date of birth
-            dates_of_birth = get_claims(entity['info']['claims'], 'P569')
+            dates_of_birth = get_time_claims(entity['info']['claims'], 'P569')
             if dates_of_birth:
                 year_of_birth = int(dates_of_birth[0][1:5])
             else:
@@ -57,7 +62,7 @@ def main():
 
                 if given_name not in given_names_occurrences:
                     given_names_occurrences[given_name] = {
-                        'occurrences': 0,
+                        'count': 0,
                         'country_of_birth': {},
                         'year_of_birth': {},
                         'gender': {}
@@ -65,15 +70,16 @@ def main():
 
                 entry = given_names_occurrences[given_name]
 
-                entry['occurrences'] += 1
+                entry['id'] = given_name
+                entry['count'] += 1
+                entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
-                entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
 
             for family_name in family_names:
                 if family_name not in family_names_occurrences:
                     family_names_occurrences[family_name] = {
-                        'occurrences': 0,
+                        'count': 0,
                         'country_of_birth': {},
                         'year_of_birth': {},
                         'gender': {}
@@ -81,12 +87,24 @@ def main():
 
                 entry = family_names_occurrences[family_name]
 
-                entry['occurrences'] += 1
+                entry['id'] = family_name
+                entry['count'] += 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
 
     print('# of humans: ', counter_humans)
+
+    with gzip.open('/vol/bitbucket/at2225/anthroponyms_humans_cleaned.jsonl.gz', 'wt') as output:
+
+        for entry in given_names_occurrences.values():
+            output.write(json.dumps(entry) + '\n')
+
+        for entry in family_names_occurrences.values():
+            output.write(json.dumps(entry) + '\n')
+
+    print('''# of humans' given names: ''', len(given_names_occurrences))
+    print('''# of humans' family names: ''', len(family_names_occurrences))
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'rt') as anthroponyms:
         with gzip.open('/vol/bitbucket/at2225/anthroponyms_cleaned.jsonl.gz', 'wt') as output:
@@ -99,14 +117,23 @@ def main():
 
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
 
-                entity['name'] = ({Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
-                                   native_labels.items()} if native_labels else None)
+                if 'family name' in entity['type']:
+                    entity['occurrences'] = family_names_occurrences.get(entity['id'], {})
 
-                if entity['id'] is None:
+                elif 'male given name' in entity['type'] or 'female given name' in entity['type']:
+                    entity['occurrences'] = given_names_occurrences.get(entity['id'], {})
+
+                entity['name'] = {Language.get(lang).language_name(): {'name': name, 'code': lang} for lang, name in
+                                   native_labels.items()}
+
+                if not entity['id']:
                     missing_id_counter += 1
 
-                if entity['name'] is None:
+                if not entity['name']:
                     missing_name_counter += 1
+
+                if entity['occurrences']['count'] == 0 or not entity['occurrences']:
+                    missing_occurrences_counter += 1
 
                 # print(entity.keys())
                 # print(entity['info'].keys())
@@ -122,6 +149,7 @@ def main():
     print('# of anthroponyms: ', counter_anthroponyms)
     print('# of anthroponyms missing ID: ', missing_id_counter)
     print('# of anthroponyms missing name: ', missing_name_counter)
+    print('# of anthroponyms missing occurrences: ', missing_occurrences_counter)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,6 @@ wget https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz -P /vo
 
 
 def main():
-
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
     qids_toponyms = get_qids('toponyms')
     qids_anthroponyms = get_qids('anthroponyms')
@@ -49,12 +48,10 @@ def main():
                                 if val in qids_toponyms and anthroponym is False and human is False:
                                     toponym = True
                                     type_.extend(qids_toponyms[val])
-                                    type_ = list(set(type_))
 
                                 if val in qids_anthroponyms and toponym is False and human is False:
                                     anthroponym = True
                                     type_.extend(qids_anthroponyms[val])
-                                    type_ = list(set(type_))
 
                                 if val == 'Q5' and toponym is False and anthroponym is False:
                                     human = True
@@ -63,6 +60,8 @@ def main():
 
                             except (KeyError, TypeError):
                                 pass
+
+                        type_ = list(set(type_))
 
                         # Entity is a toponym.
                         if toponym:

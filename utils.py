@@ -41,7 +41,8 @@ def get_qids(target: str) -> Dict[str, str]:
         }
         '''
 
-    r = requests.get(url, params={'format': 'json', 'query': query})
+    headers = {'User-Agent': 'Guided-Toponym-and-Anthroponym-Generation/1.0 (anna.taormina25@imperial.ac.uk)'}
+    r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()['results']['bindings']
 
     qids = {}
@@ -56,22 +57,31 @@ def get_qids(target: str) -> Dict[str, str]:
 
 
 # Returns the list of values for a given property among entity's claims.
-def get_claims(claims: Dict, pid: str) -> Optional[list[str]]:
+def get_claims(claims: Dict, pid: str) -> list[str]:
     try:
         result = [claim['mainsnak']['datavalue']['value']['id'] for claim in claims[pid]]
-        return result if result else None
+        return result if result else []
     except (KeyError, IndexError, TypeError):
-        return None
+        return []
 
 
 # Returns the list of values for a given property among entity's monolingual claims.
-def get_monolingual_claims(claims: Dict, pid: str) -> Optional[list[str]]:
+def get_monolingual_claims(claims: Dict, pid: str) -> Dict[str, str]:
     try:
         result = {claim['mainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text']
                   for claim in claims[pid]}
-        return result if result else None
+        return result if result else {}
     except (KeyError, IndexError, TypeError):
-        return None
+        return {}
+
+
+# Returns the list of values for a given property among entity's time claims.
+def get_time_claims(claims: Dict, pid: str) -> list[str]:
+    try:
+        result = [claim['mainsnak']['datavalue']['value']['time'] for claim in claims[pid]]
+        return result if result else []
+    except (KeyError, IndexError, TypeError):
+        return []
 
 
 # Returns a dictionary where the key is a country (ID) and the value is a list of official languages (ISO codes).
@@ -88,7 +98,7 @@ def get_country_languages() -> Dict[str, List[str]]:
       ?language wdt:P218 ?lang .
     }
     '''
-    headers = {'User-Agent': 'YourProjectName/1.0 (anna.taormina25@imperial.ac.uk)'}
+    headers = {'User-Agent': 'Guided-Toponym-and-Anthroponym-Generation/1.0 (anna.taormina25@imperial.ac.uk)'}
     r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()
 
@@ -112,13 +122,13 @@ def get_country_languages() -> Dict[str, List[str]]:
 
 
 # Based on a mapping, returns a list of unique languages for a list of countries.
-def get_languages(mapping: dict, countries: list) -> Optional[List[str]]:
+def get_languages(mapping: dict, countries: list) -> List[str]:
     if not countries:
         return None
     languages = []
     for country in countries:
         languages.extend(mapping.get(country, []))
-    return list(set(languages)) if languages else None
+    return list(set(languages)) if languages else []
 
 
 # Returns a dictionary mapping each place (ID) to a country (ID)
