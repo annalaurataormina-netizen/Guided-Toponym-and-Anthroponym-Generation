@@ -38,10 +38,20 @@ def main():
                 # P1705 is missing for virtually all toponyms. If missing, resort to labels.
                 if not entity['name']:
                     languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
+                    # DEBUG
+                    if entity['id'] == 'Q13993518':
+                        print(languages)
                     labels = entity['info'].get('labels', None)
+                    # DEBUG
+                    if entity['id'] == 'Q13993518':
+                        print(labels)
                     entity['name'] = {
                         Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
                         for lang in languages if labels and labels.get(lang, {})}
+                    # DEBUG
+                    if entity['id'] == 'Q13993518':
+                        print(entity['name'])
+
 
                 if entity['id'] is None:
                     missing_id_counter += 1
@@ -70,4 +80,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    print(COUNTRY_LANGUAGES)
