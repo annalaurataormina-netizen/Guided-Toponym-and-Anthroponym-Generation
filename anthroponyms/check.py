@@ -13,7 +13,7 @@ def main():
 
             entity = json.loads(line)
 
-            if entity.get('name') is None:
+            if not entity.get('name'):
                 ids.append(entity.get('id'))
                 for type in entity.get('type'):
                     if type in types.keys():

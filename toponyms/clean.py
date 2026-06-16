@@ -41,7 +41,7 @@ def main():
                     labels = entity['info'].get('labels', None)
                     entity['name'] = {
                         Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
-                        for lang in languages if labels and labels.get(lang, None) is not None}
+                        for lang in languages if labels and labels.get(lang, {})}
 
                 if entity['id'] is None:
                     missing_id_counter += 1
