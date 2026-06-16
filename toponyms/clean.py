@@ -27,6 +27,9 @@ def main():
 
                 entity = json.loads(line)
 
+                if 'P576' in entity['info']['claims']:
+                    continue
+
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
 
                 # The value is a list of IDs for the countries.
@@ -38,20 +41,10 @@ def main():
                 # P1705 is missing for virtually all toponyms. If missing, resort to labels.
                 if not entity['name']:
                     languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
-                    # DEBUG
-                    if entity['id'] == 'Q13993518':
-                        print(languages)
                     labels = entity['info'].get('labels', None)
-                    # DEBUG
-                    if entity['id'] == 'Q13993518':
-                        print(labels)
                     entity['name'] = {
                         Language.get(lang).language_name(): {'name': labels.get(lang, {}).get('value'), 'code': lang}
                         for lang in languages if labels and labels.get(lang, {})}
-                    # DEBUG
-                    if entity['id'] == 'Q13993518':
-                        print(entity['name'])
-
 
                 if entity['id'] is None:
                     missing_id_counter += 1

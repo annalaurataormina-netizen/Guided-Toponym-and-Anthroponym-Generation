@@ -115,10 +115,22 @@ def get_country_languages() -> Dict[str, List[str]]:
         else:
             country_languages[country] = [lang]
 
+    # China
     if 'Q148' not in country_languages.keys():
         country_languages['Q148'] = ['zh']
     elif 'zh' not in country_languages['Q148']:
         country_languages['Q148'].append('zh')
+
+    # US
+    country_languages['Q30'] = ['en']
+
+    # Vatican
+    country_languages['Q237'] = ['it']
+
+    # Georgia
+    if country_languages.get('Q230', []):
+        country_languages['Q230'].append('kat')
+    country_languages['Q230'] = list(set(country_languages['Q230']))
 
     return country_languages
 
