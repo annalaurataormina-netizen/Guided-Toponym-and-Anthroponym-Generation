@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/anthroponyms/clean.py", line 156, in <module>
-    main()
-  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/anthroponyms/clean.py", line 76, in main
-    entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: unhashable type: 'list'
