@@ -144,6 +144,6 @@ def get_place_country() -> Dict[str, str]:
             id = entity.get('id', None)
             country = entity.get('country', None)
 
-            mapping[id] = country
+            mapping[id] = country[0] if country else None
 
     return mapping
