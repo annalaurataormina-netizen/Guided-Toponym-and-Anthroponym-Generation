@@ -45,14 +45,17 @@ def main():
                             try:
                                 val = claim['mainsnak']['datavalue']['value']['id']
 
+                                # Entity is an instance of 'toponym'.
                                 if val in qids_toponyms and anthroponym is False and human is False:
                                     toponym = True
                                     type_.extend(qids_toponyms[val])
 
+                                # Entity is an instance of 'anthroponym'.
                                 if val in qids_anthroponyms and toponym is False and human is False:
                                     anthroponym = True
                                     type_.extend(qids_anthroponyms[val])
 
+                                # Entity is an instance of 'human'.
                                 if val == 'Q5' and toponym is False and anthroponym is False:
                                     human = True
                                     type_ = ['human']
@@ -61,39 +64,29 @@ def main():
                             except (KeyError, TypeError):
                                 pass
 
+                        # Make type_ a list of unique items.
                         type_ = list(set(type_))
+
+                        # Each entity is a dictionary.
+                        entity = {
+                            # ID, like 'Q38'.
+                            'id': line.get('id', None),
+                            # List of unique types, like ['human'].
+                            'type': type_,
+                            # All the information, as pulled from WikiData, for that entity.
+                            'info': line,
+                        }
 
                         # Entity is a toponym.
                         if toponym:
-                            entity = {
-                                # The value is a string containing the ID.
-                                'id': line.get('id', None),
-                                # The value is a list of unique types.
-                                'type': type_,
-                                # The value is all the information as pulled from WikiData for that item.
-                                'info': line,
-                            }
-
                             toponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is an anthroponym.
                         if anthroponym:
-                            entity = {
-                                'id': line.get('id', None),
-                                'type': type_,
-                                'info': line,
-                            }
-
                             anthroponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is a human.
                         if human:
-                            entity = {
-                                'id': line.get('id', None),
-                                'type': type_,
-                                'info': line,
-                            }
-
                             humans.write(json.dumps(entity) + '\n')
 
 

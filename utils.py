@@ -5,7 +5,7 @@ from typing import Dict, List
 import requests
 
 
-# Returns the list of qids to be used to obtain anthroponyms or toponyms
+# Returns the list of qids to be used to filter anthroponyms or toponyms
 # from the dump based on the "instance of" field.
 def get_qids(target: str) -> Dict[str, str]:
     url = 'https://query.wikidata.org/sparql'
@@ -65,7 +65,8 @@ def get_claims(claims: Dict, pid: str) -> list[str]:
         return []
 
 
-# Returns the list of values for a given property among entity's monolingual claims.
+# Returns a dictionary for a given property among entity's monolingual claims.
+# Can be used to extract native labels when called with claims = entity['info']['claims'] and pid = 'P1705'.
 def get_monolingual_claims(claims: Dict, pid: str) -> Dict[str, str]:
     try:
         result = {claim['mainsnak']['datavalue']['value']['language']: claim['mainsnak']['datavalue']['value']['text']
@@ -76,6 +77,7 @@ def get_monolingual_claims(claims: Dict, pid: str) -> Dict[str, str]:
 
 
 # Returns the list of values for a given property among entity's time claims.
+# Can be used on humans to extract their date of birth.
 def get_time_claims(claims: Dict, pid: str) -> list[str]:
     try:
         result = [claim['mainsnak']['datavalue']['value']['time'] for claim in claims[pid]]
@@ -84,7 +86,7 @@ def get_time_claims(claims: Dict, pid: str) -> list[str]:
         return []
 
 
-# Returns a dictionary where the key is a country (ID) and the value is a list of official languages (ISO codes).
+# Returns a dictionary where the key is a country (ID) and the value is a list of languages (ISO codes).
 def get_country_languages() -> Dict[str, List[str]]:
     url = 'https://query.wikidata.org/sparql'
 
@@ -150,13 +152,6 @@ def get_country_languages() -> Dict[str, List[str]]:
     else:
         country_languages['Q974'] = ['fr', 'sw', 'ln', 'kg', 'lua']
 
-    # Georgia
-    if country_languages.get('Q230', []):
-        country_languages['Q230'].append('kat')
-        country_languages['Q230'] = list(set(country_languages['Q230']))
-    else:
-        country_languages['Q230'] = ['kat']
-
     # Burkina Faso
     country_languages['Q965'] = ['fr', 'mos', 'dyu', 'ful']
 
@@ -179,7 +174,7 @@ def get_languages(mapping: dict, countries: list) -> List[str]:
     return list(set(languages)) if languages else []
 
 
-# Returns a dictionary mapping each place (ID) to a country (ID)
+# Returns a dictionary mapping each place (ID) to a country (ID).
 def get_place_country() -> Dict[str, str]:
     with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'rt') as input:
         mapping = {}
