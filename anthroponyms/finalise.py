@@ -6,6 +6,7 @@ from icu import Transliterator
 
 from clean import OCCURRENCE_THRESHOLD
 
+
 def main():
     transliterator = Transliterator.createInstance("Any-Latin")
     counter = 0
@@ -48,7 +49,8 @@ def main():
                         'id': entity['id'],
                         'type': entity['type'],
                         # This should also cover the native labels, but it's not guaranteed.
-                        'country': [country for country in entity['occurrences']['country'].keys() if entity['occurrences']['country'][country] >= OCCURRENCE_THRESHOLD],
+                        'country': [country for country in entity['occurrences']['country_of_birth'].keys() if
+                                    entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD],
                     }
 
                     output.write(json.dumps(anthroponym) + '\n')
@@ -63,7 +65,7 @@ def main():
                     breakdown_by_length[len(name['name'])] += 1
                     breakdown_by_length_romanised[len(name_romanised)] += 1
 
-                    for country in entity['country']:
+                    for country in anthroponym['country']:
                         breakdown_by_country.update([country])
 
                         length_by_country[country][len(name['name'])] += 1

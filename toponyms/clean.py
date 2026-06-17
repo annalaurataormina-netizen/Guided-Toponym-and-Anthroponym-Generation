@@ -28,8 +28,6 @@ def main():
 
                 entity = json.loads(line)
 
-                historical_entity = False
-
                 # 'P576' signals a dissolved, abolished or demolished date.
                 if 'P576' in entity['info']['claims']:
                     continue
@@ -43,9 +41,11 @@ def main():
 
                 # Exclude historical country, historical region, historical Chinese state.
                 claims = get_claims(entity['info']['claims'], 'P31')
-                if any(claim in ('Q1620908', 'Q3024240', 'Q50068795') for claim in claims):
-                    historical_entity = True
+                print(claims)
+                if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims:
                     continue
+
+                break
 
                 # As a first step, use native labels.
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
