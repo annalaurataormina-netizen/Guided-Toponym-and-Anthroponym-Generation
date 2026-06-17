@@ -140,7 +140,8 @@ def get_country_languages() -> Dict[str, List[str]]:
     country_languages['Q408'] = ['en']
 
     # India
-    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te', 'ur']
+    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te',
+                                 'ur']
 
     # Congo
     if country_languages.get('Q974', []):

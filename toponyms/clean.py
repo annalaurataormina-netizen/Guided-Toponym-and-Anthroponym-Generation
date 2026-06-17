@@ -42,13 +42,9 @@ def main():
                     continue
 
                 # Exclude historical country, historical region, historical Chinese state.
-                claims = entity.get('info', {}).get('claims', {}).get('P31', [])
-                for claim in claims.keys():
-                    if claim == 'Q1620908' or claim == 'Q3024240' or claim == 'Q50068795':
-                        historical_entity = True
-                        break
-
-                if historical_entity:
+                claims = get_claims(entity['info']['claims'], 'P31')
+                if any(claim in ('Q1620908', 'Q3024240', 'Q50068795') for claim in claims):
+                    historical_entity = True
                     continue
 
                 # As a first step, use native labels.

@@ -161,12 +161,12 @@ def main():
                 # Get list of languages spoken in the countries where the name occurs.
                 languages = get_languages(COUNTRY_LANGUAGES, countries)
 
-                if not entity['name']:
-                    entity['name'] = {
-                        Language.get(language).language_name(): {'name': labels[language]['value'], 'code': language,
-                                                                 'language': Language.get(
-                                                                     language).language_name()}
-                        for language in labels if language in languages}
+                # Expand the list of names with languages from the countries where the name occurs more than the threshold.
+                entity['name'] = {
+                    Language.get(language).language_name(): {'name': labels[language]['value'], 'code': language,
+                                                             'language': Language.get(
+                                                                 language).language_name()}
+                    for language in labels if language in languages and language not in entity['name']}
 
                 if not entity['id']:
                     missing_id_counter += 1

@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 
 from icu import Transliterator
 
+from clean import OCCURRENCE_THRESHOLD
 
 def main():
     transliterator = Transliterator.createInstance("Any-Latin")
@@ -39,7 +40,6 @@ def main():
                     # Get the romanised version of the name.
                     name_romanised = transliterator.transliterate(name['name'])
 
-                    # CONTINUE FROM HERE
                     anthroponym = {
                         'name_romanised': name_romanised,
                         'name': name['name'],
@@ -47,7 +47,8 @@ def main():
                         'language_code': name['code'],
                         'id': entity['id'],
                         'type': entity['type'],
-                        'country': [country for country in entity['occurrences']['country'].ke,
+                        # This should also cover the native labels, but it's not guaranteed.
+                        'country': [country for country in entity['occurrences']['country'].keys() if entity['occurrences']['country'][country] >= OCCURRENCE_THRESHOLD],
                     }
 
                     output.write(json.dumps(anthroponym) + '\n')
