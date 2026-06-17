@@ -119,11 +119,14 @@ def main():
 
                 output.write(json.dumps(entity) + '\n')
 
+    missing_language = list(set(missing_language))
+
     print('# of items: ', counter)
     print('# of items missing ID: ', missing_id_counter)
     print('# of items missing name: ', missing_name_counter)
     print('# of items missing country: ', missing_country_counter)
     print('# of items whose country has no languages: ', missing_language_counter)
+    print('Country without languages: ', missing_language)
 
 
 if __name__ == '__main__':
