@@ -41,11 +41,8 @@ def main():
 
                 # Exclude historical country, historical region, historical Chinese state.
                 claims = get_claims(entity['info']['claims'], 'P31')
-                print(claims)
                 if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims:
                     continue
-
-                break
 
                 # As a first step, use native labels.
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
