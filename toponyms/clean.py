@@ -28,6 +28,8 @@ def main():
 
                 entity = json.loads(line)
 
+                historical_entity = False
+
                 # 'P576' signals a dissolved, abolished or demolished date.
                 if 'P576' in entity['info']['claims']:
                     continue
@@ -37,6 +39,16 @@ def main():
 
                 # 'Q34266' is the Russian Empire.
                 if 'Q34266' in entity['country']:
+                    continue
+
+                # Exclude historical country, historical region, historical Chinese state.
+                claims = entity.get('info', {}).get('claims', {}).get('P31', [])
+                for claim in claims.keys():
+                    if claim == 'Q1620908' or claim == 'Q3024240' or claim == 'Q50068795':
+                        historical_entity = True
+                        break
+
+                if historical_entity:
                     continue
 
                 # As a first step, use native labels.
