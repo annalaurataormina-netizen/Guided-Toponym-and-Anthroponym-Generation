@@ -130,7 +130,41 @@ def get_country_languages() -> Dict[str, List[str]]:
     # Georgia
     if country_languages.get('Q230', []):
         country_languages['Q230'].append('kat')
-    country_languages['Q230'] = list(set(country_languages['Q230']))
+        country_languages['Q230'] = list(set(country_languages['Q230']))
+    else:
+        country_languages['Q230'] = ['kat']
+
+    # Australia
+    country_languages['Q408'] = ['en']
+
+    # India
+    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te', 'ur']
+
+    # Congo
+    if country_languages.get('Q974', []):
+        country_languages['Q974'].append('sw')
+        country_languages['Q974'].append('ln')
+        country_languages['Q974'].append('kg')
+        country_languages['Q974'].append('lua')
+        country_languages['Q974'] = list(set(country_languages['Q974']))
+    else:
+        country_languages['Q974'] = ['fr', 'sw', 'ln', 'kg', 'lua']
+
+    # Georgia
+    if country_languages.get('Q230', []):
+        country_languages['Q230'].append('kat')
+        country_languages['Q230'] = list(set(country_languages['Q230']))
+    else:
+        country_languages['Q230'] = ['kat']
+
+    # Burkina Faso
+    country_languages['Q965'] = ['fr', 'mos', 'dyu', 'ful']
+
+    # Algeria
+    country_languages['Q262'] = ["ar", "fr", "kab", "ber"]
+
+    # Spain
+    country_languages['Q29'] = ["es", "ca", "gl", "eu"]
 
     return country_languages
 
