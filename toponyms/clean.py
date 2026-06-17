@@ -19,6 +19,7 @@ def main():
     missing_name_counter = 0
     missing_country_counter = 0
     missing_language_counter = 0
+    missing_language = []
 
     with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
         with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
@@ -59,6 +60,9 @@ def main():
                 # The country where the entity is located doesn't have languages associated to it.
                 if not languages:
                     missing_language_counter += 1
+                    if entity['country']:
+                        for country in entity['country']:
+                            missing_language.append(country)
                     continue
 
                 # If no native labels, use labels linked to the languages of the country.

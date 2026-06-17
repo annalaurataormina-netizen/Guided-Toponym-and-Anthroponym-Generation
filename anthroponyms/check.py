@@ -1,11 +1,12 @@
 import gzip
 import json
 import random
+from collections import Counter
 
 
 def main():
-    ids = []
-    types = {}
+    entities_missing_name = []
+    types_missing_name = Counter()
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms_cleaned.jsonl.gz', 'rt') as input:
 
@@ -14,16 +15,13 @@ def main():
             entity = json.loads(line)
 
             if not entity.get('name'):
-                ids.append(entity.get('id'))
-                for type in entity.get('type'):
-                    if type in types.keys():
-                        types[type] += 1
-                    else:
-                        types[type] = 1
+                entities_missing_name.append(entity.get('id'))
+                types_missing_name.update(entity.get('type', []))
 
-    print('# missing name: ', len(ids))
-    print('First 100 IDs (shuffled list): ', random.sample(ids, 100))
-    print('breakdown by type: ', types)
+    print('FOR ENTITIES MISSING NAMES')
+    print('#: ', len(entities_missing_name))
+    print('100 IDs (shuffled): ', random.sample(entities_missing_name, min(100, len(entities_missing_name))))
+    print('breakdown by type: ', types_missing_name)
 
 
 if __name__ == '__main__':
