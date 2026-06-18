@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from icu import Transliterator
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_romanised, get_countries_names
+from utils import get_romanised, get_countries_names, split_diacritics
 
 MIN_LENGTH_THRESHOLD = 2
 MAX_LENGTH_THRESHOLD = 25
@@ -45,6 +45,14 @@ def main():
                     # Get the romanised version of the name.
                     name_romanised = get_romanised(name['name'])
 
+                    if language in ('Unknown language', 'Unknown language [eml]', 'Uncoded languages',
+                                    'Multiple languages', 'Australian languages',
+                                    'Ancient Egyptian', 'Mycenaean Greek', 'Sumerian', 'Akkadian',
+                                    'Elamite', 'Phoenician', 'Ancient Greek', 'Old Norse', 'Old English', 'Old French',
+                                    'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic'):
+                        excluded_language += 1
+                        continue
+
                     if name_romanised == '':
                         excluded_characters += 1
                         continue
@@ -53,13 +61,7 @@ def main():
                         excluded_length += 1
                         continue
 
-                    if language in ('Unknown language', 'Unknown language [eml]', 'Uncoded languages',
-                                    'Multiple languages', 'Australian languages',
-                                    'Ancient Egyptian', 'Mycenaean Greek', 'Sumerian', 'Akkadian',
-                                    'Elamite', 'Phoenician', 'Ancient Greek', 'Old Norse', 'Old English', 'Old French',
-                                    'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic'):
-                        excluded_language += 1
-                        continue
+                    name_romanised = split_diacritics(name_romanised)
 
                     toponym = {
                         'name_romanised': name_romanised,
