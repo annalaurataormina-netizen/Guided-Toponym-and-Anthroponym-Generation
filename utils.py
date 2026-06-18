@@ -229,3 +229,47 @@ def get_romanised(name):
         return ''
 
     return valid
+
+
+def get_countries_names(ids: list) -> dict[str, str]:
+    country_id_name = {}
+
+    url = 'https://query.wikidata.org/sparql'
+
+    batch_size = 200
+
+    batches = len(ids) // batch_size
+
+    for batch in range(batches):
+        ids_ = ids[batch * batch_size:(batch + 1) * batch_size]
+        values = ' '.join(f'wd:{id}' for id in ids_)
+        query = f'''
+        SELECT ?country ?countryLabel WHERE {{
+          VALUES ?country {{ {values} }}
+          SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+        }}
+        '''
+        headers = {'User-Agent': 'Guided-Toponym-and-Anthroponym-Generation/1.0 (anna.taormina25@imperial.ac.uk)'}
+        r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
+
+        data = r.json()['results']['bindings']
+        for country in data:
+            country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
+
+    ids_ = ids[batches * batch_size:]
+
+    values = ' '.join(f'wd:{id}' for id in ids_)
+
+    query = f'''
+    SELECT ?country ?countryLabel WHERE {{
+      VALUES ?country {{ {values} }}
+      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+    }}
+    '''
+    headers = {'User-Agent': 'Guided-Toponym-and-Anthroponym-Generation/1.0 (anna.taormina25@imperial.ac.uk)'}
+    r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
+    data = r.json()['results']['bindings']
+    for country in data:
+        country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
+
+    return country_id_name

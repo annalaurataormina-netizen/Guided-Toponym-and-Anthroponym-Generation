@@ -4,7 +4,10 @@ from collections import Counter, defaultdict
 
 from icu import Transliterator
 
-from utils import get_romanised
+from utils import get_romanised, get_countries_names
+
+MIN_LENGTH_THRESHOLD = 2
+MAX_LENGTH_THRESHOLD = 25
 
 
 def main():
@@ -18,6 +21,10 @@ def main():
 
     length_by_country = defaultdict(Counter)
     length_by_language = defaultdict(Counter)
+
+    excluded_characters = 0
+    excluded_length = 0
+    excluded_language = 0
 
     with (gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'rt') as input):
         with gzip.open('/vol/bitbucket/at2225/toponyms_final.jsonl.gz', 'wt') as output:
@@ -33,9 +40,22 @@ def main():
                 for language, name in entity['name'].items():
 
                     # Get the romanised version of the name.
-                    name_romanised = get_romanised(name)
+                    name_romanised = get_romanised(name['name'])
 
                     if name_romanised == '':
+                        excluded_characters += 1
+                        continue
+
+                    if len(name_romanised) < MIN_LENGTH_THRESHOLD or len(name_romanised) > MAX_LENGTH_THRESHOLD:
+                        excluded_length += 1
+                        continue
+
+                    if language in ('Unknown language', 'Unknown language [eml]', 'Uncoded languages',
+                                    'Multiple languages', 'Australian languages',
+                                    'Ancient Egyptian', 'Mycenaean Greek', 'Sumerian', 'Akkadian',
+                                    'Elamite', 'Phoenician', 'Ancient Greek', 'Old Norse', 'Old English', 'Old French',
+                                    'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic'):
+                        excluded_language += 1
                         continue
 
                     toponym = {
@@ -65,16 +85,23 @@ def main():
 
                     length_by_language[language][len(name_romanised)] += 1
 
-    print('# of toponyms: ', counter)
+    countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
-    print('Character occurrences (romanised): ', character_counter)
+    print('# of toponyms: ', counter, '\n')
 
-    print('Breakdown by language: ', breakdown_by_language)
-    print('Breakdown by country: ', breakdown_by_country)
-    print('Breakdown by length (romanised): ', breakdown_by_length)
+    print('Character occurrences (romanised): ', character_counter, '\n')
 
-    print('Length by country (romanised): ', length_by_country)
-    print('Length by language (romanised): ', length_by_language)
+    print('Breakdown by language: ', breakdown_by_language, '\n')
+    print('Breakdown by country: ', {countries_id_names.get(k, k): v for k, v in breakdown_by_country.items()}, '\n')
+    print('Breakdown by length (romanised): ', breakdown_by_length, '\n')
+
+    print('Length by country (romanised): ', {countries_id_names.get(k, k): v for k, v in length_by_country.items()},
+          '\n')
+    print('Length by language (romanised): ', length_by_language, '\n')
+
+    print('# of toponyms excluded due to characters: ', excluded_characters, '\n')
+    print('# of toponyms excluded due to length: ', excluded_length, '\n')
+    print('# of toponyms excluded due to language: ', excluded_language, '\n')
 
 
 if __name__ == '__main__':
