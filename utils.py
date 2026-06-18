@@ -37,6 +37,7 @@ def get_qids(target: str) -> Dict[str, str]:
         SELECT DISTINCT ?item ?type WHERE {
           {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
           UNION {?item wdt:P279* wd:Q11879590 . BIND("female given name" AS ?type)}
+          UNION {?item wdt:P279* wd:Q3409032 . BIND("unisex given name" AS ?type)}
           UNION {?item wdt:P279* wd:Q101352 . BIND("family name" AS ?type)}
         }
         '''

@@ -21,8 +21,6 @@ OCCURRENCE_THRESHOLD = 50
 
 def main():
 
-    counter = 0
-
     counter_anthroponyms = 0
     counter_humans = 0
 
@@ -37,11 +35,6 @@ def main():
 
         for line in humans:
 
-            counter += 1
-
-            if counter > 10:
-                return
-
             entity = json.loads(line)
 
             counter_humans += 1
@@ -51,10 +44,6 @@ def main():
 
             # List of family names
             family_names = get_claims(entity['info']['claims'], 'P734')
-
-            print(entity.get('id', None))
-            print(given_names)
-            print(family_names)
 
             # Gender
             genders = get_claims(entity['info']['claims'], 'P21')
@@ -108,9 +97,9 @@ def main():
     print('# of given name occurrences: ', len(given_names_occurrences))
     print('# of family name occurrences: ', len(family_names_occurrences))
     print('100 given name occurrences (shuffled): ',
-          random.sample(given_names_occurrences, min(100, len(given_names_occurrences))))
+          random.sample(given_names_occurrences.values(), min(100, len(given_names_occurrences))))
     print('100 family name occurrences (shuffled): ',
-          random.sample(family_names_occurrences, min(100, len(family_names_occurrences))))
+          random.sample(family_names_occurrences.values(), min(100, len(family_names_occurrences))))
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms_humans_cleaned.jsonl.gz', 'wt') as output:
 
