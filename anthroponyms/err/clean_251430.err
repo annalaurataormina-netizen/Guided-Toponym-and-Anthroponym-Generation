@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/anthroponyms/clean.py", line 186, in <module>
+    main()
+  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/anthroponyms/clean.py", line 100, in main
+    random.sample(given_names_occurrences.values(), min(100, len(given_names_occurrences))))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/random.py", line 413, in sample
+    raise TypeError("Population must be a sequence.  "
+TypeError: Population must be a sequence.  For dicts or sets, use sorted(d).
