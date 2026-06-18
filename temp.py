@@ -11,3 +11,5 @@ if __name__ == "__main__":
             print(repr(char), '->', repr(decomposed), len(decomposed), breakdown[char])
         elif decomposed not in ('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'):
             print(decomposed.encode("unicode_escape"), breakdown[char])
+
+
