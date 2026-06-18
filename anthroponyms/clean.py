@@ -19,8 +19,10 @@ COUNTRY_LANGUAGES = get_country_languages()
 # Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
 OCCURRENCE_THRESHOLD = 50
 
-
 def main():
+
+    counter = 0
+
     counter_anthroponyms = 0
     counter_humans = 0
 
@@ -28,12 +30,17 @@ def main():
     missing_name_counter = 0
     missing_occurrences_counter = 0
 
+    given_names_occurrences = {}
+    family_names_occurrences = {}
+
     with gzip.open('/vol/bitbucket/at2225/humans.jsonl.gz', 'rt') as humans:
 
-        given_names_occurrences = {}
-        family_names_occurrences = {}
-
         for line in humans:
+
+            counter += 1
+
+            if counter > 10:
+                return
 
             entity = json.loads(line)
 
@@ -45,26 +52,21 @@ def main():
             # List of family names
             family_names = get_claims(entity['info']['claims'], 'P734')
 
+            print(entity.get('id', None))
+            print(given_names)
+            print(family_names)
+
             # Gender
             genders = get_claims(entity['info']['claims'], 'P21')
-            if genders:
-                gender = genders[0]
-            else:
-                gender = None
+            gender = genders[0] if genders else None
 
             # Year of birth
             dates_of_birth = get_time_claims(entity['info']['claims'], 'P569')
-            if dates_of_birth:
-                year_of_birth = int(dates_of_birth[0][1:5])
-            else:
-                year_of_birth = None
+            year_of_birth = int(dates_of_birth[0][1:5]) if dates_of_birth else None
 
             # Country of birth
             places_of_birth = get_claims(entity['info']['claims'], 'P19')
-            if places_of_birth:
-                place_of_birth = places_of_birth[0]
-            else:
-                place_of_birth = None
+            place_of_birth = places_of_birth[0] if places_of_birth else None
             country_of_birth = PLACE_COUNTRY.get(place_of_birth, None)
 
             for given_name in given_names:
