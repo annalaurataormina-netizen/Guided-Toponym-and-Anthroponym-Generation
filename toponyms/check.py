@@ -21,11 +21,11 @@ def main():
                 types_missing_name.update(entity.get('type', []))
                 countries_missing_name.update(entity.get('country', []))
 
-    print('FOR ENTITIES MISSING NAMES')
-    print('#: ', len(entities_missing_name))
-    print('100 IDs (shuffled): ', random.sample(entities_missing_name, min(100, len(entities_missing_name))))
-    print('breakdown by type: ', types_missing_name)
-    print('breakdown by country: ', countries_missing_name)
+    print('FOR ENTITIES MISSING NAMES', '\n')
+    print('#: ', len(entities_missing_name), '\n')
+    print('100 IDs (shuffled): ', random.sample(entities_missing_name, min(100, len(entities_missing_name))), '\n')
+    print('breakdown by type: ', types_missing_name, '\n')
+    print('breakdown by country: ', countries_missing_name, '\n')
 
 
 if __name__ == '__main__':
