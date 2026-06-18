@@ -223,12 +223,16 @@ def get_romanised(name):
             continue
 
         # Skip these characters
-        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/\u2019\u200c\u202c\u202b\u200b\u200d\u200e\u200f\ufeff\xa0\u180e\u3000\xad''':
+        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/̲\u2019\u200c\u202c\u202b\u200b\u200d\u200e\u200f\ufeff\xa0\u180e\u3000\xad''':
             continue
 
         return ''
 
     return valid
+
+
+def split_diacritics(name: str) -> str:
+    return ''.join(unicodedata.normalize('NFD', char) for char in name)
 
 
 def get_countries_names(ids: list) -> dict[str, str]:
