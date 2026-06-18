@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/toponyms/finalise.py", line 8, in <module>
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+                    ^^
+NameError: name 'os' is not defined. Did you forget to import 'os'?
