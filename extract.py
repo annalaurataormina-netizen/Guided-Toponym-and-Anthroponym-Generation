@@ -3,11 +3,6 @@ import json
 
 from utils import get_qids
 
-'''
-To get the latest Wikidata dump:
-wget https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz -P /vol/bitbucket/at2225/
-'''
-
 
 def main():
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
