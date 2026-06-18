@@ -15,6 +15,11 @@ COUNTRY_LANGUAGES = get_country_languages()
 def main():
     counter = 0
 
+    excluded_dissolved_counter = 0
+    excluded_historical = 0
+    excluded_russian_empire = 0
+    excluded_missing_labels = 0
+
     missing_id_counter = 0
     missing_name_counter = 0
     missing_country_counter = 0
@@ -28,18 +33,21 @@ def main():
 
                 # 'P576' signals a dissolved, abolished or demolished state.
                 if 'P576' in entity['info']['claims']:
+                    excluded_dissolved_counter += 1
                     continue
 
                 # The value is a list of IDs for the countries.
                 entity['country'] = get_claims(entity['info']['claims'], 'P17')
 
-                # 'Q34266' is the Russian Empire.
-                if 'Q34266' in entity['country']:
-                    continue
-
                 # Exclude historical entities.
                 claims = get_claims(entity['info']['claims'], 'P31')
                 if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims or 'Q28171280' in claims or 'Q2072238' in claims or 'Q1250464' in claims:
+                    excluded_historical += 1
+                    continue
+
+                # 'Q34266' is the Russian Empire.
+                if 'Q34266' in entity['country']:
+                    excluded_russian_empire += 1
                     continue
 
                 # As a first step, use native labels.
@@ -58,6 +66,7 @@ def main():
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
+                    excluded_missing_labels += 1
                     continue
 
                 # If no native labels, use labels linked to the languages of the country.
@@ -114,10 +123,14 @@ def main():
 
                 output.write(json.dumps(entity) + '\n')
 
-    print('# of items: ', counter)
-    print('# of items missing ID: ', missing_id_counter)
-    print('# of items missing name: ', missing_name_counter)
-    print('# of items missing country: ', missing_country_counter)
+    print('# of items (ex. excluded): ', counter, '\n')
+    print('# of items missing ID: ', missing_id_counter, '\n')
+    print('# of items missing name: ', missing_name_counter, '\n')
+    print('# of items missing country: ', missing_country_counter, '\n')
+    print('# of items excluded because dissolved: ', excluded_dissolved_counter, '\n')
+    print('# of items excluded because historical: ', excluded_historical, '\n')
+    print('# of items excluded because belonging to Russian Empire: ', excluded_russian_empire, '\n')
+    print('# of items excluded because missing native labels and labels: ', excluded_missing_labels, '\n')
 
 
 if __name__ == '__main__':

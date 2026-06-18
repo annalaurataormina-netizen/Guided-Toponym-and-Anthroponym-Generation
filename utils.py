@@ -1,5 +1,6 @@
 import gzip
 import json
+import unicodedata
 from typing import Dict, List
 
 import requests
@@ -190,3 +191,41 @@ def get_place_country() -> Dict[str, str]:
             mapping[id] = country[0] if country else None
 
     return mapping
+
+
+# Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
+def get_romanised(name):
+    valid = ''
+
+    for char in name:
+
+        cat = unicodedata.category(char)
+        block = unicodedata.name(char, '')
+
+        # Allow Latin letters and combining marks
+        if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
+            valid += char
+            continue
+
+        # Allow combining diacritical marks
+        if cat == 'Mn':
+            valid += char
+            continue
+
+        # Allow these characters
+        if char in ''' 'ʼʻʾʿ·ʹʺʱˌ''':
+            valid += char
+            continue
+
+        # Allow hyphen
+        if char in '''-–''':
+            valid += '-'
+            continue
+
+        # Skip these characters
+        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/\u2019\u200c\u202c\u202b\u200b\u200d\u200e\u200f\ufeff\xa0\u180e\u3000\xad''':
+            continue
+
+        return ''
+
+    return valid

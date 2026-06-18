@@ -4,26 +4,22 @@ from collections import Counter, defaultdict
 
 from icu import Transliterator
 
+from utils import get_romanised
+
 
 def main():
-    transliterator = Transliterator.createInstance("Any-Latin")
     counter = 0
 
     character_counter = Counter()
-    character_counter_romanised = Counter()
 
     breakdown_by_language = Counter()
     breakdown_by_country = Counter()
     breakdown_by_length = Counter()
-    breakdown_by_length_romanised = Counter()
 
     length_by_country = defaultdict(Counter)
     length_by_language = defaultdict(Counter)
 
-    length_by_country_romanised = defaultdict(Counter)
-    length_by_language_romanised = defaultdict(Counter)
-
-    with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'rt') as input:
+    with (gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'rt') as input):
         with gzip.open('/vol/bitbucket/at2225/toponyms_final.jsonl.gz', 'wt') as output:
 
             for line in input:
@@ -37,7 +33,10 @@ def main():
                 for language, name in entity['name'].items():
 
                     # Get the romanised version of the name.
-                    name_romanised = transliterator.transliterate(name['name'])
+                    name_romanised = get_romanised(name)
+
+                    if name_romanised == '':
+                        continue
 
                     toponym = {
                         'name_romanised': name_romanised,
@@ -53,34 +52,29 @@ def main():
 
                     counter += 1
 
-                    character_counter.update(name['name'])
-                    character_counter_romanised.update(name_romanised)
+                    character_counter.update(name_romanised)
 
                     breakdown_by_language.update([language])
 
-                    breakdown_by_length[len(name['name'])] += 1
-                    breakdown_by_length_romanised[len(name_romanised)] += 1
+                    breakdown_by_length[len(name_romanised)] += 1
 
                     for country in entity['country']:
                         breakdown_by_country.update([country])
 
-                        length_by_country[country][len(name['name'])] += 1
-                        length_by_country_romanised[country][len(name_romanised)] += 1
+                        length_by_country[country][len(name_romanised)] += 1
 
-                    length_by_language[language][len(name['name'])] += 1
-                    length_by_language_romanised[language][len(name_romanised)] += 1
+                    length_by_language[language][len(name_romanised)] += 1
 
     print('# of toponyms: ', counter)
-    print('Character occurrences: ', character_counter)
-    print('Character occurrences in romanised names: ', character_counter_romanised)
+
+    print('Character occurrences (romanised): ', character_counter)
+
     print('Breakdown by language: ', breakdown_by_language)
     print('Breakdown by country: ', breakdown_by_country)
-    print('Breakdown by length: ', breakdown_by_length)
-    print('Breakdown by length (romanised): ', breakdown_by_length_romanised)
-    print('Length by country: ', length_by_country)
-    print('Length by language: ', length_by_language)
-    print('Length by country (romanised): ', length_by_country_romanised)
-    print('Length by language (romanised): ', length_by_language_romanised)
+    print('Breakdown by length (romanised): ', breakdown_by_length)
+
+    print('Length by country (romanised): ', length_by_country)
+    print('Length by language (romanised): ', length_by_language)
 
 
 if __name__ == '__main__':

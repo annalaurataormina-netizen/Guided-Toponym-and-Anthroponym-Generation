@@ -11,9 +11,9 @@ def main():
 
     with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
-        #with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'wt') as toponyms:
+        with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'wt') as toponyms:
             with gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'wt') as anthroponyms:
-                #with gzip.open('/vol/bitbucket/at2225/humans.jsonl.gz', 'wt') as humans:
+                with gzip.open('/vol/bitbucket/at2225/humans.jsonl.gz', 'wt') as humans:
 
                     for line in dump:
 
@@ -73,16 +73,16 @@ def main():
                         }
 
                         # Entity is a toponym.
-                        # if toponym:
-                        #     toponyms.write(json.dumps(entity) + '\n')
+                        if toponym:
+                            toponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is an anthroponym.
                         if anthroponym:
                             anthroponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is a human.
-                        # if human:
-                        #     humans.write(json.dumps(entity) + '\n')
+                        if human:
+                            humans.write(json.dumps(entity) + '\n')
 
 
 if __name__ == '__main__':
