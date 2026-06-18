@@ -18,17 +18,15 @@ def main():
     missing_id_counter = 0
     missing_name_counter = 0
     missing_country_counter = 0
-    missing_language_counter = 0
-    missing_language = []
 
-    with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
+    with (gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input):
         with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
 
             for line in input:
 
                 entity = json.loads(line)
 
-                # 'P576' signals a dissolved, abolished or demolished date.
+                # 'P576' signals a dissolved, abolished or demolished state.
                 if 'P576' in entity['info']['claims']:
                     continue
 
@@ -39,9 +37,9 @@ def main():
                 if 'Q34266' in entity['country']:
                     continue
 
-                # Exclude historical country, historical region, historical Chinese state.
+                # Exclude historical entities.
                 claims = get_claims(entity['info']['claims'], 'P31')
-                if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims:
+                if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims or 'Q28171280' in claims or 'Q2072238' in claims or 'Q1250464' in claims:
                     continue
 
                 # As a first step, use native labels.
@@ -60,14 +58,6 @@ def main():
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
-                    continue
-
-                # The country where the entity is located doesn't have languages associated to it.
-                if not languages:
-                    missing_language_counter += 1
-                    if entity['country']:
-                        for country in entity['country']:
-                            missing_language.append(country)
                     continue
 
                 # If no native labels, use labels linked to the languages of the country.
@@ -130,10 +120,7 @@ def main():
     print('# of items missing ID: ', missing_id_counter)
     print('# of items missing name: ', missing_name_counter)
     print('# of items missing country: ', missing_country_counter)
-    print('# of items whose country has no languages: ', missing_language_counter)
-    print('Country without languages: ', missing_language)
 
 
 if __name__ == '__main__':
     main()
-    # print(COUNTRY_LANGUAGES)
