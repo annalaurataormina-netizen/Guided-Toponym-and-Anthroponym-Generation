@@ -218,7 +218,7 @@ def get_romanised(name):
         #     continue
 
         # Allow hyphen
-        if char in '''-–''':
+        if char in '-–':
                 valid += '-'
                 continue
 
@@ -231,6 +231,8 @@ def get_romanised(name):
             continue
 
         valid += char
+
+        # return ""
 
     return valid
 
