@@ -211,6 +211,10 @@ def get_romanised(name):
         if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ', '̭', '̑', 'ƛ', '̓']:
             return ''
 
+        # Rare characters (occurrences < 5 for toponyms)
+        if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ', '̭', '̑', 'ƛ', '̓']:
+            return ''
+
         # Allow Latin letters
         if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
             valid += char
@@ -247,10 +251,6 @@ def get_romanised(name):
 
         # Drop non-Latin letters
         if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Lo', 'Mc') and 'LATIN' not in block:
-            return ''
-
-        # Rare characters (occurrences < 5 for toponyms)
-        if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ', '̭', '̑', 'ƛ', '̓']:
             return ''
 
     return valid.strip() or ''

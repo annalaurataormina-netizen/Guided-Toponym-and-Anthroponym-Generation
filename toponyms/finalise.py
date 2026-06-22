@@ -2,7 +2,7 @@ import gzip
 import json
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, get_countries_names, split_diacritics, get_country_languages
@@ -11,6 +11,46 @@ MIN_LENGTH_THRESHOLD = 2
 MAX_LENGTH_THRESHOLD = 25
 
 COUNTRY_LANGUAGES = get_country_languages()
+
+EXCLUDED_EXACT = {
+    'Uncoded languages', 'Multiple languages', 'Australian languages',
+    'Mycenaean Greek', 'Ancient Greek', 'Sumerian', 'Akkadian',
+    'Elamite', 'Phoenician', 'Old Norse', 'Old English', 'Old French',
+    'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic',
+    'Sanskrit', 'Ancient Egyptian', 'Literary Chinese', 'Ottoman Turkish', 'Church Slavic',
+    'Prussian', 'Taino', 'Wyandot', 'Berber languages', 'Western Abnaki', 'Koyukon', 'Pite Sami'
+}
+EXCLUDED_SMALL = {
+    'Aleut', 'Navajo', 'Corsican', 'Avaric', 'Siberian Tatar', 'Atikamekw', 'Nahuatl languages',
+    'Yoruba', 'Veps', 'Russia Buriat', 'Tahitian', 'Komi-Permyak', 'Pampanga', 'Mazanderani',
+    'Uyghur', 'Kara-Kalpak', 'Cebuano', 'Chamorro', 'Paiwan', 'Egyptian Arabic', 'Tachelhit',
+    'Picard', 'Haida', 'Lezghian', 'Latgalian', 'Ladin', 'Mari',
+    'Antigua and Barbuda Creole English', 'Papiamento', 'Mingrelian', 'Buriat', 'Manx',
+    'Moroccan Arabic', 'Northern Hindko', 'Cree', 'Wolaytta', 'Livvi', 'Tyap', 'Tok Pisin',
+    'Chipewyan', 'Central Okinawan', 'Northern Frisian', 'Ewe', 'Fiji Hindi', 'Wyandot',
+    'Kashmiri', 'Northern Sotho', 'Gagauz', 'Tetum', 'Kildin Sami', 'Nogai', 'Min Dong Chinese',
+    'Bunun', 'Saraiki', 'Livonian', 'Dimli (individual language)', 'Neapolitan', 'Zeelandic',
+    'Taino', 'Akan', 'Nama', 'Magahi', 'Kabuverdianu', 'Gheg Albanian', 'Hiligaynon', 'Rusyn',
+    'Nigerian Pidgin', 'Siksiká', 'Oromo', 'Tausug', 'Talysh', 'Central Atlas Tamazight',
+    'Central Kurdish', 'Lakota', 'Northern Tutchone', 'Twi', 'Lower Silesian', 'Ancient Egyptian',
+    'Chavacano', 'Kinaray-a', 'Maithili', 'Lillooet', 'Mohawk', 'Silesian', 'Batak Toba',
+    'Soninke', 'Hakka Chinese', "Tohono O'odham", 'Esperanto', 'Abaza', 'Ga', 'Eastern Frisian',
+    'Zhuang', 'Omaha-Ponca', 'Rukai', 'Thao', 'Warlpiri', 'Northern East Cree', 'Palauan',
+    'Yapese', 'Gilbertese', 'Nenets', 'Eastern Canadian Inuktitut', 'Standard Moroccan Tamazight',
+    'Chukot', 'Tsimshian', 'Saaroa', 'Jejueo', 'Kundal Shahi', 'Arawak', 'Brahui', 'Zarma',
+    'Herero', 'Cajun French', 'Fon', 'Seneca', 'South Azerbaijani', 'Chilcotin', 'Hunsrik',
+    'Okanagan', 'Yiddish', 'Võro', 'Western Balochi', 'Munsee', 'Nheengatu', 'Choctaw',
+    'Bishnupriya', 'Amis', 'Dogrib', 'Slave', 'Niuean', 'Pitcairn-Norfolk', 'Iloko', 'Romagnol',
+    'Southern Balochi', 'Afar', 'Ume Sami', 'Island Carib', 'Mirandese', 'Shughni', 'Judeo-Tat',
+    'Goan Konkani', 'Nyungar', 'Ainu', 'Tornedalen Finnish', 'Prussian', 'Ibibio',
+    'Southern Tutchone', 'Torwali', 'Syriac', 'Western Armenian', 'Ganda', 'Susu',
+    'Central Siberian Yupik', 'Gilaki', 'Rakhine', 'Shan', 'Ndonga', 'Kikuyu', 'Straits Salish',
+    'Romany', 'Mixtepec Mixtec', 'Literary Chinese', 'Vlax Romani', 'Kuvi', 'Tagish',
+    'Jamaican Creole English', 'Tumbuka', 'Rajasthani', 'Rapanui', 'Marwari (India)', 'Ingrian',
+    'Nanai', 'Kulon-Pazeh', 'Colognian', 'Sranan Tongo', 'Hassaniyya', 'Pular', 'Istro Romanian',
+    'Louisiana Creole', 'Kanakanabu', 'Rutul', 'Betawi', 'Zuni', 'Dargwa', 'Min Nan Chinese', 'Faroese', 'Jèrriais'
+}
+EXCLUDED_PARTIAL = {'Unknown'}
 
 
 def main():
@@ -43,45 +83,6 @@ def main():
                     if not any(c in COUNTRY_LANGUAGES for c in entity['country']):
                         continue
 
-                    EXCLUDED_EXACT = {
-                        'Uncoded languages', 'Multiple languages', 'Australian languages',
-                        'Mycenaean Greek', 'Ancient Greek', 'Sumerian', 'Akkadian',
-                        'Elamite', 'Phoenician', 'Old Norse', 'Old English', 'Old French',
-                        'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic',
-                        'Sanskrit', 'Ancient Egyptian', 'Literary Chinese', 'Ottoman Turkish', 'Church Slavic',
-                        'Prussian', 'Taino', 'Wyandot'
-                    }
-                    EXCLUDED_SMALL = {
-                        'Aleut', 'Navajo', 'Corsican', 'Avaric', 'Siberian Tatar', 'Atikamekw', 'Nahuatl languages',
-                        'Yoruba', 'Veps', 'Russia Buriat', 'Tahitian', 'Komi-Permyak', 'Pampanga', 'Mazanderani',
-                        'Uyghur', 'Kara-Kalpak', 'Cebuano', 'Chamorro', 'Paiwan', 'Egyptian Arabic', 'Tachelhit',
-                        'Picard', 'Haida', 'Lezghian', 'Latgalian', 'Ladin', 'Mari',
-                        'Antigua and Barbuda Creole English', 'Papiamento', 'Mingrelian', 'Buriat', 'Manx',
-                        'Moroccan Arabic', 'Northern Hindko', 'Cree', 'Wolaytta', 'Livvi', 'Tyap', 'Tok Pisin',
-                        'Chipewyan', 'Central Okinawan', 'Northern Frisian', 'Ewe', 'Fiji Hindi', 'Wyandot',
-                        'Kashmiri', 'Northern Sotho', 'Gagauz', 'Tetum', 'Kildin Sami', 'Nogai', 'Min Dong Chinese',
-                        'Bunun', 'Saraiki', 'Livonian', 'Dimli (individual language)', 'Neapolitan', 'Zeelandic',
-                        'Taino', 'Akan', 'Nama', 'Magahi', 'Kabuverdianu', 'Gheg Albanian', 'Hiligaynon', 'Rusyn',
-                        'Nigerian Pidgin', 'Siksiká', 'Oromo', 'Tausug', 'Talysh', 'Central Atlas Tamazight',
-                        'Central Kurdish', 'Lakota', 'Northern Tutchone', 'Twi', 'Lower Silesian', 'Ancient Egyptian',
-                        'Chavacano', 'Kinaray-a', 'Maithili', 'Lillooet', 'Mohawk', 'Silesian', 'Batak Toba',
-                        'Soninke', 'Hakka Chinese', "Tohono O'odham", 'Esperanto', 'Abaza', 'Ga', 'Eastern Frisian',
-                        'Zhuang', 'Omaha-Ponca', 'Rukai', 'Thao', 'Warlpiri', 'Northern East Cree', 'Palauan',
-                        'Yapese', 'Gilbertese', 'Nenets', 'Eastern Canadian Inuktitut', 'Standard Moroccan Tamazight',
-                        'Chukot', 'Tsimshian', 'Saaroa', 'Jejueo', 'Kundal Shahi', 'Arawak', 'Brahui', 'Zarma',
-                        'Herero', 'Cajun French', 'Fon', 'Seneca', 'South Azerbaijani', 'Chilcotin', 'Hunsrik',
-                        'Okanagan', 'Yiddish', 'Võro', 'Western Balochi', 'Munsee', 'Nheengatu', 'Choctaw',
-                        'Bishnupriya', 'Amis', 'Dogrib', 'Slave', 'Niuean', 'Pitcairn-Norfolk', 'Iloko', 'Romagnol',
-                        'Southern Balochi', 'Afar', 'Ume Sami', 'Island Carib', 'Mirandese', 'Shughni', 'Judeo-Tat',
-                        'Goan Konkani', 'Nyungar', 'Ainu', 'Tornedalen Finnish', 'Prussian', 'Ibibio',
-                        'Southern Tutchone', 'Torwali', 'Syriac', 'Western Armenian', 'Ganda', 'Susu',
-                        'Central Siberian Yupik', 'Gilaki', 'Rakhine', 'Shan', 'Ndonga', 'Kikuyu', 'Straits Salish',
-                        'Romany', 'Mixtepec Mixtec', 'Literary Chinese', 'Vlax Romani', 'Kuvi', 'Tagish',
-                        'Jamaican Creole English', 'Tumbuka', 'Rajasthani', 'Rapanui', 'Marwari (India)', 'Ingrian',
-                        'Nanai', 'Kulon-Pazeh', 'Colognian', 'Sranan Tongo', 'Hassaniyya', 'Pular', 'Istro Romanian',
-                        'Louisiana Creole', 'Kanakanabu', 'Rutul', 'Betawi', 'Zuni', 'Dargwa'
-                    }
-                    EXCLUDED_PARTIAL = {'Unknown'}
                     if language in EXCLUDED_EXACT or language in EXCLUDED_SMALL or any(
                             excl in language for excl in EXCLUDED_PARTIAL):
                         excluded_language += 1
@@ -109,7 +110,7 @@ def main():
                         'language_code': name['code'],
                         'id': entity['id'],
                         'type': entity['type'],
-                        'country': entity['country'],
+                        'country': [country for country in entity['country'] if country in COUNTRY_LANGUAGES],
                     }
 
                     output.write(json.dumps(toponym) + '\n')
