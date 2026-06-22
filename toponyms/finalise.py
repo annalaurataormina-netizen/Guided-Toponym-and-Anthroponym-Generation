@@ -88,8 +88,6 @@ def main():
 
                 for language, name in entity['name'].items():
 
-                    if language in {}
-
                     # Only keep toponyms whose country is a current sovereign state
                     if not any(c in COUNTRY_LANGUAGES for c in entity['country']):
                         continue
