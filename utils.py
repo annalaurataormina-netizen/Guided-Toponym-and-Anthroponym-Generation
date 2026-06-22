@@ -6,6 +6,7 @@ from typing import Dict, List
 import requests
 from icu import Transliterator
 
+TRANSLITERATOR = Transliterator.createInstance('Any-Latin; NFC')
 
 # Returns the list of qids to be used to filter anthroponyms or toponyms
 # from the dump based on the "instance of" field.
@@ -196,8 +197,7 @@ def get_place_country() -> Dict[str, str]:
 
 # Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
 def get_romanised(name):
-    transliterator = Transliterator.createInstance('Any-Latin; NFC')
-    name_romanised = transliterator.transliterate(name)
+    name_romanised = TRANSLITERATOR.transliterate(name)
 
     valid = ''
 
@@ -207,36 +207,42 @@ def get_romanised(name):
         block = unicodedata.name(char, '')
 
         # Allow Latin letters and combining marks
-        if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
+        if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Mn') and ('LATIN' in block or 'COMBINING' in block):
             valid += char
             continue
-
-        # Allow combining diacritical marks
-        if cat == 'Mn':
-            valid += char
-            continue
-
-        # Allow these characters
-        # if char in ''' 'ʼʻʾʿ·ʹʺʱˌ''':
-        #     valid += char
-        #     continue
-
-        # Allow hyphen
-        # if char in '-–':
-        #         valid += '-'
-        #         continue
 
         # Skip these characters
-        # if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/':
-        #     continue
+        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/°№♡○•…′″½⓶©®™←→↑↓':
+            continue
 
-        # if char == '\u2019':
-        #     valid += "'"
-        #     continue
+        # Keep space and hyphen (but standardise)
+        if char in ' -–—‑':  # spaces and dashes (expand your existing hyphen check)
+            valid += '-' if char != ' ' else ' '
+            continue
+
+        # Standardise apostrophes
+        if char in "'\u2019":
+            valid += "'"
+            continue
+
+        # Standardise hyphens
+        if char in '-\u2011\u2013\u2014':
+            valid += '-'
+            continue
+
+        # Keep middle dot, secondary stress
+        if char in '·ˌ':
+            valid += char
+            continue
+
+        if cat in ('Lo', 'Mc', 'Nl', 'No', 'So', 'Nd') and 'LATIN' not in block:
+            return ''
+
+        # Skip zero-width, directional marks, private use, spaces
+        if cat in ('Cf', 'Co', 'Zs'):
+            continue
 
         valid += char
-
-        # return ""
 
     return valid
 
@@ -271,6 +277,9 @@ def get_countries_names(ids: list) -> dict[str, str]:
             country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
 
     ids_ = ids[batches * batch_size:]
+
+    if not ids_:
+        return country_id_name
 
     values = ' '.join(f'wd:{id}' for id in ids_)
 

@@ -139,12 +139,14 @@ def main():
                 if not entity['name'] and not labels:
                     continue
 
+                ### CONTINUE FROM HERE ###
+
                 # Skip (no occurrences)
                 if not entity['occurrences'] or entity['occurrences']['count'] == 0:
                     missing_occurrences_counter += 1
                     continue
 
-                # Get the list of countries where the names occurs (using place of birth) more than 100 times.
+                # Get the list of countries where the names occurs (using place of birth) more than X times.
                 countries = [country for country in entity['occurrences']['country_of_birth'].keys() if
                              entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD]
 

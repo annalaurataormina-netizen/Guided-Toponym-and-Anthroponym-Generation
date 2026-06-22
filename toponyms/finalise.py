@@ -40,16 +40,19 @@ def main():
 
                 for language, name in entity['name'].items():
 
-                    # Get the romanised version of the name.
-                    name_romanised = get_romanised(name['name'])
-
-                    if language in ('Unknown language', 'Unknown language [eml]', 'Uncoded languages',
-                                    'Multiple languages', 'Australian languages',
-                                    'Ancient Egyptian', 'Mycenaean Greek', 'Sumerian', 'Akkadian',
-                                    'Elamite', 'Phoenician', 'Ancient Greek', 'Old Norse', 'Old English', 'Old French',
-                                    'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic'):
+                    EXCLUDED_EXACT = {
+                        'Uncoded languages', 'Multiple languages', 'Australian languages',
+                        'Mycenaean Greek', 'Ancient Greek', 'Sumerian', 'Akkadian',
+                        'Elamite', 'Phoenician', 'Old Norse', 'Old English', 'Old French',
+                        'Old Turkish', 'Church Slavic', 'Ancient Hebrew', 'Pali', 'Latin', 'Aramaic'
+                    }
+                    EXCLUDED_PARTIAL = {'Unknown'}
+                    if language in EXCLUDED_EXACT or any(excl in language for excl in EXCLUDED_PARTIAL):
                         excluded_language += 1
                         continue
+
+                    # Get the romanised version of the name.
+                    name_romanised = get_romanised(name['name'])
 
                     if not name_romanised:
                         excluded_characters += 1
