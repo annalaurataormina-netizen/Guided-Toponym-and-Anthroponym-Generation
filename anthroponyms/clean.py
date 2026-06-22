@@ -109,7 +109,7 @@ def main():
         for entry in family_names_occurrences.values():
             output.write(json.dumps(entry) + '\n')
 
-    with gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'rt') as anthroponyms:
+    with (gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'rt') as anthroponyms):
         with gzip.open('/vol/bitbucket/at2225/anthroponyms_cleaned.jsonl.gz', 'wt') as output:
 
             for line in anthroponyms:
@@ -136,11 +136,19 @@ def main():
 
                 # Get P407 claims
                 languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
-                for language in languages_of_work_or_name:
-                    if language not in entity['name'] and native_labels:
-                        entity['name'][Language.get(language).language_name()] = {'name': list(native_labels.values())[0], 'code': language,
-                                                                                   'language': Language.get(
-                                                                                       language).language_name()}
+                if languages_of_work_or_name:
+                    for language in languages_of_work_or_name:
+                        if Language.get(language).language_name() not in entity['name']:
+                            name = native_labels.get(language, "")
+                            if not name and labels:
+                                name = labels.get(language, {}).get('value', "")
+                            if not name and native_labels:
+                                name = list(native_labels.values())[0]
+                            if not name:
+                                continue
+                            entity['name'][Language.get(language).language_name()] = {'name': name, 'code': language,
+                                                                                       'language': Language.get(
+                                                                                           language).language_name()}
 
                 labels = entity['info'].get('labels', None)
 
@@ -155,24 +163,35 @@ def main():
                     continue
 
                 # Get the list of countries where the names occurs (using place of birth) more than X times.
-                countries_of_occurrence = [country for country in entity['occurrences']['country_of_birth'].keys() if
-                             entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD]
+                countries_of_occurrence = []
+                if entity['occurrences']:
+                    countries_of_occurrence = [country for country in entity['occurrences']['country_of_birth'].keys() if
+                                 entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD]
 
                 # Get list of languages spoken in the countries where the name occurs.
-                languages = get_languages(COUNTRY_LANGUAGES, countries_of_occurrence)
-
                 # Expand the list of names with languages from the countries where the name occurs more than the threshold.
-                entity['name'] = {
-                    Language.get(language).language_name(): {'name': labels[language]['value'], 'code': language,
-                                                             'language': Language.get(
-                                                                 language).language_name()}
-                    for language in labels if language in languages and language not in entity['name']}
+                languages = get_languages(COUNTRY_LANGUAGES, countries_of_occurrence)
+                if languages:
+                    for language in languages:
+                        name = native_labels.get(language, "")
+                        if not name and labels:
+                            name = labels.get(language, {}).get('value', "")
+                        if not name and native_labels:
+                            name = list(native_labels.values())[0]
+                        if not name:
+                            continue
+                        if Language.get(language).language_name() not in entity['name']:
+                            entity['name'][Language.get(language).language_name()] = {'name': name, 'code': language,
+                                                                                       'language': Language.get(
+                                                                                           language).language_name()}
 
                 if not entity['id']:
                     missing_id_counter += 1
+                    continue
 
                 if not entity['name']:
                     missing_name_counter += 1
+                    continue
 
                 # print(entity.keys())
                 # print(entity['info'].keys())
