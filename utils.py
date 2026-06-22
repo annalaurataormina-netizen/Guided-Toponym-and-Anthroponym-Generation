@@ -218,17 +218,17 @@ def get_romanised(name):
         #     continue
 
         # Allow hyphen
-        if char in '-–':
-                valid += '-'
-                continue
+        # if char in '-–':
+        #         valid += '-'
+        #         continue
 
         # Skip these characters
-        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/':
-            continue
+        # if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/':
+        #     continue
 
-        if char == '\u2019':
-            valid += "'"
-            continue
+        # if char == '\u2019':
+        #     valid += "'"
+        #     continue
 
         valid += char
 
