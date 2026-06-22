@@ -212,7 +212,7 @@ def get_romanised(name):
             continue
 
         # Skip these characters
-        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/°№♡○•…′″½⓶©®™←→↑↓':
+        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/°№♡○•…′″½⓶©®™←→↑↓;+=\\，？（）„‚"`´""\u00b4':
             continue
 
         # Keep space and hyphen (but standardise)
@@ -221,7 +221,7 @@ def get_romanised(name):
             continue
 
         # Standardise apostrophes
-        if char in "'\u2019":
+        if char in "'''’‘":
             valid += "'"
             continue
 
@@ -235,7 +235,7 @@ def get_romanised(name):
             valid += char
             continue
 
-        if cat in ('Lo', 'Mc', 'Nl', 'No', 'So', 'Nd') and 'LATIN' not in block:
+        if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Lo', 'Mc', 'Nl', 'No', 'So', 'Nd') and 'LATIN' not in block and 'COMBINING' not in block:
             return ''
 
         # Skip zero-width, directional marks, private use, spaces
