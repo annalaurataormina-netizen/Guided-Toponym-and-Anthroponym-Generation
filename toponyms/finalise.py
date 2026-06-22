@@ -57,7 +57,7 @@ EXCLUDED_SMALL = {
     'Udmurt', 'Kalmyk', 'Friulian', 'Limburgish', 'Inupiaq', 'Walloon', 'Kabardian', 'Western Mari', 'Piedmontese',
     'West Flemish', 'Western Panjabi', 'Breton', 'Wallisian', 'Algonquin', 'Western Frisian', 'Arpitan', 'Karachay-Balkar',
     'Asturian', 'Khakas', 'Hawaiian', 'Lombard', 'Ingush', 'Kumyk', 'Algerian Arabic', 'Lak', 'Eastern Mari', 'Javanese', 'Bavarian',
-    'Nauru', 'Erzya', 'Ojibwa', 'Venetian', 'Inuktitut', 'Ligurian', 'Cantonese', 'Southern Altai', 'Igbo'
+    'Nauru', 'Erzya', 'Ojibwa', 'Venetian', 'Inuktitut', 'Ligurian', 'Cantonese', 'Southern Altai', 'Igbo', 'Carolinian'
 }
 EXCLUDED_PARTIAL = {'Unknown'}
 
@@ -88,6 +88,9 @@ def main():
 
                 for language, name in entity['name'].items():
 
+                    if language in ('Swiss German', 'Kven Finnish','Norwegian Nynorsk', 'Norwegian Bokmål'):
+                        continue
+
                     # Only keep toponyms whose country is a current sovereign state
                     if not any(c in COUNTRY_LANGUAGES for c in entity['country']):
                         continue
@@ -114,10 +117,10 @@ def main():
 
                     # Ignore rare diacritics and combining characters that appeared when splitting
                     # the diacritics from the underlying character.
-                    name_romanised.replace('̍', '')
-                    name_romanised.replace('̭', '')
-                    name_romanised.replace('̑', '')
-                    name_romanised.replace('̓', '')
+                    name_romanised = name_romanised.replace('̍', '')
+                    name_romanised = name_romanised.replace('̭', '')
+                    name_romanised = name_romanised.replace('̑', '')
+                    name_romanised = name_romanised.replace('̓', '')
 
                     if 'ƛ' in name_romanised:
                         excluded_characters += 1
