@@ -2,7 +2,7 @@ import gzip
 import json
 import os
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, split_diacritics, get_countries_names
@@ -11,6 +11,8 @@ from clean import OCCURRENCE_THRESHOLD
 
 MIN_LENGTH_THRESHOLD = 2
 MAX_LENGTH_THRESHOLD = 25
+
+COUNTRY_LANGUAGES = get_country_languages()
 
 
 def main():
@@ -21,9 +23,6 @@ def main():
     breakdown_by_language = Counter()
     breakdown_by_country = Counter()
     breakdown_by_length = Counter()
-
-    length_by_country = defaultdict(Counter)
-    length_by_language = defaultdict(Counter)
 
     excluded_characters = 0
     excluded_length = 0
@@ -52,6 +51,8 @@ def main():
                         excluded_length += 1
                         continue
 
+                    length = len(name_romanised)
+
                     name_romanised = split_diacritics(name_romanised)
 
                     anthroponym = {
@@ -62,7 +63,8 @@ def main():
                         'id': entity['id'],
                         'type': entity['type'],
                         'country': [country for country in entity['occurrences']['country_of_birth'].keys() if
-                                    entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD],
+                                    entity['occurrences']['country_of_birth'][
+                                        country] >= OCCURRENCE_THRESHOLD] and country in country in COUNTRY_LANGUAGES,
                     }
 
                     output.write(json.dumps(anthroponym) + '\n')
@@ -71,12 +73,10 @@ def main():
 
                     character_counter.update(name_romanised)
                     breakdown_by_language.update([language])
-                    breakdown_by_length[len(name_romanised)] += 1
-                    length_by_language[language][len(name_romanised)] += 1
+                    breakdown_by_length[length] += 1
 
                     for country in entity['country']:
                         breakdown_by_country.update([country])
-                        length_by_country[country][len(name_romanised)] += 1
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
@@ -87,10 +87,6 @@ def main():
     print('Breakdown by language: ', breakdown_by_language, '\n')
     print('Breakdown by country: ', {countries_id_names.get(k, k): v for k, v in breakdown_by_country.items()}, '\n')
     print('Breakdown by length (romanised): ', breakdown_by_length, '\n')
-
-    print('Length by country (romanised): ', {countries_id_names.get(k, k): v for k, v in length_by_country.items()},
-          '\n')
-    print('Length by language (romanised): ', length_by_language, '\n')
 
     print('# of anthroponyms excluded due to characters: ', excluded_characters, '\n')
     print('# of anthroponyms excluded due to length: ', excluded_length, '\n')
