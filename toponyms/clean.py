@@ -61,7 +61,7 @@ def main():
                 # Get labels (dictionary).
                 labels = entity['info'].get('labels', None)
 
-                # Get list of languages spoken in the country where the entity is located.
+                # Get list of languages spoken in the countries where the entity is located.
                 languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
 
                 # Nothing to be done here (entity has neither native labels nor labels).
@@ -72,10 +72,14 @@ def main():
                 # If no native labels, use labels linked to the languages of the country.
                 if not entity['name']:
                     entity['name'] = {
-                        Language.get(language).language_name(): {'name': labels.get(language, {}).get('value'),
-                                                                 'code': language,
-                                                                 'language': Language.get(language).language_name()}
-                        for language in languages if labels.get(language, {})}
+                        Language.get(language).language_name(): {
+                            'name': labels[language]['value'],
+                            'code': language,
+                            'language': Language.get(language).language_name()
+                        }
+                        for language in languages
+                        if labels.get(language, {}).get('value')
+                    }
 
                 # If no native labels or labels in the languages of the country, use the
                 # labels associated to the languages below as a fallback and assign that to all languages

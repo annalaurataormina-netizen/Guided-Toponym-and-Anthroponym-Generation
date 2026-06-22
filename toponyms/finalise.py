@@ -53,7 +53,7 @@ def main():
                         excluded_language += 1
                         continue
 
-                    if name_romanised == '':
+                    if not name_romanised:
                         excluded_characters += 1
                         continue
 
@@ -85,7 +85,6 @@ def main():
 
                     for country in entity['country']:
                         breakdown_by_country.update([country])
-
                         length_by_country[country][len(name_romanised)] += 1
 
                     length_by_language[language][len(name_romanised)] += 1

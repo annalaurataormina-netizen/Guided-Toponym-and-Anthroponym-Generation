@@ -195,9 +195,12 @@ def get_place_country() -> Dict[str, str]:
 
 # Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
 def get_romanised(name):
+    transliterator = Transliterator.createInstance('Any-Latin; NFC')
+    name_romanised = transliterator.transliterate(name)
+
     valid = ''
 
-    for char in name:
+    for char in name_romanised:
 
         cat = unicodedata.category(char)
         block = unicodedata.name(char, '')
