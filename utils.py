@@ -4,6 +4,7 @@ import unicodedata
 from typing import Dict, List
 
 import requests
+from icu import Transliterator
 
 
 # Returns the list of qids to be used to filter anthroponyms or toponyms

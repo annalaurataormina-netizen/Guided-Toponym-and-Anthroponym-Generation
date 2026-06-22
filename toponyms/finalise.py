@@ -4,8 +4,6 @@ import os
 import sys
 from collections import Counter, defaultdict
 
-from icu import Transliterator
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, get_countries_names, split_diacritics
 
