@@ -7,11 +7,12 @@ from collections import Counter
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, get_countries_names, split_diacritics, get_country_languages
 
-MIN_LENGTH_THRESHOLD = 2
-MAX_LENGTH_THRESHOLD = 25
+MIN_LENGTH_THRESHOLD = 3
+MAX_LENGTH_THRESHOLD = 50
 
 COUNTRY_LANGUAGES = get_country_languages()
 
+# Languages that are not really spoken nowadays.
 EXCLUDED_EXACT = {
     'Uncoded languages', 'Multiple languages', 'Australian languages',
     'Mycenaean Greek', 'Ancient Greek', 'Sumerian', 'Akkadian',
@@ -20,6 +21,7 @@ EXCLUDED_EXACT = {
     'Sanskrit', 'Ancient Egyptian', 'Literary Chinese', 'Ottoman Turkish', 'Church Slavic',
     'Prussian', 'Taino', 'Wyandot', 'Berber languages', 'Western Abnaki', 'Koyukon', 'Pite Sami'
 }
+# Below have names for less than 200 toponyms.
 EXCLUDED_SMALL = {
     'Aleut', 'Navajo', 'Corsican', 'Avaric', 'Siberian Tatar', 'Atikamekw', 'Nahuatl languages',
     'Yoruba', 'Veps', 'Russia Buriat', 'Tahitian', 'Komi-Permyak', 'Pampanga', 'Mazanderani',
@@ -48,7 +50,14 @@ EXCLUDED_SMALL = {
     'Romany', 'Mixtepec Mixtec', 'Literary Chinese', 'Vlax Romani', 'Kuvi', 'Tagish',
     'Jamaican Creole English', 'Tumbuka', 'Rajasthani', 'Rapanui', 'Marwari (India)', 'Ingrian',
     'Nanai', 'Kulon-Pazeh', 'Colognian', 'Sranan Tongo', 'Hassaniyya', 'Pular', 'Istro Romanian',
-    'Louisiana Creole', 'Kanakanabu', 'Rutul', 'Betawi', 'Zuni', 'Dargwa', 'Min Nan Chinese', 'Faroese', 'Jèrriais'
+    'Louisiana Creole', 'Kanakanabu', 'Rutul', 'Betawi', 'Zuni', 'Dargwa', 'Min Nan Chinese', 'Faroese', 'Jèrriais',
+    'Tongan', 'North Ndebele', 'Lower Sorbian', 'Chechen', 'Sundanese', 'Skolt Sami', 'Marshallese', 'Yakut', 'Innu-aimun',
+    'Welsh', 'Sicilian', 'Tuvinian', 'Low German', 'Aragonese', 'Samoan', 'Adyghe', 'Karelian', 'Tlingit', 'Dagbani',
+    'Central Yupik', "Mi'kmaw", 'Sardinian', 'Scots', 'Filipino', 'Kashubian', 'Bislama', 'Komi', 'Moksha', 'Cornish',
+    'Udmurt', 'Kalmyk', 'Friulian', 'Limburgish', 'Inupiaq', 'Walloon', 'Kabardian', 'Western Mari', 'Piedmontese',
+    'West Flemish', 'Western Panjabi', 'Breton', 'Wallisian', 'Algonquin', 'Western Frisian', 'Arpitan', 'Karachay-Balkar',
+    'Asturian', 'Khakas', 'Hawaiian', 'Lombard', 'Ingush', 'Kumyk', 'Algerian Arabic', 'Lak', 'Eastern Mari', 'Javanese', 'Bavarian',
+    'Nauru', 'Erzya', 'Ojibwa', 'Venetian', 'Inuktitut', 'Ligurian', 'Cantonese', 'Southern Altai', 'Igbo'
 }
 EXCLUDED_PARTIAL = {'Unknown'}
 
@@ -79,6 +88,8 @@ def main():
 
                 for language, name in entity['name'].items():
 
+                    if language in {}
+
                     # Only keep toponyms whose country is a current sovereign state
                     if not any(c in COUNTRY_LANGUAGES for c in entity['country']):
                         continue
@@ -95,13 +106,24 @@ def main():
                         excluded_characters += 1
                         continue
 
-                    if len(name_romanised) < MIN_LENGTH_THRESHOLD or len(name_romanised) > MAX_LENGTH_THRESHOLD:
+                    length = len(name_romanised)
+
+                    if length < MIN_LENGTH_THRESHOLD or length > MAX_LENGTH_THRESHOLD:
                         excluded_length += 1
                         continue
 
-                    length = len(name_romanised)
-
                     name_romanised = split_diacritics(name_romanised)
+
+                    # Ignore rare diacritics and combining characters that appeared when splitting
+                    # the diacritics from the underlying character.
+                    name_romanised.replace('̍', '')
+                    name_romanised.replace('̭', '')
+                    name_romanised.replace('̑', '')
+                    name_romanised.replace('̓', '')
+
+                    if 'ƛ' in name_romanised:
+                        excluded_characters += 1
+                        continue
 
                     toponym = {
                         'name_romanised': name_romanised,
