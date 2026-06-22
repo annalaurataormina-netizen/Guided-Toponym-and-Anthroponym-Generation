@@ -1,29 +1,32 @@
 import gzip
 import json
+import os
+import sys
 from collections import Counter, defaultdict
 
-from icu import Transliterator
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils import get_romanised, split_diacritics, get_countries_names
 
 from clean import OCCURRENCE_THRESHOLD
 
+MIN_LENGTH_THRESHOLD = 2
+MAX_LENGTH_THRESHOLD = 25
+
 
 def main():
-    transliterator = Transliterator.createInstance("Any-Latin")
     counter = 0
 
     character_counter = Counter()
-    character_counter_romanised = Counter()
 
     breakdown_by_language = Counter()
     breakdown_by_country = Counter()
     breakdown_by_length = Counter()
-    breakdown_by_length_romanised = Counter()
 
     length_by_country = defaultdict(Counter)
     length_by_language = defaultdict(Counter)
 
-    length_by_country_romanised = defaultdict(Counter)
-    length_by_language_romanised = defaultdict(Counter)
+    excluded_characters = 0
+    excluded_length = 0
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms_cleaned.jsonl.gz', 'rt') as input:
         with gzip.open('/vol/bitbucket/at2225/anthroponyms_final.jsonl.gz', 'wt') as output:
@@ -39,7 +42,17 @@ def main():
                 for language, name in entity['name'].items():
 
                     # Get the romanised version of the name.
-                    name_romanised = transliterator.transliterate(name['name'])
+                    name_romanised = get_romanised(name['name'])
+
+                    if not name_romanised:
+                        excluded_characters += 1
+                        continue
+
+                    if len(name_romanised) < MIN_LENGTH_THRESHOLD or len(name_romanised) > MAX_LENGTH_THRESHOLD:
+                        excluded_length += 1
+                        continue
+
+                    name_romanised = split_diacritics(name_romanised)
 
                     anthroponym = {
                         'name_romanised': name_romanised,
@@ -48,7 +61,6 @@ def main():
                         'language_code': name['code'],
                         'id': entity['id'],
                         'type': entity['type'],
-                        # This should also cover the native labels, but it's not guaranteed.
                         'country': [country for country in entity['occurrences']['country_of_birth'].keys() if
                                     entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD],
                     }
@@ -57,34 +69,31 @@ def main():
 
                     counter += 1
 
-                    character_counter.update(name['name'])
-                    character_counter_romanised.update(name_romanised)
-
+                    character_counter.update(name_romanised)
                     breakdown_by_language.update([language])
+                    breakdown_by_length[len(name_romanised)] += 1
+                    length_by_language[language][len(name_romanised)] += 1
 
-                    breakdown_by_length[len(name['name'])] += 1
-                    breakdown_by_length_romanised[len(name_romanised)] += 1
-
-                    for country in anthroponym['country']:
+                    for country in entity['country']:
                         breakdown_by_country.update([country])
+                        length_by_country[country][len(name_romanised)] += 1
 
-                        length_by_country[country][len(name['name'])] += 1
-                        length_by_country_romanised[country][len(name_romanised)] += 1
+    countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
-                    length_by_language[language][len(name['name'])] += 1
-                    length_by_language_romanised[language][len(name_romanised)] += 1
+    print('# of anthroponyms: ', counter, '\n')
 
-    print('# of anthroponym: ', counter)
-    print('Character occurrences: ', character_counter)
-    print('Character occurrences in romanised names: ', character_counter_romanised)
-    print('Breakdown by language: ', breakdown_by_language)
-    print('Breakdown by country: ', breakdown_by_country)
-    print('Breakdown by length: ', breakdown_by_length)
-    print('Breakdown by length (romanised): ', breakdown_by_length_romanised)
-    print('Length by country: ', length_by_country)
-    print('Length by language: ', length_by_language)
-    print('Length by country (romanised): ', length_by_country_romanised)
-    print('Length by language (romanised): ', length_by_language_romanised)
+    print('Character occurrences (romanised): ', character_counter, '\n')
+
+    print('Breakdown by language: ', breakdown_by_language, '\n')
+    print('Breakdown by country: ', {countries_id_names.get(k, k): v for k, v in breakdown_by_country.items()}, '\n')
+    print('Breakdown by length (romanised): ', breakdown_by_length, '\n')
+
+    print('Length by country (romanised): ', {countries_id_names.get(k, k): v for k, v in length_by_country.items()},
+          '\n')
+    print('Length by language (romanised): ', length_by_language, '\n')
+
+    print('# of anthroponyms excluded due to characters: ', excluded_characters, '\n')
+    print('# of anthroponyms excluded due to length: ', excluded_length, '\n')
 
 
 if __name__ == '__main__':

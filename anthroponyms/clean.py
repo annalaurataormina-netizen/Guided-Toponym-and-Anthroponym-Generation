@@ -59,7 +59,6 @@ def main():
             country_of_birth = PLACE_COUNTRY.get(place_of_birth, None)
 
             for given_name in given_names:
-
                 if given_name not in given_names_occurrences:
                     given_names_occurrences[given_name] = {
                         'id': given_name,
@@ -97,9 +96,9 @@ def main():
     print('# of given name occurrences: ', len(given_names_occurrences))
     print('# of family name occurrences: ', len(family_names_occurrences))
     print('100 given name occurrences (shuffled): ',
-          random.sample(given_names_occurrences.values(), min(100, len(given_names_occurrences))))
+          random.sample(list(given_names_occurrences.values()), min(100, len(given_names_occurrences))))
     print('100 family name occurrences (shuffled): ',
-          random.sample(family_names_occurrences.values(), min(100, len(family_names_occurrences))))
+          random.sample(list(family_names_occurrences.values()), min(100, len(family_names_occurrences))))
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms_humans_cleaned.jsonl.gz', 'wt') as output:
 

@@ -76,16 +76,13 @@ def main():
                     counter += 1
 
                     character_counter.update(name_romanised)
-
                     breakdown_by_language.update([language])
-
                     breakdown_by_length[len(name_romanised)] += 1
+                    length_by_language[language][len(name_romanised)] += 1
 
                     for country in entity['country']:
                         breakdown_by_country.update([country])
                         length_by_country[country][len(name_romanised)] += 1
-
-                    length_by_language[language][len(name_romanised)] += 1
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
