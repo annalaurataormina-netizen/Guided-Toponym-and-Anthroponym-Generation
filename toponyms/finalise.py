@@ -88,7 +88,7 @@ def main():
                     if language in EXCLUDED_EXACT or language in EXCLUDED_SMALL or any(
                             excl in language for excl in EXCLUDED_PARTIAL):
                         excluded_language += 1
-                    continue
+                        continue
 
                     # Get the romanised version of the name.
                     name_romanised = get_romanised(name['name'])
