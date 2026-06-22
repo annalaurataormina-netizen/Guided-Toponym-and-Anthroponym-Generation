@@ -207,6 +207,10 @@ def get_romanised(name):
         cat = unicodedata.category(char)
         block = unicodedata.name(char, '')
 
+        # Rare characters (occurrences < 5 for toponyms)
+        if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ', '̭', '̑', 'ƛ', '̓']:
+            return ''
+
         # Allow Latin letters
         if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
             valid += char

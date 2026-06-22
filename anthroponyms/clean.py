@@ -17,7 +17,7 @@ PLACE_COUNTRY = get_place_country()
 COUNTRY_LANGUAGES = get_country_languages()
 
 # Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
-OCCURRENCE_THRESHOLD = 50
+OCCURRENCE_THRESHOLD = 10
 
 def main():
 
@@ -27,6 +27,7 @@ def main():
     missing_id_counter = 0
     missing_name_counter = 0
     missing_occurrences_counter = 0
+    missing_labels_counter = 0
 
     given_names_occurrences = {}
     family_names_occurrences = {}
@@ -133,25 +134,32 @@ def main():
                                   language, name in
                                   native_labels.items()}
 
+                # Get P407 claims
+                languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
+                for language in languages_of_work_or_name:
+                    if language not in entity['name'] and native_labels:
+                        entity['name'][Language.get(language).language_name()] = {'name': list(native_labels.values())[0], 'code': language,
+                                                                                   'language': Language.get(
+                                                                                       language).language_name()}
+
                 labels = entity['info'].get('labels', None)
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
+                    missing_labels_counter += 1
                     continue
 
-                ### CONTINUE FROM HERE ###
-
                 # Skip (no occurrences)
-                if not entity['occurrences'] or entity['occurrences']['count'] == 0:
+                if not entity['name'] and (not entity['occurrences'] or entity['occurrences']['count'] == 0):
                     missing_occurrences_counter += 1
                     continue
 
                 # Get the list of countries where the names occurs (using place of birth) more than X times.
-                countries = [country for country in entity['occurrences']['country_of_birth'].keys() if
+                countries_of_occurrence = [country for country in entity['occurrences']['country_of_birth'].keys() if
                              entity['occurrences']['country_of_birth'][country] >= OCCURRENCE_THRESHOLD]
 
                 # Get list of languages spoken in the countries where the name occurs.
-                languages = get_languages(COUNTRY_LANGUAGES, countries)
+                languages = get_languages(COUNTRY_LANGUAGES, countries_of_occurrence)
 
                 # Expand the list of names with languages from the countries where the name occurs more than the threshold.
                 entity['name'] = {
@@ -180,6 +188,7 @@ def main():
     print('# of anthroponyms: ', counter_anthroponyms)
     print('# of anthroponyms missing ID: ', missing_id_counter)
     print('# of anthroponyms missing name: ', missing_name_counter)
+    print('# of anthroponyms missing labels: ', missing_labels_counter)
     print('# of anthroponyms missing occurrences: ', missing_occurrences_counter)
 
 
