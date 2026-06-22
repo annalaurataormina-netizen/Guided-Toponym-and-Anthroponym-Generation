@@ -197,7 +197,8 @@ def get_place_country() -> Dict[str, str]:
 
 # Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
 def get_romanised(name):
-    name_romanised = TRANSLITERATOR.transliterate(name)
+
+    name_romanised = unicodedata.normalize('NFKC', TRANSLITERATOR.transliterate(name))
 
     valid = ''
 
@@ -206,45 +207,45 @@ def get_romanised(name):
         cat = unicodedata.category(char)
         block = unicodedata.name(char, '')
 
-        # Allow Latin letters and combining marks
-        if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Mn') and ('LATIN' in block or 'COMBINING' in block):
+        # Allow Latin letters
+        if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
             valid += char
             continue
 
-        # Skip these characters
-        if char in '0123456789,()[]{}.#:_«»<>?!@£$%^&*~|/°№♡○•…′″½⓶©®™←→↑↓;+=\\，？（）„‚"`´""\u00b4':
+        # Allow combining diacritics (Latin only)
+        if cat == 'Mn' and 'ARABIC' not in block and 'MYANMAR' not in block:
+            valid += char
             continue
 
-        # Keep space and hyphen (but standardise)
-        if char in ' -–—‑':  # spaces and dashes (expand your existing hyphen check)
-            valid += '-' if char != ' ' else ' '
-            continue
-
-        # Standardise apostrophes
-        if char in "'''’‘":
-            valid += "'"
+        # Standardise spaces
+        if cat == 'Zs' or char == ' ':
+            valid += ' '
             continue
 
         # Standardise hyphens
-        if char in '-\u2011\u2013\u2014':
+        if char in '-–—‑‐\u2011\u2013\u2014':
             valid += '-'
             continue
 
-        # Keep middle dot, secondary stress
+        # Standardise apostrophes
+        if char in "'''''\u2019":
+            valid += "'"
+            continue
+
+        # Keep these
         if char in '·ˌ':
             valid += char
             continue
 
-        if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Lo', 'Mc', 'Nl', 'No', 'So', 'Nd') and 'LATIN' not in block and 'COMBINING' not in block:
-            return ''
-
-        # Skip zero-width, directional marks, private use, spaces
-        if cat in ('Cf', 'Co', 'Zs'):
+        # Drop symbols, punctuation, digits
+        if cat in ('Po', 'Ps', 'Pe', 'Pi', 'Pf', 'Nd', 'No', 'Nl', 'So', 'Sm', 'Sk', 'Cf', 'Co'):
             continue
 
-        valid += char
+        # Drop non-Latin letters
+        if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Lo', 'Mc') and 'LATIN' not in block:
+            return ''
 
-    return valid
+    return valid.strip() or ''
 
 
 def split_diacritics(name: str) -> str:
