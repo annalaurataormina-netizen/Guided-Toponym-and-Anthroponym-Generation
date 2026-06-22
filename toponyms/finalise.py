@@ -121,6 +121,7 @@ def main():
                     name_romanised = name_romanised.replace('̭', '')
                     name_romanised = name_romanised.replace('̑', '')
                     name_romanised = name_romanised.replace('̓', '')
+                    name_romanised = name_romanised.replace('̟', '')
 
                     if 'ƛ' in name_romanised:
                         excluded_characters += 1
