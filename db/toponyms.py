@@ -3,6 +3,8 @@ import json
 import psycopg2
 from dotenv import load_dotenv
 import os
+import psycopg2.extras
+from psycopg2.extras import execute_many
 
 load_dotenv()
 
@@ -14,6 +16,8 @@ conn = psycopg2.connect(
     password=os.getenv("PGPASSWORD"),
     options='-c client_encoding=UTF8'
 )
+
+psycopg2.extras.register_default_jsonb(conn)
 
 cur = conn.cursor()
 
@@ -34,7 +38,7 @@ with gzip.open('/vol/bitbucket/at2225/toponyms_final.jsonl.gz', 'rt', encoding='
             cur.executemany("""
                 INSERT INTO toponyms.entries 
                 (id, language_code, name, name_romanised, language, countries, types)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s::text[], %s::text[])
                 ON CONFLICT (id, language_code) DO NOTHING
             """, batch)
             conn.commit()
@@ -44,7 +48,7 @@ with gzip.open('/vol/bitbucket/at2225/toponyms_final.jsonl.gz', 'rt', encoding='
         cur.executemany("""
             INSERT INTO toponyms.entries 
             (id, language_code, name, name_romanised, language, countries, types)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s::text[], %s::text[])
             ON CONFLICT (id, language_code) DO NOTHING
         """, batch)
         conn.commit()
