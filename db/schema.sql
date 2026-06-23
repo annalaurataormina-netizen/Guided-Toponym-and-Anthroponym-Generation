@@ -10,5 +10,5 @@ CREATE TABLE toponyms.entries (
 );
 
 CREATE INDEX ON toponyms.entries(language_code);
-CREATE INDEX ON toponyms.entries(countries) USING GIN;
-CREATE INDEX ON toponyms.entries(types) USING GIN;
+CREATE INDEX ON toponyms.entries(countries) USING GIN (countries);
+CREATE INDEX ON toponyms.entries(types) USING GIN (types);
