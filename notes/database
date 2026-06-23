@@ -25,3 +25,7 @@ toponyms.entries
 
 OTHER COMMANDS
 SELECT * FROM toponyms.entries LIMIT 10;
+
+Notes on the toponyms database:
+- Manually deleted these 3 entries: ('Q9512', 'it'), ('Q30940739', 'fr'), ('Q30028235', 'it')
+  because name was missing
