@@ -131,8 +131,7 @@ def main():
                 entity['name'] = {Language.get(language).language_name(): {'name': name, 'code': language,
                                                                            'language': Language.get(
                                                                                language).language_name()} for
-                                  language, name in native_labels.items() if
-                                  not (language.startswith('q') and language[1:].isdigit())}
+                                  language, name in native_labels.items()}
 
                 labels = entity['info'].get('labels', None)
 
@@ -140,6 +139,8 @@ def main():
                 languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
                 if languages_of_work_or_name:
                     for language in languages_of_work_or_name:
+                        if language.startswith('q') and language[1:].isdigit():
+                            continue
                         if Language.get(language).language_name() not in entity['name']:
                             name = native_labels.get(language, "")
                             if not name and labels:
