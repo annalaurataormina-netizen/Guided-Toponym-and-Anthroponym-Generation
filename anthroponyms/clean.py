@@ -191,18 +191,25 @@ def main():
                 # Expand the list of names with languages from the countries where the name occurs more than the threshold.
                 languages = get_languages(COUNTRY_LANGUAGES, countries_of_occurrence)
                 if languages:
-                    for language in languages:
-                        name = native_labels.get(language, "")
+                    for language_id in languages:
+
+                        iso = LANGUAGE_IDS_TO_ISO.get(language_id)
+
+                        if not iso:
+                            continue
+
+                        name = native_labels.get(iso, "")
+
                         if not name and labels:
-                            name = labels.get(language, {}).get('value', "")
+                            name = labels.get(iso, {}).get('value', "")
                         if not name and native_labels:
                             name = list(native_labels.values())[0]
                         if not name:
                             continue
-                        if Language.get(language).language_name() not in entity['name']:
-                            entity['name'][Language.get(language).language_name()] = {'name': name, 'code': language,
+                        if Language.get(iso).language_name() not in entity['name']:
+                            entity['name'][Language.get(iso).language_name()] = {'name': name, 'code': iso,
                                                                                       'language': Language.get(
-                                                                                          language).language_name()}
+                                                                                          iso).language_name()}
 
                 if not entity['id']:
                     missing_id_counter += 1

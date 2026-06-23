@@ -10,7 +10,7 @@ from utils import get_romanised, get_countries_names, get_country_languages
 from clean import OCCURRENCE_THRESHOLD
 
 MIN_LENGTH_THRESHOLD = 2
-MAX_LENGTH_THRESHOLD = 25
+MAX_LENGTH_THRESHOLD = 30
 
 COUNTRY_LANGUAGES = get_country_languages()
 
