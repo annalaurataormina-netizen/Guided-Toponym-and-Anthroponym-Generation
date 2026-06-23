@@ -8,6 +8,7 @@ from icu import Transliterator
 
 TRANSLITERATOR = Transliterator.createInstance('Any-Latin; NFC')
 
+
 # Returns the list of qids to be used to filter anthroponyms or toponyms
 # from the dump based on the "instance of" field.
 def get_qids(target: str) -> Dict[str, str]:
@@ -144,7 +145,8 @@ def get_country_languages() -> Dict[str, List[str]]:
     country_languages['Q408'] = ['en']
 
     # India
-    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te', 'ur']
+    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te',
+                                 'ur']
 
     # Congo
     if country_languages.get('Q974', []):
@@ -199,7 +201,6 @@ def get_place_country() -> Dict[str, str]:
 
 # Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
 def get_romanised(name):
-
     name_romanised = unicodedata.normalize('NFKC', TRANSLITERATOR.transliterate(name))
 
     valid = ''
@@ -257,6 +258,7 @@ def get_romanised(name):
 def split_diacritics(name: str) -> str:
     return unicodedata.normalize('NFD', name)
 
+
 def get_countries_names(ids: list) -> dict[str, str]:
     country_id_name = {}
 
@@ -302,3 +304,30 @@ def get_countries_names(ids: list) -> dict[str, str]:
         country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
 
     return country_id_name
+
+
+def map_lang_ids_to_iso_codes() -> dict[str, str]:
+    url = "https://query.wikidata.org/sparql"
+
+    query = """
+    SELECT ?language ?isoCode WHERE {
+      ?language wdt:P218 ?isoCode.
+    }
+    """
+
+    headers = {
+        "User-Agent": "Guided-Toponym-and-Anthroponym-Generation/1.0 (anna.taormina25@imperial.ac.uk)"
+    }
+
+    r = requests.get(url, params={"format": "json", "query": query}, headers=headers)
+    data = r.json()
+
+    qid_to_iso = {}
+
+    for item in data["results"]["bindings"]:
+        qid = item["language"]["value"].split("/")[-1]
+        iso = item["isoCode"]["value"]
+
+        qid_to_iso[qid] = iso
+
+    return qid_to_iso

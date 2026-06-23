@@ -8,7 +8,7 @@ from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_claims, get_monolingual_claims, get_time_claims, get_place_country, get_languages, \
-    get_country_languages
+    get_country_languages, map_lang_ids_to_iso_codes
 
 # Dictionary mapping each place (ID) to a country (ID).
 PLACE_COUNTRY = get_place_country()
@@ -19,6 +19,7 @@ COUNTRY_LANGUAGES = get_country_languages()
 # Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
 OCCURRENCE_THRESHOLD = 10
 
+LANGUAGE_IDS_TO_ISO = map_lang_ids_to_iso_codes()
 
 def main():
     counter_anthroponyms = 0
@@ -137,21 +138,36 @@ def main():
 
                 # Get P407 claims
                 languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
+
                 if languages_of_work_or_name:
-                    for language in languages_of_work_or_name:
-                        if language.startswith('q') and language[1:].isdigit():
+                    for language_id in languages_of_work_or_name:
+
+                        iso = LANGUAGE_IDS_TO_ISO.get(language_id)
+                        if not iso:
                             continue
-                        if Language.get(language).language_name() not in entity['name']:
-                            name = native_labels.get(language, "")
-                            if not name and labels:
-                                name = labels.get(language, {}).get('value', "")
-                            if not name and native_labels:
-                                name = list(native_labels.values())[0]
-                            if not name:
-                                continue
-                            entity['name'][Language.get(language).language_name()] = {'name': name, 'code': language,
-                                                                                      'language': Language.get(
-                                                                                          language).language_name()}
+
+                        lang_obj = Language.get(iso)
+                        lang_name = lang_obj.language_name()
+
+                        if lang_name in entity["name"]:
+                            continue
+
+                        name = native_labels.get(iso, "")
+
+                        if not name and labels:
+                            name = labels.get(iso, {}).get("value", "")
+
+                        if not name and native_labels:
+                            name = next(iter(native_labels.values()), "")
+
+                        if not name:
+                            continue
+
+                        entity["name"][lang_name] = {
+                            "name": name,
+                            "code": iso,
+                            "language": lang_name
+                        }
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
