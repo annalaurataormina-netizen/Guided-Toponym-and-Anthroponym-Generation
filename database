@@ -1,0 +1,13 @@
+TO CONNECT:
+psql -h db.doc.ic.ac.uk -p 5432 -U at2225
+Then type password in ~/.pgpass
+
+TO CHECK EXISTING TABLES:
+\dt
+
+TO CREATE TABLE:
+CREATE SCHEMA toponyms;
+
+TO QUIT
+\q
+
