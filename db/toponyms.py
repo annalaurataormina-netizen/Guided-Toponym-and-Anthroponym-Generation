@@ -12,6 +12,7 @@ conn = psycopg2.connect(
     user=os.getenv("PGUSER"),
     dbname=os.getenv("PGDATABASE"),
     password=os.getenv("PGPASSWORD"),
+    options='-c client_encoding=UTF8'
 )
 
 cur = conn.cursor()
