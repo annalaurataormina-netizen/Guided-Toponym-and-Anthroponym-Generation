@@ -93,13 +93,13 @@ def main():
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
 
-    print('# of humans: ', counter_humans)
-    print('# of given name occurrences: ', len(given_names_occurrences))
-    print('# of family name occurrences: ', len(family_names_occurrences))
+    print('# of humans: ', counter_humans, '\n')
+    print('# of given name occurrences: ', len(given_names_occurrences), '\n')
+    print('# of family name occurrences: ', len(family_names_occurrences), '\n')
     print('100 given name occurrences (shuffled): ',
-          random.sample(list(given_names_occurrences.values()), min(100, len(given_names_occurrences))))
+          random.sample(list(given_names_occurrences.values()), min(100, len(given_names_occurrences))), '\n')
     print('100 family name occurrences (shuffled): ',
-          random.sample(list(family_names_occurrences.values()), min(100, len(family_names_occurrences))))
+          random.sample(list(family_names_occurrences.values()), min(100, len(family_names_occurrences))), '\n')
 
     with gzip.open('/vol/bitbucket/at2225/anthroponyms_humans_cleaned.jsonl.gz', 'wt') as output:
 
@@ -134,6 +134,8 @@ def main():
                                   language, name in
                                   native_labels.items()}
 
+                labels = entity['info'].get('labels', None)
+
                 # Get P407 claims
                 languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
                 if languages_of_work_or_name:
@@ -149,8 +151,6 @@ def main():
                             entity['name'][Language.get(language).language_name()] = {'name': name, 'code': language,
                                                                                        'language': Language.get(
                                                                                            language).language_name()}
-
-                labels = entity['info'].get('labels', None)
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
@@ -204,11 +204,11 @@ def main():
 
                 output.write(json.dumps(entity) + '\n')
 
-    print('# of anthroponyms: ', counter_anthroponyms)
-    print('# of anthroponyms missing ID: ', missing_id_counter)
-    print('# of anthroponyms missing name: ', missing_name_counter)
-    print('# of anthroponyms missing labels: ', missing_labels_counter)
-    print('# of anthroponyms missing occurrences: ', missing_occurrences_counter)
+    print('# of anthroponyms: ', counter_anthroponyms, '\n')
+    print('# of anthroponyms missing ID: ', missing_id_counter, '\n')
+    print('# of anthroponyms missing name: ', missing_name_counter, '\n')
+    print('# of anthroponyms missing labels: ', missing_labels_counter, '\n')
+    print('# of anthroponyms missing occurrences: ', missing_occurrences_counter, '\n')
 
 
 if __name__ == '__main__':

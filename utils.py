@@ -257,7 +257,6 @@ def get_romanised(name):
 def split_diacritics(name: str) -> str:
     return unicodedata.normalize('NFD', name)
 
-
 def get_countries_names(ids: list) -> dict[str, str]:
     country_id_name = {}
 

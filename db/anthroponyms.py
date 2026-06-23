@@ -19,7 +19,7 @@ psycopg2.extras.register_default_jsonb(conn)
 
 cur = conn.cursor()
 
-with gzip.open('/vol/bitbucket/at2225/toponyms_final.jsonl.gz', 'rt', encoding='utf-8') as f:
+with gzip.open('/vol/bitbucket/at2225/anthroponyms_final.jsonl.gz', 'rt', encoding='utf-8') as f:
     batch = []
     for line in f:
         t = json.loads(line)

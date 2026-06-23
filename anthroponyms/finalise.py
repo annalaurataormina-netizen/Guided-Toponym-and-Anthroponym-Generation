@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_romanised, split_diacritics, get_countries_names
+from utils import get_romanised, get_countries_names, get_country_languages
 
 from clean import OCCURRENCE_THRESHOLD
 
@@ -52,8 +52,6 @@ def main():
                         continue
 
                     length = len(name_romanised)
-
-                    name_romanised = split_diacritics(name_romanised)
 
                     anthroponym = {
                         'name_romanised': name_romanised,

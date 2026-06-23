@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_romanised, get_countries_names, split_diacritics, get_country_languages
+from utils import get_romanised, get_countries_names, get_country_languages
 
 MIN_LENGTH_THRESHOLD = 3
 MAX_LENGTH_THRESHOLD = 50
@@ -51,12 +51,15 @@ EXCLUDED_SMALL = {
     'Jamaican Creole English', 'Tumbuka', 'Rajasthani', 'Rapanui', 'Marwari (India)', 'Ingrian',
     'Nanai', 'Kulon-Pazeh', 'Colognian', 'Sranan Tongo', 'Hassaniyya', 'Pular', 'Istro Romanian',
     'Louisiana Creole', 'Kanakanabu', 'Rutul', 'Betawi', 'Zuni', 'Dargwa', 'Min Nan Chinese', 'Faroese', 'Jèrriais',
-    'Tongan', 'North Ndebele', 'Lower Sorbian', 'Chechen', 'Sundanese', 'Skolt Sami', 'Marshallese', 'Yakut', 'Innu-aimun',
+    'Tongan', 'North Ndebele', 'Lower Sorbian', 'Chechen', 'Sundanese', 'Skolt Sami', 'Marshallese', 'Yakut',
+    'Innu-aimun',
     'Welsh', 'Sicilian', 'Tuvinian', 'Low German', 'Aragonese', 'Samoan', 'Adyghe', 'Karelian', 'Tlingit', 'Dagbani',
     'Central Yupik', "Mi'kmaw", 'Sardinian', 'Scots', 'Filipino', 'Kashubian', 'Bislama', 'Komi', 'Moksha', 'Cornish',
     'Udmurt', 'Kalmyk', 'Friulian', 'Limburgish', 'Inupiaq', 'Walloon', 'Kabardian', 'Western Mari', 'Piedmontese',
-    'West Flemish', 'Western Panjabi', 'Breton', 'Wallisian', 'Algonquin', 'Western Frisian', 'Arpitan', 'Karachay-Balkar',
-    'Asturian', 'Khakas', 'Hawaiian', 'Lombard', 'Ingush', 'Kumyk', 'Algerian Arabic', 'Lak', 'Eastern Mari', 'Javanese', 'Bavarian',
+    'West Flemish', 'Western Panjabi', 'Breton', 'Wallisian', 'Algonquin', 'Western Frisian', 'Arpitan',
+    'Karachay-Balkar',
+    'Asturian', 'Khakas', 'Hawaiian', 'Lombard', 'Ingush', 'Kumyk', 'Algerian Arabic', 'Lak', 'Eastern Mari',
+    'Javanese', 'Bavarian',
     'Nauru', 'Erzya', 'Ojibwa', 'Venetian', 'Inuktitut', 'Ligurian', 'Cantonese', 'Southern Altai', 'Igbo', 'Carolinian'
 }
 EXCLUDED_PARTIAL = {'Unknown'}
@@ -88,7 +91,7 @@ def main():
 
                 for language, name in entity['name'].items():
 
-                    if language in ('Swiss German', 'Kven Finnish','Norwegian Nynorsk', 'Norwegian Bokmål'):
+                    if language in ('Swiss German', 'Kven Finnish', 'Norwegian Nynorsk', 'Norwegian Bokmål'):
                         continue
 
                     # Only keep toponyms whose country is a current sovereign state
@@ -112,8 +115,6 @@ def main():
                     if length < MIN_LENGTH_THRESHOLD or length > MAX_LENGTH_THRESHOLD:
                         excluded_length += 1
                         continue
-
-                    name_romanised = split_diacritics(name_romanised)
 
                     # Ignore rare diacritics and combining characters that appeared when splitting
                     # the diacritics from the underlying character.
