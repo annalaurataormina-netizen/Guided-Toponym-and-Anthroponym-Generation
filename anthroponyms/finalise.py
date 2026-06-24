@@ -45,7 +45,6 @@ EXCLUDE_LANGUAGES = [
     "Prussian",
 
     # Language families
-    "Berber languages",
     "Bihari languages",
     "Nahuatl languages",
 
@@ -94,6 +93,11 @@ def main():
                         continue
 
                     length = len(name_romanised)
+
+                    # Rare characters (< 5 occurrences in the database)
+                    # For rare characters, ignoring diacritics and combining characters and
+                    # leaving all those in.
+                    name_romanised = name_romanised.replace('ǝ', 'e').replace('ɔ', 'o').replace('ŋ', 'ng')
 
                     countries_of_birth = entity.get('occurrences', {}).get('country_of_birth', {})
 
