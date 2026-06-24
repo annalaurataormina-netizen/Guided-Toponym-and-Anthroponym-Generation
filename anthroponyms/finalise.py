@@ -73,7 +73,7 @@ def main():
                     breakdown_by_language.update([language])
                     breakdown_by_length[length] += 1
 
-                    for country in entity['country']:
+                    for country in anthroponym['country']:
                         breakdown_by_country.update([country])
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
