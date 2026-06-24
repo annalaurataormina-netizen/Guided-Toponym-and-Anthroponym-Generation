@@ -8,6 +8,8 @@ from icu import Transliterator
 
 TRANSLITERATOR = Transliterator.createInstance('Any-Latin; NFC')
 
+EXCLUDE_COUNTRIES = {'Q23681', 'Q34754', 'Q29999', 'Q756617'}
+
 
 # Returns the list of qids to be used to filter anthroponyms or toponyms
 # from the dump based on the "instance of" field.
@@ -115,6 +117,9 @@ def get_country_languages() -> Dict[str, List[str]]:
 
         country = item['country']['value'].split('/')[-1]
         lang = item['lang']['value']
+
+        if country in EXCLUDE_COUNTRIES:
+            continue
 
         if country in country_languages.keys():
             country_languages[country].append(lang)

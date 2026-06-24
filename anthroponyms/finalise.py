@@ -147,11 +147,6 @@ def main():
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
-    for qid in COUNTRY_LANGUAGES:
-        name = countries_id_names.get(qid, qid)
-        if 'Kingdom' in name or 'Northern Cyprus' in name or 'Somaliland' in name:
-            print(qid, name)
-
     print('# of anthroponyms: ', counter, '\n')
 
     print('Character occurrences (romanised): ', character_counter, '\n')
