@@ -11,8 +11,8 @@ CREATE TABLE toponyms.entries (
 
 CREATE INDEX ON toponyms.entries(language_code);
 CREATE INDEX ON toponyms.entries(language);
-CREATE INDEX ON toponyms.entries(countries) USING GIN (countries);
-CREATE INDEX ON toponyms.entries(types) USING GIN (types);
+CREATE INDEX ON toponyms.entries USING GIN (countries);
+CREATE INDEX ON toponyms.entries USING GIN (types);
 
 CREATE TABLE anthroponyms.entries (
     id              TEXT    NOT NULL,
@@ -27,5 +27,5 @@ CREATE TABLE anthroponyms.entries (
 
 CREATE INDEX ON anthroponyms.entries(language_code);
 CREATE INDEX ON anthroponyms.entries(language);
-CREATE INDEX ON anthroponyms.entries(countries) USING GIN (countries);
-CREATE INDEX ON anthroponyms.entries(types) USING GIN (types);
+CREATE INDEX ON anthroponyms.entries USING GIN (countries);
+CREATE INDEX ON anthroponyms.entries USING GIN (types);
