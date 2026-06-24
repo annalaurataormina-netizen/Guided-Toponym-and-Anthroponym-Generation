@@ -47,7 +47,7 @@ def main():
     print('#: ', str(entities_missing_id))
     print('breakdown by type: ', types_missing_id)
 
-    print('FOR ENTITIES MISSING OCCURRECES')
+    print('FOR ENTITIES MISSING OCCURRENCES')
     print('#: ', len(entities_missing_occurrences))
     print('100 IDs (shuffled): ',
           random.sample(entities_missing_occurrences, min(100, len(entities_missing_occurrences))))
