@@ -62,7 +62,7 @@ def main():
                         'type': entity['type'],
                         'country': [country for country in entity['occurrences']['country_of_birth'].keys() if
                                     entity['occurrences']['country_of_birth'][
-                                        country] >= OCCURRENCE_THRESHOLD] and country in country in COUNTRY_LANGUAGES,
+                                        country] >= OCCURRENCE_THRESHOLD],
                     }
 
                     output.write(json.dumps(anthroponym) + '\n')
