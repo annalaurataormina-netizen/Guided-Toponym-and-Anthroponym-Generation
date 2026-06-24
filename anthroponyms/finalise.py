@@ -4,6 +4,8 @@ import os
 import sys
 from collections import Counter
 
+import langcodes
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, get_countries_names, get_country_languages
 
@@ -13,6 +15,35 @@ MIN_LENGTH_THRESHOLD = 2
 MAX_LENGTH_THRESHOLD = 30
 
 COUNTRY_LANGUAGES = get_country_languages()
+
+EXCLUDE_LANGUAGES = [
+    # Unknown/uncoded
+    "Unknown language",
+    "Unknown language [eml]",
+    "Unknown language [isv]",
+    "Uncoded languages",
+    "No linguistic content",
+
+    # Constructed languages
+    "Esperanto",
+    "Interlingua",
+    "Interlingue",
+    "Lingua Franca Nova",
+
+    # Liturgical/classical/dead
+    "Pali",
+    "Avestan",
+    "Classical Syriac",
+    "Literary Chinese",
+    "Latin",
+    "Old Norse",
+    "Old English",
+    "Middle English",
+    "Old Japanese",
+    "Ancient Greek",
+    "Ottoman Turkish",
+    "Prussian",
+]
 
 
 def main():
@@ -40,6 +71,9 @@ def main():
 
                 for language, name in entity['name'].items():
 
+                    if language in EXCLUDE_LANGUAGES:
+                        continue
+
                     # Get the romanised version of the name.
                     name_romanised = get_romanised(name['name'])
 
@@ -57,29 +91,58 @@ def main():
 
                     countries = [
                         c for c in countries_of_birth.keys()
-                        if countries_of_birth[c] >= OCCURRENCE_THRESHOLD
+                        if countries_of_birth[c] >= OCCURRENCE_THRESHOLD and c != 'null'
+                           and c in COUNTRY_LANGUAGES
                     ]
 
-                    anthroponym = {
-                        'name_romanised': name_romanised,
-                        'name': name['name'],
-                        'language': language,
-                        'language_code': name['code'],
-                        'id': entity['id'],
-                        'type': entity['type'],
-                        'country': countries,
-                    }
+                    languages_countries_of_birth = []
 
-                    output.write(json.dumps(anthroponym) + '\n')
+                    if language == 'Multiple languages':
+                        languages_countries_of_birth = [
+                            l for c in countries_of_birth
+                            if c in COUNTRY_LANGUAGES
+                            for l in COUNTRY_LANGUAGES[c]
+                        ]
 
-                    counter += 1
+                    if languages_countries_of_birth:
+                        for l in languages_countries_of_birth:
+                            if l in entity['name'].keys():
+                                continue
+                            anthroponym = {
+                                'name_romanised': name_romanised,
+                                'name': name['name'],
+                                'language': l,
+                                'language_code': langcodes.find(l).language,
+                                'id': entity['id'],
+                                'type': entity['type'],
+                                'country': countries,
+                            }
+                            output.write(json.dumps(anthroponym) + '\n')
+                            counter += 1
+                            character_counter.update(name_romanised)
+                            breakdown_by_language.update([l])
+                            breakdown_by_length[length] += 1
 
-                    character_counter.update(name_romanised)
-                    breakdown_by_language.update([language])
-                    breakdown_by_length[length] += 1
+                            for country in anthroponym['country']:
+                                breakdown_by_country.update([country])
+                    else:
+                        anthroponym = {
+                            'name_romanised': name_romanised,
+                            'name': name['name'],
+                            'language': language,
+                            'language_code': name['code'],
+                            'id': entity['id'],
+                            'type': entity['type'],
+                            'country': countries,
+                        }
+                        output.write(json.dumps(anthroponym) + '\n')
+                        counter += 1
+                        character_counter.update(name_romanised)
+                        breakdown_by_language.update([language])
+                        breakdown_by_length[length] += 1
 
-                    for country in anthroponym['country']:
-                        breakdown_by_country.update([country])
+                        for country in anthroponym['country']:
+                            breakdown_by_country.update([country])
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
 
