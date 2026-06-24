@@ -17,7 +17,7 @@ PLACE_COUNTRY = get_place_country()
 COUNTRY_LANGUAGES = get_country_languages()
 
 # Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
-OCCURRENCE_THRESHOLD = 1
+OCCURRENCE_THRESHOLD = 5
 
 LANGUAGE_IDS_TO_ISO = map_lang_ids_to_iso_codes()
 

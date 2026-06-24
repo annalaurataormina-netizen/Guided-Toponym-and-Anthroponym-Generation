@@ -91,7 +91,7 @@ def main():
 
                     countries = [
                         c for c in countries_of_birth.keys()
-                        if countries_of_birth[c] >= OCCURRENCE_THRESHOLD and c != 'null'
+                        if countries_of_birth[c] >= OCCURRENCE_THRESHOLD and c != 'null' and c is not None
                            and c in COUNTRY_LANGUAGES
                     ]
 
