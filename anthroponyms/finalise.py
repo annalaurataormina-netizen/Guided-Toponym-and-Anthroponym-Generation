@@ -53,6 +53,13 @@ def main():
 
                     length = len(name_romanised)
 
+                    countries_of_birth = entity.get('occurrences', {}).get('country_of_birth', {})
+
+                    countries = [
+                        c for c in countries_of_birth.keys()
+                        if countries_of_birth[c] >= OCCURRENCE_THRESHOLD
+                    ]
+
                     anthroponym = {
                         'name_romanised': name_romanised,
                         'name': name['name'],
@@ -60,9 +67,7 @@ def main():
                         'language_code': name['code'],
                         'id': entity['id'],
                         'type': entity['type'],
-                        'country': [country for country in entity['occurrences']['country_of_birth'].keys() if
-                                    entity['occurrences']['country_of_birth'][
-                                        country] >= OCCURRENCE_THRESHOLD],
+                        'country': countries,
                     }
 
                     output.write(json.dumps(anthroponym) + '\n')
