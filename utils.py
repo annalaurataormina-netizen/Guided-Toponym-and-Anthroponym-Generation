@@ -168,7 +168,7 @@ def get_country_languages() -> Dict[str, List[str]]:
     country_languages['Q29'] = ["es", "ca", "gl", "eu"]
 
     # Norway
-    country_languages['Q20'] = ['Q9043']
+    country_languages['Q20'] = ['no']
 
     return country_languages
 
