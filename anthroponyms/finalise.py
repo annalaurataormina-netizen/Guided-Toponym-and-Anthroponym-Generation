@@ -4,7 +4,7 @@ import os
 import sys
 from collections import Counter
 
-import langcodes
+from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_romanised, get_countries_names, get_country_languages
@@ -106,13 +106,13 @@ def main():
 
                     if languages_countries_of_birth:
                         for l in languages_countries_of_birth:
-                            if l in entity['name'].keys():
+                            if Language.get(l).language_name() in entity['name'].keys():
                                 continue
                             anthroponym = {
                                 'name_romanised': name_romanised,
                                 'name': name['name'],
-                                'language': l,
-                                'language_code': langcodes.find(l).language,
+                                'language': Language.get(l).language_name(),
+                                'language_code': l,
                                 'id': entity['id'],
                                 'type': entity['type'],
                                 'country': countries,
@@ -120,12 +120,12 @@ def main():
                             output.write(json.dumps(anthroponym) + '\n')
                             counter += 1
                             character_counter.update(name_romanised)
-                            breakdown_by_language.update([l])
+                            breakdown_by_language.update([Language.get(l).language_name()])
                             breakdown_by_length[length] += 1
 
                             for country in anthroponym['country']:
                                 breakdown_by_country.update([country])
-                    else:
+                    elif language != 'Multiple languages':
                         anthroponym = {
                             'name_romanised': name_romanised,
                             'name': name['name'],
