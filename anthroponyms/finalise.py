@@ -125,7 +125,7 @@ def main():
 
                             for country in anthroponym['country']:
                                 breakdown_by_country.update([country])
-                                
+
                     elif language != 'Multiple languages':
                         anthroponym = {
                             'name_romanised': name_romanised,
@@ -146,6 +146,11 @@ def main():
                             breakdown_by_country.update([country])
 
     countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
+
+    for qid in COUNTRY_LANGUAGES:
+        name = countries_id_names.get(qid, qid)
+        if 'Kingdom' in name or 'Northern Cyprus' in name or 'Somaliland' in name:
+            print(qid, name)
 
     print('# of anthroponyms: ', counter, '\n')
 
