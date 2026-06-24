@@ -102,7 +102,7 @@ def get_country_languages() -> Dict[str, List[str]]:
     '''
     query = '''
     SELECT ?country ?lang WHERE {
-      ?country wdt:P31 wd:Q6256 .
+      ?country wdt:P31 wd:Q3624078 .
       ?country wdt:P37 ?language .
       ?language wdt:P218 ?lang .
     }

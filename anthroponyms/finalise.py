@@ -43,6 +43,14 @@ EXCLUDE_LANGUAGES = [
     "Ancient Greek",
     "Ottoman Turkish",
     "Prussian",
+
+    # Language families
+    "Berber languages",
+    "Bihari languages",
+    "Nahuatl languages",
+
+    # Writing system
+    "N'Ko",
 ]
 
 
