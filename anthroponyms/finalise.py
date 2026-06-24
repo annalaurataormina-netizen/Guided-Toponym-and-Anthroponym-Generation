@@ -125,6 +125,7 @@ def main():
 
                             for country in anthroponym['country']:
                                 breakdown_by_country.update([country])
+                                
                     elif language != 'Multiple languages':
                         anthroponym = {
                             'name_romanised': name_romanised,

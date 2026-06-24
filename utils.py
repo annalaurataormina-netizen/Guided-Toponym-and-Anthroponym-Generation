@@ -214,13 +214,16 @@ def get_romanised(name):
         if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ']:
             return ''
 
+        if char in '︠︡\u034f':
+            continue
+
         # Allow Latin letters
         if cat in ('Ll', 'Lu', 'Lt', 'Lm') and 'LATIN' in block:
             valid += char
             continue
 
         # Allow combining diacritics (Latin only)
-        if cat == 'Mn' and 'ARABIC' not in block and 'MYANMAR' not in block:
+        if cat == 'Mn' and 'ARABIC' not in block and 'MYANMAR' not in block and 'PRESENTATION FORM' not in block:
             valid += char
             continue
 
