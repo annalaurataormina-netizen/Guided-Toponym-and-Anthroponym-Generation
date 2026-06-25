@@ -19,9 +19,11 @@ SET search_path TO toponyms;
 
 SCHEMA
 toponyms
+anthroponyms
 
 TABLES
 toponyms.entries
+anthroponyms.entries
 
 OTHER COMMANDS
 SELECT * FROM toponyms.entries LIMIT 10;
