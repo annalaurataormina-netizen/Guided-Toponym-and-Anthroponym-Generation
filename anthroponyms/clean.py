@@ -19,6 +19,8 @@ COUNTRY_LANGUAGES = get_country_languages()
 # Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
 OCCURRENCE_THRESHOLD = 5
 
+OCCURRENCE_THRESHOLD_CITIZENSHIP = 10
+
 LANGUAGE_IDS_TO_ISO = map_lang_ids_to_iso_codes()
 
 def main():
@@ -60,12 +62,21 @@ def main():
             place_of_birth = places_of_birth[0] if places_of_birth else None
             country_of_birth = PLACE_COUNTRY.get(place_of_birth, None)
 
+            country_of_citizenship = None
+
+            if not country_of_birth:
+                country_of_citizenship = get_claims(entity['info']['claims'], 'P27')
+
+            if country_of_citizenship:
+                country_of_citizenship = country_of_citizenship[0]
+
             for given_name in given_names:
                 if given_name not in given_names_occurrences:
                     given_names_occurrences[given_name] = {
                         'id': given_name,
                         'count': 0,
                         'country_of_birth': {},
+                        'country_of_citizenship': {},
                         'year_of_birth': {},
                         'gender': {}
                     }
@@ -75,6 +86,8 @@ def main():
                 entry['count'] += 1
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
+                if country_of_citizenship:
+                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(country_of_citizenship, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
 
             for family_name in family_names:
@@ -83,6 +96,7 @@ def main():
                         'id': family_name,
                         'count': 0,
                         'country_of_birth': {},
+                        'country_of_citizenship': {},
                         'year_of_birth': {},
                         'gender': {}
                     }
@@ -91,6 +105,8 @@ def main():
 
                 entry['count'] += 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
+                if country_of_citizenship:
+                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(country_of_citizenship, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
 
@@ -186,6 +202,12 @@ def main():
                                                if
                                                entity['occurrences']['country_of_birth'][
                                                    country] >= OCCURRENCE_THRESHOLD]
+
+                for country in entity['occurrences'].get('country_of_citizenship', {}).keys():
+                    if country is not None and country not in countries_of_occurrence and \
+                            entity['occurrences']['country_of_citizenship'][
+                                country] >= OCCURRENCE_THRESHOLD_CITIZENSHIP:
+                        countries_of_occurrence.append(country)
 
                 # Get list of languages spoken in the countries where the name occurs.
                 # Expand the list of names with languages from the countries where the name occurs more than the threshold.
