@@ -2,20 +2,22 @@ TO CONNECT:
 psql -h db.doc.ic.ac.uk -p 5432 -U at2225
 Then type password in ~/.pgpass
 
+TO CHANGE PATH
+SET search_path TO toponyms;
+SET search_path TO anthroponyms;
+
 TO CHECK EXISTING TABLES:
 \dt
 
 TO CREATE TABLE:
 CREATE SCHEMA toponyms;
+CREATE SCHEMA anthroponyms;
 
 TO QUIT
 \q
 
 TO RUN THE CODE IN db/schema.sql
 psql -h db.doc.ic.ac.uk -p 5432 -U at2225 -d at2225 -f db/schema.sql
-
-TO CHANGE PATH
-SET search_path TO toponyms;
 
 SCHEMA
 toponyms
@@ -25,8 +27,40 @@ TABLES
 toponyms.entries
 anthroponyms.entries
 
-OTHER COMMANDS
+TO REMOVE ALL ENTRIES
+TRUNCATE TABLE toponyms.entries;
+TRUNCATE TABLE anthroponyms.entries;
+
+TO SEE ENTRIES
 SELECT * FROM toponyms.entries LIMIT 10;
+SELECT * FROM anthroponyms.entries LIMIT 10;
+
+SANITY CHECKS
+1)
+SELECT *
+FROM toponyms.entries
+WHERE id IS NULL
+   OR name IS NULL
+   OR name_romanised IS NULL
+   OR language IS NULL
+   OR language_code IS NULL;
+2)
+SELECT *
+FROM toponyms.entries
+WHERE TRIM(id) = ''
+   OR TRIM(name) = ''
+   OR TRIM(name_romanised) = ''
+   OR TRIM(language) = ''
+   OR TRIM(language_code) = '';
+3)
+SELECT *
+FROM toponyms.entries
+WHERE language_code !~ '^[a-z]{2,3}(-[a-z0-9]{2,8})*$';
+4)
+SELECT id, language_code, COUNT(*)
+FROM toponyms.entries
+GROUP BY id, language_code
+HAVING COUNT(*) > 1;
 
 Notes on the toponyms database:
 - Manually deleted these 3 entries: ('Q9512', 'it'), ('Q30940739', 'fr'), ('Q30028235', 'it')
