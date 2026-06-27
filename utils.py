@@ -8,21 +8,20 @@ from icu import Transliterator
 
 TRANSLITERATOR = Transliterator.createInstance('Any-Latin; NFC')
 
-EXCLUDE_COUNTRIES = {'Q23681', 'Q34754', 'Q29999', 'Q756617'}
+# Norther Cyprus, Somaliland, Kingdom of Denmark and Kingdom of the Netherlands.
+EXCLUDED_COUNTRIES = {'Q23681', 'Q34754', 'Q29999', 'Q756617'}
 
 
-# Returns the list of qids to be used to filter anthroponyms or toponyms
-# from the dump based on the "instance of" field.
-def get_qids(target: str) -> Dict[str, str]:
+# Returns a dictionary used to filter anthroponyms or toponyms from the dump based on their P31.
+# The key is a qid, while the value is a list of types, e.g., ['human settlement'].
+def get_qids_and_types(category: str) -> Dict[str, str]:
     url = 'https://query.wikidata.org/sparql'
 
-    '''
-    SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
-    Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
-    P279* is to get subclasses recursively.
-    Order matters due to the way get_gids() processes them.
-    '''
-    if target == 'toponyms':
+    # SPARQL query to get all the subclasses of Q486972 ('human settlement'), Q56061 ('administrative territorial entity'),
+    # Q6256 ('country'), Q271669 ('landform'), Q15324 ('body of water'), Q23442 ('island').
+    # P279* allows to get subclasses recursively.
+    # Order matters due to the way get_gids() processes them.
+    if category == 'toponyms':
         query = '''
         SELECT DISTINCT ?item ?type WHERE {
           {?item wdt:P279* wd:Q486972 . BIND("settlement" AS ?type)}
@@ -34,11 +33,10 @@ def get_qids(target: str) -> Dict[str, str]:
         }
         '''
 
-    '''
-    SPARQL query to get all the subclasses of Q1243157 ('given name') and Q101352 ('family name').
-    P279* is to get subclasses recursively.
-    '''
-    if target == 'anthroponyms':
+    # SPARQL query to get all the subclasses of Q12308941 ('male given name'),
+    # Q11879590 ('female given name'), Q3409032 ('unisex given name') and Q101352 ('family name').
+    # P279* allows to get subclasses recursively.
+    if category == 'anthroponyms':
         query = '''
         SELECT DISTINCT ?item ?type WHERE {
           {?item wdt:P279* wd:Q12308941 . BIND("male given name" AS ?type)}
@@ -52,18 +50,20 @@ def get_qids(target: str) -> Dict[str, str]:
     r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()['results']['bindings']
 
-    qids = {}
+    qid_to_types = {}
+
     for item in data:
-        item_id = item['item']['value'].split('/')[-1]
-        item_type = item['type']['value']
-        if item_id in qids.keys():
-            qids[item_id].append(item_type)
+        qid = item['item']['value'].split('/')[-1]
+        type_ = item['type']['value']
+        if qid in qid_to_types.keys():
+            qid_to_types[qid].append(type_)
         else:
-            qids[item_id] = [item_type]
-    return qids
+            qid_to_types[qid] = [type_]
+
+    return qid_to_types
 
 
-# Returns the list of values for a given property among entity's claims.
+# Returns a list of values (qids) for a given property among entity's claims.
 def get_claims(claims: Dict, pid: str) -> list[str]:
     try:
         result = [claim['mainsnak']['datavalue']['value']['id'] for claim in claims[pid]]
@@ -83,7 +83,7 @@ def get_monolingual_claims(claims: Dict, pid: str) -> Dict[str, str]:
         return {}
 
 
-# Returns the list of values for a given property among entity's time claims.
+# Returns a list of values (qids) for a given property among entity's time claims.
 # Can be used on humans to extract their date of birth.
 def get_time_claims(claims: Dict, pid: str) -> list[str]:
     try:
@@ -93,8 +93,8 @@ def get_time_claims(claims: Dict, pid: str) -> list[str]:
         return []
 
 
-# Returns a dictionary where the key is a country (ID) and the value is a list of languages (ISO codes).
-def get_country_languages() -> Dict[str, List[str]]:
+# Returns a dictionary where the key is a country (qid) and the value is a list of languages (ISO codes).
+def country_to_languages() -> Dict[str, List[str]]:
     url = 'https://query.wikidata.org/sparql'
 
     '''
@@ -111,75 +111,74 @@ def get_country_languages() -> Dict[str, List[str]]:
     r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()
 
-    country_languages = {}
+    country_to_languages = {}
 
     for item in data['results']['bindings']:
 
         country = item['country']['value'].split('/')[-1]
         lang = item['lang']['value']
 
-        if country in EXCLUDE_COUNTRIES:
+        # Norther Cyprus, Somaliland, Kingdom of Denmark and Kingdom of Netherlands.
+        if country in EXCLUDED_COUNTRIES:
             continue
 
-        if country in country_languages.keys():
-            country_languages[country].append(lang)
+        if country in country_to_languages.keys():
+            country_to_languages[country].append(lang)
 
         else:
-            country_languages[country] = [lang]
+            country_to_languages[country] = [lang]
 
     # China
-    if 'Q148' not in country_languages.keys():
-        country_languages['Q148'] = ['zh']
-    elif 'zh' not in country_languages['Q148']:
-        country_languages['Q148'].append('zh')
+    if 'Q148' not in country_to_languages.keys():
+        country_to_languages['Q148'] = ['zh']
+    elif 'zh' not in country_to_languages['Q148']:
+        country_to_languages['Q148'].append('zh')
 
     # US
-    country_languages['Q30'] = ['en']
+    country_to_languages['Q30'] = ['en']
 
     # Vatican
-    country_languages['Q237'] = ['it']
+    country_to_languages['Q237'] = ['it']
 
     # Georgia
-    if country_languages.get('Q230', []):
-        country_languages['Q230'].append('kat')
-        country_languages['Q230'] = list(set(country_languages['Q230']))
+    if country_to_languages.get('Q230', []):
+        country_to_languages['Q230'].append('kat')
+        country_to_languages['Q230'] = list(set(country_to_languages['Q230']))
     else:
-        country_languages['Q230'] = ['kat']
+        country_to_languages['Q230'] = ['kat']
 
     # Australia
-    country_languages['Q408'] = ['en']
+    country_to_languages['Q408'] = ['en']
 
     # India
-    country_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te',
-                                 'ur']
+    country_to_languages['Q668'] = ['hi', 'as', 'bn', 'gu', 'kn', 'ml', 'mr', 'ne', 'or', 'pa', 'sa', 'sd', 'ta', 'te',
+                                    'ur']
 
     # Congo
-    if country_languages.get('Q974', []):
-        country_languages['Q974'].append('sw')
-        country_languages['Q974'].append('ln')
-        country_languages['Q974'].append('kg')
-        country_languages['Q974'].append('lua')
-        country_languages['Q974'] = list(set(country_languages['Q974']))
+    if country_to_languages.get('Q974', []):
+        country_to_languages['Q974'].extend(['sw', 'ln', 'kg', 'lua'])
+        country_to_languages['Q974'] = list(set(country_to_languages['Q974']))
     else:
-        country_languages['Q974'] = ['fr', 'sw', 'ln', 'kg', 'lua']
+        country_to_languages['Q974'] = ['fr', 'sw', 'ln', 'kg', 'lua']
 
     # Burkina Faso
-    country_languages['Q965'] = ['fr', 'mos', 'dyu', 'ful']
+    country_to_languages['Q965'] = ['fr', 'mos', 'dyu', 'ful']
 
     # Algeria
-    country_languages['Q262'] = ["ar", "fr", "kab", "ber"]
+    country_to_languages['Q262'] = ["ar", "fr", "kab", "ber"]
 
     # Spain
-    country_languages['Q29'] = ["es", "ca", "gl", "eu"]
+    country_to_languages['Q29'] = ["es", "ca", "gl", "eu"]
 
     # Norway
-    country_languages['Q20'] = ['no']
+    country_to_languages['Q20'] = ['no']
 
-    return country_languages
+    return country_to_languages
 
 
-# Based on a mapping, returns a list of unique languages for a list of countries.
-def get_languages(mapping: dict, countries: list) -> List[str]:
+# Based on a mapping of countries to languages as done by get_country_languages(),
+# returns a list of unique languages for a list of countries.
+def countries_to_languages(mapping: dict, countries: list) -> List[str]:
     if not countries:
         return []
     languages = []
@@ -188,8 +187,8 @@ def get_languages(mapping: dict, countries: list) -> List[str]:
     return list(set(languages)) if languages else []
 
 
-# Returns a dictionary mapping each place (ID) to a country (ID).
-def get_place_country() -> Dict[str, str]:
+# Returns a dictionary mapping each place (qid) to the country (qid) where it is located.
+def place_to_country() -> Dict[str, str]:
     with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'rt') as input:
         mapping = {}
 
@@ -204,8 +203,8 @@ def get_place_country() -> Dict[str, str]:
     return mapping
 
 
-# Returns romanised version of a string or an empty string, if the original contains characters that are now allowed.
-def get_romanised(name):
+# Returns the romanised version of a string or an empty string, if the original contains characters that are now allowed.
+def romanise(name):
     name_romanised = unicodedata.normalize('NFKC', TRANSLITERATOR.transliterate(name))
 
     valid = ''
@@ -215,7 +214,7 @@ def get_romanised(name):
         cat = unicodedata.category(char)
         block = unicodedata.name(char, '')
 
-        # Rare characters (occurrences < 5 for toponyms)
+        # Return '' if original string contains phonetic extension characters.
         if char in ['ɂ', 'Ɂ', 'ʋ', 'ʕ', 'Ɲ', 'ȝ', 'ɬ']:
             return ''
 
@@ -256,19 +255,21 @@ def get_romanised(name):
         if cat in ('Po', 'Ps', 'Pe', 'Pi', 'Pf', 'Nd', 'No', 'Nl', 'So', 'Sm', 'Sk', 'Cf', 'Co'):
             continue
 
-        # Drop non-Latin letters
+        # Drop strings containing non-Latin letters
         if cat in ('Ll', 'Lu', 'Lt', 'Lm', 'Lo', 'Mc') and 'LATIN' not in block:
             return ''
 
     return valid.strip() or ''
 
 
+# Returns the string after splitting the diacritics from the underlying character.
 def split_diacritics(name: str) -> str:
     return unicodedata.normalize('NFD', name)
 
 
-def get_countries_names(ids: list) -> dict[str, str]:
-    country_id_name = {}
+# Returns a dictionary where, for each country, the key is its qid and the value is its name.
+def qid_to_country_name(ids: list) -> dict[str, str]:
+    countries = {}
 
     url = 'https://query.wikidata.org/sparql'
 
@@ -290,12 +291,12 @@ def get_countries_names(ids: list) -> dict[str, str]:
 
         data = r.json()['results']['bindings']
         for country in data:
-            country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
+            countries[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
 
     ids_ = ids[batches * batch_size:]
 
     if not ids_:
-        return country_id_name
+        return countries
 
     values = ' '.join(f'wd:{id}' for id in ids_)
 
@@ -309,12 +310,13 @@ def get_countries_names(ids: list) -> dict[str, str]:
     r = requests.get(url, params={'format': 'json', 'query': query}, headers=headers)
     data = r.json()['results']['bindings']
     for country in data:
-        country_id_name[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
+        countries[country['country']['value'].split('/')[-1]] = country['countryLabel']['value']
 
-    return country_id_name
+    return countries
 
 
-def map_lang_ids_to_iso_codes() -> dict[str, str]:
+# Returns a dictionary where, for each language, the key is its qid and the value is its ISO code.
+def qid_to_iso() -> dict[str, str]:
     url = "https://query.wikidata.org/sparql"
 
     query = """

@@ -6,10 +6,10 @@ import sys
 from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_monolingual_claims, get_claims, get_country_languages, get_languages
+from utils import get_monolingual_claims, get_claims, country_to_languages, countries_to_languages
 
-# Dictionary mapping country to a list of languages.
-COUNTRY_LANGUAGES = get_country_languages()
+# Dictionary mapping each country to a list of languages.
+COUNTRY_TO_LANGUAGES = country_to_languages()
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     missing_name_counter = 0
     missing_country_counter = 0
 
-    with (gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input):
+    with gzip.open('/vol/bitbucket/at2225/toponyms.jsonl.gz', 'rt') as input:
         with gzip.open('/vol/bitbucket/at2225/toponyms_cleaned.jsonl.gz', 'wt') as output:
 
             for line in input:
@@ -36,33 +36,33 @@ def main():
                     excluded_dissolved_counter += 1
                     continue
 
-                # The value is a list of IDs for the countries.
+                # entity['country'] contains a list of qids for the countries where the place is located.
                 entity['country'] = get_claims(entity['info']['claims'], 'P17')
-
-                # Exclude historical entities.
-                claims = get_claims(entity['info']['claims'], 'P31')
-                if 'Q1620908' in claims or 'Q3024240' in claims or 'Q50068795' in claims or 'Q28171280' in claims or 'Q2072238' in claims or 'Q1250464' in claims:
-                    excluded_historical += 1
-                    continue
 
                 # 'Q34266' is the Russian Empire.
                 if 'Q34266' in entity['country']:
                     excluded_russian_empire += 1
                     continue
 
-                # As a first step, use native labels.
+                # Exclude historical entities.
+                claims = get_claims(entity['info']['claims'], 'P31')
+                if any(q in claims for q in ('Q1620908', 'Q3024240', 'Q50068795', 'Q28171280', 'Q2072238', 'Q1250464')):
+                    excluded_historical += 1
+                    continue
+
+                # As a first step, use native labels (P1705).
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
-                entity['name'] = {Language.get(language).language_name(): {'name': name, 'code': language,
-                                                                           'language': Language.get(
-                                                                               language).language_name()}
-                                  for language, name in
+                entity['name'] = {Language.get(iso).language_name(): {'name': name, 'code': iso,
+                                                                      'language': Language.get(
+                                                                          iso).language_name()}
+                                  for iso, name in
                                   native_labels.items()}
 
-                # Get labels (dictionary).
-                labels = entity['info'].get('labels', None)
+                # Get labels (dictionary mapping ISO code to a string).
+                labels = entity['info'].get('labels')
 
                 # Get list of languages spoken in the countries where the entity is located.
-                languages = get_languages(COUNTRY_LANGUAGES, entity['country'])
+                languages = countries_to_languages(COUNTRY_TO_LANGUAGES, entity['country'])
 
                 # Nothing to be done here (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
@@ -72,38 +72,29 @@ def main():
                 # If no native labels, use labels linked to the languages of the country.
                 if not entity['name']:
                     entity['name'] = {
-                        Language.get(language).language_name(): {
-                            'name': labels[language]['value'],
-                            'code': language,
-                            'language': Language.get(language).language_name()
+                        Language.get(iso).language_name(): {
+                            'name': labels[iso]['value'],
+                            'code': iso,
+                            'language': Language.get(iso).language_name()
                         }
-                        for language in languages
-                        if labels.get(language, {}).get('value')
+                        for iso in languages
+                        if labels.get(iso, {}).get('value')
                     }
 
-                # If no native labels or labels in the languages of the country, use the
-                # labels associated to the languages below as a fallback and assign that to all languages
-                # of the country.
+                # If no native labels or labels in the languages of the country, use the labels associated to
+                # the languages below as a fallback and assign that to all languages of the country.
                 if not entity['name']:
                     name = ''
-                    if labels.get('mul', None):
-                        name = labels.get('mul').get('value')
-                    elif labels.get('sv', None):
-                        name = labels.get('sv').get('value')
-                    elif labels.get('vi', None):
-                        name = labels.get('vi').get('value')
-                    elif labels.get('nl', None):
-                        name = labels.get('nl').get('value')
-                    elif labels.get('ceb', None):
-                        name = labels.get('ceb').get('value')
-                    elif labels.get('en', None):
-                        name = labels.get('en').get('value')
+                    for iso in ['mul', 'sv', 'vi', 'nl', 'ceb', 'en']:
+                        if labels.get(iso):
+                            name = labels.get(iso).get('value')
+                            break
                     if name:
                         entity['name'] = {
-                            Language.get(language).language_name(): {'name': name,
-                                                                     'code': language,
-                                                                     'language': Language.get(language).language_name()}
-                            for language in languages}
+                            Language.get(iso).language_name(): {'name': name,
+                                                                'code': iso,
+                                                                'language': Language.get(iso).language_name()}
+                            for iso in languages}
 
                 if entity['id'] is None:
                     missing_id_counter += 1

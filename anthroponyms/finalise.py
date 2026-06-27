@@ -4,17 +4,15 @@ import os
 import sys
 from collections import Counter
 
-from langcodes import Language
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_romanised, get_countries_names, get_country_languages
+from utils import romanise, qid_to_country_name, country_to_languages
 
 from clean import OCCURRENCE_THRESHOLD, OCCURRENCE_THRESHOLD_CITIZENSHIP
 
 MIN_LENGTH_THRESHOLD = 2
 MAX_LENGTH_THRESHOLD = 20
 
-COUNTRY_LANGUAGES = get_country_languages()
+COUNTRY_TO_LANGUAGES = country_to_languages()
 
 EXCLUDE_LANGUAGES = [
     # Unknown/uncoded
@@ -71,16 +69,19 @@ def main():
 
                 for language, name in entity['name'].items():
 
+                    # Skip (language is in exclusion list)
                     if language in EXCLUDE_LANGUAGES:
                         continue
 
-                    # Get the romanised version of the name.
-                    name_romanised = get_romanised(name['name'])
+                    # Get the romanised version of the name
+                    name_romanised = romanise(name['name'])
 
+                    # Skip (name contained obscure characters)
                     if not name_romanised:
                         excluded_characters += 1
                         continue
 
+                    # Skip (name length outside of the approved range)
                     if len(name_romanised) < MIN_LENGTH_THRESHOLD or len(name_romanised) > MAX_LENGTH_THRESHOLD:
                         excluded_length += 1
                         continue
@@ -88,8 +89,6 @@ def main():
                     length = len(name_romanised)
 
                     # Rare characters (< 5 occurrences in the database)
-                    # For rare characters, ignoring diacritics and combining characters and
-                    # leaving all those in.
                     name_romanised = name_romanised.replace('ǝ', 'e').replace('ɔ', 'o').replace('ŋ', 'ng')
 
                     countries_of_birth = entity.get('occurrences', {}).get('country_of_birth', {})
@@ -97,13 +96,13 @@ def main():
                     countries = [
                         c for c in countries_of_birth.keys()
                         if countries_of_birth[c] >= OCCURRENCE_THRESHOLD and c != 'null' and c is not None
-                           and c in COUNTRY_LANGUAGES
+                           and c in COUNTRY_TO_LANGUAGES
                     ]
 
                     countries_of_citizenship = entity.get('occurrences', {}).get('country_of_citizenship', {})
 
                     for country in countries_of_citizenship:
-                        if country is not None and country != 'null' and country in COUNTRY_LANGUAGES \
+                        if country is not None and country != 'null' and country in COUNTRY_TO_LANGUAGES \
                                 and countries_of_citizenship[country] >= OCCURRENCE_THRESHOLD_CITIZENSHIP \
                                 and country not in countries:
                             countries.append(country)
@@ -120,6 +119,7 @@ def main():
                         'type': entity['type'],
                         'country': countries,
                     }
+
                     output.write(json.dumps(anthroponym) + '\n')
                     counter += 1
                     character_counter.update(name_romanised)
@@ -129,7 +129,7 @@ def main():
                     for country in anthroponym['country']:
                         breakdown_by_country.update([country])
 
-    countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
+    countries_id_names = qid_to_country_name(list(breakdown_by_country.keys()))
 
     print('# of anthroponyms: ', counter, '\n')
 

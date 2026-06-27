@@ -17,7 +17,6 @@ def main():
 
             if not entity.get('name'):
                 entities_missing_name.append(entity.get('id'))
-
                 types_missing_name.update(entity.get('type', []))
                 countries_missing_name.update(entity.get('country', []))
 

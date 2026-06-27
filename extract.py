@@ -1,13 +1,14 @@
 import gzip
 import json
 
-from utils import get_qids
+from utils import get_qids_and_types
 
 
 def main():
     # Dictionary where the key is the qid and the value is the type, as set in the SPARQL query.
-    qids_toponyms = get_qids('toponyms')
-    qids_anthroponyms = get_qids('anthroponyms')
+    # Used to retrieve toponyms and anthroponyms from the dump based on the P31 field.
+    qids_toponyms = get_qids_and_types('toponyms')
+    qids_anthroponyms = get_qids_and_types('anthroponyms')
 
     with gzip.open('/vol/bitbucket/at2225/latest-all.json.gz', 'rt') as dump:
 
@@ -25,12 +26,11 @@ def main():
 
                         # Get the list of claims for the entity.
                         claims = line.get('claims', {})
-                        # Get the P31 ('instance of') claims.
+
+                        # Get the P31 (or 'instance of') claims.
                         p31 = claims.get('P31', [])
 
-                        toponym = False
-                        anthroponym = False
-                        human = False
+                        toponym, anthroponym, human = False, False, False
 
                         type_ = []
 
@@ -46,12 +46,12 @@ def main():
                                     type_.extend(qids_toponyms[val])
 
                                 # Entity is an instance of 'anthroponym'.
-                                if val in qids_anthroponyms and toponym is False and human is False:
+                                elif val in qids_anthroponyms and toponym is False and human is False:
                                     anthroponym = True
                                     type_.extend(qids_anthroponyms[val])
 
                                 # Entity is an instance of 'human'.
-                                if val == 'Q5' and toponym is False and anthroponym is False:
+                                elif val == 'Q5' and toponym is False and anthroponym is False:
                                     human = True
                                     type_ = ['human']
                                     break
@@ -77,11 +77,11 @@ def main():
                             toponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is an anthroponym.
-                        if anthroponym:
+                        elif anthroponym:
                             anthroponyms.write(json.dumps(entity) + '\n')
 
                         # Entity is a human.
-                        if human:
+                        elif human:
                             humans.write(json.dumps(entity) + '\n')
 
 

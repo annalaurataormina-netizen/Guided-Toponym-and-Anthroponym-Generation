@@ -7,21 +7,24 @@ import sys
 from langcodes import Language
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_claims, get_monolingual_claims, get_time_claims, get_place_country, get_languages, \
-    get_country_languages, map_lang_ids_to_iso_codes
+from utils import get_claims, get_monolingual_claims, get_time_claims, place_to_country, countries_to_languages, \
+    country_to_languages, qid_to_iso
 
-# Dictionary mapping each place (ID) to a country (ID).
-PLACE_COUNTRY = get_place_country()
+# Dictionary mapping each place (qid) to a country (qid).
+PLACE_COUNTRY = place_to_country()
 
-# Dictionary mapping country to a list of languages.
-COUNTRY_LANGUAGES = get_country_languages()
+# Dictionary  mapping each country to a list of languages.
+COUNTRY_TO_LANGUAGES = country_to_languages()
 
-# Threshold for occurrences in country of birth over which a name is considered to be of that country and its languages.
+# Dictionary mapping each language (qid) to its ISO code.
+QID_TO_ISO = qid_to_iso()
+
+# Threshold for occurrences in country of birth for a name to be considered as linked to that country and its languages.
 OCCURRENCE_THRESHOLD = 5
 
+# Threshold for occurrences in country of citizenship for a name to be considered as linked to that country and its languages.
 OCCURRENCE_THRESHOLD_CITIZENSHIP = 10
 
-LANGUAGE_IDS_TO_ISO = map_lang_ids_to_iso_codes()
 
 def main():
     counter_anthroponyms = 0
@@ -62,14 +65,12 @@ def main():
             place_of_birth = places_of_birth[0] if places_of_birth else None
             country_of_birth = PLACE_COUNTRY.get(place_of_birth, None)
 
-            country_of_citizenship = None
-
             if not country_of_birth:
                 country_of_citizenship = get_claims(entity['info']['claims'], 'P27')
 
-            if country_of_citizenship:
-                country_of_citizenship = country_of_citizenship[0]
+            country_of_citizenship = country_of_citizenship[0] if country_of_citizenship else None
 
+            # Keep track of given names' occurrences
             for given_name in given_names:
                 if given_name not in given_names_occurrences:
                     given_names_occurrences[given_name] = {
@@ -87,9 +88,11 @@ def main():
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
                 if country_of_citizenship:
-                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(country_of_citizenship, 0) + 1
+                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(
+                        country_of_citizenship, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
 
+            # Keep track of family names' occurrences
             for family_name in family_names:
                 if family_name not in family_names_occurrences:
                     family_names_occurrences[family_name] = {
@@ -106,7 +109,8 @@ def main():
                 entry['count'] += 1
                 entry['country_of_birth'][country_of_birth] = entry['country_of_birth'].get(country_of_birth, 0) + 1
                 if country_of_citizenship:
-                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(country_of_citizenship, 0) + 1
+                    entry['country_of_citizenship'][country_of_citizenship] = entry['country_of_citizenship'].get(
+                        country_of_citizenship, 0) + 1
                 entry['year_of_birth'][year_of_birth] = entry['year_of_birth'].get(year_of_birth, 0) + 1
                 entry['gender'][gender] = entry['gender'].get(gender, 0) + 1
 
@@ -126,7 +130,7 @@ def main():
         for entry in family_names_occurrences.values():
             output.write(json.dumps(entry) + '\n')
 
-    with (gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'rt') as anthroponyms):
+    with gzip.open('/vol/bitbucket/at2225/anthroponyms.jsonl.gz', 'rt') as anthroponyms:
         with gzip.open('/vol/bitbucket/at2225/anthroponyms_cleaned.jsonl.gz', 'wt') as output:
 
             for line in anthroponyms:
@@ -135,37 +139,40 @@ def main():
 
                 counter_anthroponyms += 1
 
+                # As a first step, use native labels (P1705)
                 native_labels = get_monolingual_claims(entity['info']['claims'], 'P1705')
 
-                # Family name.
+                # Family name
                 if 'family name' in entity['type']:
                     entity['occurrences'] = family_names_occurrences.get(entity['id'], {})
 
-                # Given name.
+                # Given name
                 else:
                     entity['occurrences'] = given_names_occurrences.get(entity['id'], {})
 
-                entity['name'] = {Language.get(language).language_name(): {'name': name, 'code': language,
+                entity['name'] = {Language.get(iso).language_name(): {'name': name, 'code': iso,
                                                                            'language': Language.get(
-                                                                               language).language_name()} for
-                                  language, name in native_labels.items()}
+                                                                               iso).language_name()} for
+                                  iso, name in native_labels.items()}
 
+                # Retrieve all entity's labels
                 labels = entity['info'].get('labels', None)
 
                 # Get P407 claims
                 languages_of_work_or_name = get_claims(entity['info']['claims'], 'P407')
 
+                # Iterate over all languages of work or name. For each, get the name associated to that languages
+                # from the entity's labels or, alternatively, get the first native label.
                 if languages_of_work_or_name:
-                    for language_id in languages_of_work_or_name:
+                    for qid in languages_of_work_or_name:
 
-                        iso = LANGUAGE_IDS_TO_ISO.get(language_id)
+                        iso = QID_TO_ISO.get(qid)
                         if not iso:
                             continue
 
-                        lang_obj = Language.get(iso)
-                        lang_name = lang_obj.language_name()
+                        language = Language.get(iso).language_name()
 
-                        if lang_name in entity["name"]:
+                        if language in entity["name"]:
                             continue
 
                         name = native_labels.get(iso, "")
@@ -179,13 +186,13 @@ def main():
                         if not name:
                             continue
 
-                        entity["name"][lang_name] = {
+                        entity["name"][language] = {
                             "name": name,
                             "code": iso,
-                            "language": lang_name
+                            "language": language
                         }
 
-                # Nothing to be done here (entity has neither native labels nor labels).
+                # Skip (entity has neither native labels nor labels).
                 if not entity['name'] and not labels:
                     missing_labels_counter += 1
                     continue
@@ -195,7 +202,7 @@ def main():
                     missing_occurrences_counter += 1
                     continue
 
-                # Get the list of countries where the names occurs (using place of birth) more than X times.
+                # Get the list of countries where the names occurrs (using place of birth) more times than a threshold.
                 countries_of_occurrence = []
                 if entity['occurrences']:
                     countries_of_occurrence = [country for country in entity['occurrences']['country_of_birth'].keys()
@@ -203,19 +210,21 @@ def main():
                                                entity['occurrences']['country_of_birth'][
                                                    country] >= OCCURRENCE_THRESHOLD]
 
+                # Get the list of countries where the names occurrs (using place of citizenship) more times than a threshold.
                 for country in entity['occurrences'].get('country_of_citizenship', {}).keys():
                     if country is not None and country not in countries_of_occurrence and \
                             entity['occurrences']['country_of_citizenship'][
                                 country] >= OCCURRENCE_THRESHOLD_CITIZENSHIP:
                         countries_of_occurrence.append(country)
 
-                # Get list of languages spoken in the countries where the name occurs.
-                # Expand the list of names with languages from the countries where the name occurs more than the threshold.
-                languages = get_languages(COUNTRY_LANGUAGES, countries_of_occurrence)
+                # Get list of languages spoken in the countries where the name occurs, as retrieved above.
+                # Iterate over all languages spoken in the countries of occurrence. For each, get the name associated
+                # to that languages from the entity's labels or, alternatively, get the first native label.
+                languages = countries_to_languages(COUNTRY_TO_LANGUAGES, countries_of_occurrence)
                 if languages:
-                    for language_id in languages:
+                    for qid in languages:
 
-                        iso = LANGUAGE_IDS_TO_ISO.get(language_id)
+                        iso = QID_TO_ISO.get(qid)
 
                         if not iso:
                             continue
@@ -224,14 +233,17 @@ def main():
 
                         if not name and labels:
                             name = labels.get(iso, {}).get('value', "")
+
                         if not name and native_labels:
-                            name = list(native_labels.values())[0]
+                            name = next(iter(native_labels.values()), "")
+
                         if not name:
                             continue
+
                         if Language.get(iso).language_name() not in entity['name']:
                             entity['name'][Language.get(iso).language_name()] = {'name': name, 'code': iso,
-                                                                                      'language': Language.get(
-                                                                                          iso).language_name()}
+                                                                                 'language': Language.get(
+                                                                                     iso).language_name()}
 
                 if not entity['id']:
                     missing_id_counter += 1

@@ -5,15 +5,15 @@ import sys
 from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import get_romanised, get_countries_names, get_country_languages
+from utils import romanise, qid_to_country_name, countries_to_languages
 
 MIN_LENGTH_THRESHOLD = 3
 MAX_LENGTH_THRESHOLD = 50
 
-COUNTRY_LANGUAGES = get_country_languages()
+COUNTRY_TO_LANGUAGES = countries_to_languages()
 
 # Languages that are not spoken nowadays.
-EXCLUDED_EXACT = {
+EXCLUDE_EXACT = {
     'Uncoded languages', 'Multiple languages', 'Australian languages',
     'Mycenaean Greek', 'Ancient Greek', 'Sumerian', 'Akkadian',
     'Elamite', 'Phoenician', 'Old Norse', 'Old English', 'Old French',
@@ -21,7 +21,7 @@ EXCLUDED_EXACT = {
     'Sanskrit', 'Ancient Egyptian', 'Literary Chinese', 'Ottoman Turkish', 'Church Slavic',
     'Prussian', 'Taino', 'Wyandot', 'Berber languages', 'Western Abnaki', 'Koyukon', 'Pite Sami'
 }
-EXCLUDED_PARTIAL = {'Unknown'}
+EXCLUDE_PARTIAL = {'Unknown'}
 
 
 def main():
@@ -50,20 +50,21 @@ def main():
 
                 for language, name in entity['name'].items():
 
+                    # These languages are redundant
                     if language in ('Swiss German', 'Kven Finnish', 'Norwegian Nynorsk', 'Norwegian Bokmål'):
                         continue
 
-                    # Only keep toponyms whose country is a current sovereign state
-                    if not any(c in COUNTRY_LANGUAGES for c in entity['country']):
+                    # Only keep toponyms whose country is a sovereign state (currently)
+                    if not any(c in COUNTRY_TO_LANGUAGES for c in entity['country']):
                         continue
 
-                    if language in EXCLUDED_EXACT or any(
-                            excl in language for excl in EXCLUDED_PARTIAL):
+                    if language in EXCLUDE_EXACT or any(
+                            excl in language for excl in EXCLUDE_PARTIAL):
                         excluded_language += 1
                         continue
 
                     # Get the romanised version of the name.
-                    name_romanised = get_romanised(name['name'])
+                    name_romanised = romanise(name['name'])
 
                     if not name_romanised:
                         excluded_characters += 1
@@ -75,8 +76,7 @@ def main():
                         excluded_length += 1
                         continue
 
-                    # Ignore rare diacritics and combining characters that appeared when splitting
-                    # the diacritics from the underlying character.
+                    # Ignore these obscure combining marks.
                     name_romanised = name_romanised.replace('̍', '')
                     name_romanised = name_romanised.replace('̭', '')
                     name_romanised = name_romanised.replace('̑', '')
@@ -94,7 +94,7 @@ def main():
                         'language_code': name['code'],
                         'id': entity['id'],
                         'type': entity['type'],
-                        'country': [country for country in entity['country'] if country in COUNTRY_LANGUAGES],
+                        'country': [country for country in entity['country'] if country in COUNTRY_TO_LANGUAGES],
                     }
 
                     output.write(json.dumps(toponym) + '\n')
@@ -108,7 +108,7 @@ def main():
                     for country in toponym['country']:
                         breakdown_by_country.update([country])
 
-    countries_id_names = get_countries_names(list(breakdown_by_country.keys()))
+    countries_id_names = qid_to_country_name(list(breakdown_by_country.keys()))
 
     print('# of toponyms: ', counter, '\n')
 
