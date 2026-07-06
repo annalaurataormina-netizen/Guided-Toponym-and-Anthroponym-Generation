@@ -27,8 +27,6 @@ if __name__ == "__main__":
 
     # Toponyms
     names = load_toponyms()
-    random.shuffle(names)
-    names = names[:100000]
 
     # Anthroponyms
     # names = load_anthroponyms()
