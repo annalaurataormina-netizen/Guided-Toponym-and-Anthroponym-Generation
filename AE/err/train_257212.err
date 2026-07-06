@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/main.py", line 12, in <module>
+    from AE.AE import AE
+  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/AE.py", line 4, in <module>
+    from AE.CharVocab import CharVocab
+ModuleNotFoundError: No module named 'AE.CharVocab'; 'AE' is not a package
