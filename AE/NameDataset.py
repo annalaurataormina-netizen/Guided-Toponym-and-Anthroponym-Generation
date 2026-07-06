@@ -1,6 +1,6 @@
 import torch
 
-from AE.CharVocab import CharVocab
+from CharVocab import CharVocab
 
 
 class NameDataset:

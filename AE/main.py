@@ -9,10 +9,10 @@ from torch.utils.data import DataLoader
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from AE.AE import AE
-from AE.CharVocab import CharVocab
-from AE.NameDataset import NameDataset
-from AE.config import ALLOWED_CHARS
+from AE import AE
+from CharVocab import CharVocab
+from NameDataset import NameDataset
+from config import ALLOWED_CHARS
 from utils import load_toponyms, normalise
 
 if __name__ == "__main__":

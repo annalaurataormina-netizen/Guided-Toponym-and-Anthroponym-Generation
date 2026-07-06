@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from AE.CharVocab import CharVocab
+from CharVocab import CharVocab
 
 
 class Encoder(nn.Module):

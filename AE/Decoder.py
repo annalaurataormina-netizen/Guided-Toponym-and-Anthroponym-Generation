@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from AE.CharVocab import CharVocab
+from CharVocab import CharVocab
 
 
 class Decoder(nn.Module):
