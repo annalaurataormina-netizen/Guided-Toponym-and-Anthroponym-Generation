@@ -262,11 +262,6 @@ def romanise(name):
     return valid.strip() or ''
 
 
-# Returns the string after splitting the diacritics from the underlying character.
-def split_diacritics(name: str) -> str:
-    return unicodedata.normalize('NFD', name)
-
-
 # Returns a dictionary where, for each country, the key is its qid and the value is its name.
 def qid_to_country_name(ids: list) -> dict[str, str]:
     countries = {}

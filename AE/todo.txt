@@ -1,0 +1,7 @@
+- Grid search
+- Make the AE bidirectional
+- Token-by-token for the decoder
+- Don't lowercase everything (?)
+- Levenshtein distance
+- Implement suggestions on learning rate tuning
+- Don't save entire output but track a few names (qualitative, interpretable)

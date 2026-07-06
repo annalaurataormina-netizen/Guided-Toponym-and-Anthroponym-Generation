@@ -3,7 +3,7 @@ import unicodedata
 # Combining Grapheme Joiner
 EXCLUDE_CHARS = {'\u034f'}
 
-# Defining the allowed characters
+# Allowed characters
 LETTERS = 'abcdefghijklmnopqrstuvwxyz'
 SPACE = ' '
 PUNCTUATION = '-\''
