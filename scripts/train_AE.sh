@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/out/check_%j.out
-#SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/err/check_%j.err
+#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/out/train_%j.out
+#SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/err/train_%j.err
 
 cd /vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE
 python3 main.py

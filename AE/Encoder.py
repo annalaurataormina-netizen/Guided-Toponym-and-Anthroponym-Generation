@@ -33,9 +33,9 @@ class Encoder(nn.Module):
         batch_size = x.size(0)
 
         # Initial hidden state
-        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
+        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=x.device)
         # Initial cell state
-        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
+        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=x.device)
 
         # x is (batch_size, seq_len)
         # embedded is (batch, seq_len, embed_dim)
