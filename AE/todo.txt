@@ -1,4 +1,3 @@
     # Find reasonable parameters
     # Just do grid search for the learning rate
-    # Epochs: no need to do grid search better to do early stopping
     # Upper case with additional character

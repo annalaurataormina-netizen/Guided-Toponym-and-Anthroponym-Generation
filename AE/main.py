@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 10
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 30
 
     print("Batch size: ", batch_size)
     print("Embedding dimension: ", embed_dim)
@@ -34,6 +34,7 @@ if __name__ == "__main__":
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
+    print("Early stopping")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -87,7 +88,15 @@ if __name__ == "__main__":
 
     global_step = 0
 
+    # For early stopping
+    best_loss = float('inf')
+    patience, wait = 50, 0
+    early_stopping = False
+
     for epoch in range(epochs):
+
+        if early_stopping:
+            break
 
         epoch_train_losses = []
 
@@ -123,7 +132,7 @@ if __name__ == "__main__":
             train_steps.append(global_step)
             epoch_train_losses.append(loss.item())
 
-            if global_step % 2000 == 0:
+            if global_step % 2_000 == 0:
 
                 model.eval()
                 val_loss = 0.0
@@ -139,6 +148,19 @@ if __name__ == "__main__":
 
                         val_loss += loss.item()
 
+                # For early stopping
+                if val_loss < best_loss:
+                    best_loss = val_loss
+                    wait = 0
+                    torch.save(model.state_dict(), "best_model.pt")
+
+                else:
+                    wait += 1
+                    if wait >= patience:
+                        print("Early stopping")
+                        early_stopping = True
+                        break
+
                 val_losses.append(val_loss / len(val_dataloader))
                 val_steps.append(global_step)
 
@@ -149,6 +171,9 @@ if __name__ == "__main__":
                     f"Step {global_step}, "
                     f"Avg validation loss = {val_losses[-1]:.4f}"
                 )
+
+                if early_stopping:
+                    break
 
             if global_step % 15_000 == 0:
 
@@ -180,8 +205,6 @@ if __name__ == "__main__":
                                     f"Name reconstructed = {pred_str}"
                                 )
                             count += 1
-
-                model.train()
 
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
