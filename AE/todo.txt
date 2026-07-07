@@ -1,6 +1,6 @@
-- Implement suggestions on learning rate tuning (!)
-- Grid search (!)
-
-- Make the AE bidirectional
-- Token-by-token for the decoder (?)
-- Don't lowercase everything (?)
+    # Start by using reasonable numbers for the hyperparameters
+    # Just do grid search for the learning rate atm
+    # Make it bidirectional
+    # Upper case with additional character
+    # Train the same model on both toponyms and anthroponyms
+    # Epochs: no need to do grid search better to do early stopping

@@ -23,7 +23,16 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 32, 16, 16, 1, 0.001, 1
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 256, 16, 16, 1, 0.001, 1
+
+    print("Batch size: ", batch_size)
+    print("Embedding dimension: ", embed_dim)
+    print("Hidden dimension: ", hidden_dim)
+    print("Number of layers: ", num_layers)
+    print("Learning rate: ", lr)
+    print("Epochs: ", epochs)
+    print("Optimiser: Adam")
+    print("No regularisation or dropout")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -137,7 +146,7 @@ if __name__ == "__main__":
                     f"avg validation loss = {val_losses[-1]:.4f}"
                 )
 
-            if global_step % 15000 == 0:
+            if global_step % 15_000 == 0:
 
                 model.eval()
 
