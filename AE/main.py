@@ -33,6 +33,7 @@ if __name__ == "__main__":
     print("Epochs: ", epochs)
     print("Optimiser: Adam")
     print("No regularisation or dropout")
+    print("Bidirectional encoder")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
