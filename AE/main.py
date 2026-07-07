@@ -1,10 +1,11 @@
 import random
+import editdistance
 
 import matplotlib
 import torch
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -17,20 +18,23 @@ from utils import load_toponyms, normalise
 
 if __name__ == "__main__":
 
+    # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # Model hyperparameters
+    # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 32, 16, 16, 1, 0.001, 1
 
+    # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
 
-    # Toponyms
+    # Toponyms (list of name_romanised)
     names = load_toponyms()
 
-    # Anthroponyms
+    # Anthroponyms (list of name_romanised)
     # names = load_anthroponyms()
 
+    # List of name_romanised after splitting diacritics and lowercasing
     names_normalised = [normalise(n) for n in names]
 
     # 80/20/20 split
@@ -45,14 +49,21 @@ if __name__ == "__main__":
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
+    # Levenshtein
+    lev_indices = random.sample(range(len(val_dataset)), 1000)
+    lev_subset = Subset(val_dataset, lev_indices)
+    lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
+
+    # Autoencoder
     model = AE(vocab, embed_dim, hidden_dim, num_layers)
 
+    # Move Autoencoder to device
     model.to(device)
 
+    # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
 
-    # Adam (Adaptive Moment Estimation) is an optimization algorithm used to train deep learning models.
-    # It dynamically adjusts the learning rate for every parameter in the model
+    # Adam (Adaptive Moment Estimation) dynamically adjusts the learning rate for every parameter in the model
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
 
     train_losses = []
@@ -73,6 +84,7 @@ if __name__ == "__main__":
 
             sequences, lengths = sequences.to(device), lengths.cpu()
 
+            # Zero out the gradients
             optimiser.zero_grad()
 
             # Drop <SOS> as it can only ever be a starting input, never a valid target to predict.
@@ -85,9 +97,10 @@ if __name__ == "__main__":
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
+            # Automatically does softmax on the logits, converting them to probabilities.
             loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
-            # Backprop
+            # Backprop (compute gradients, update model params via backpropagation)
             loss.backward()
             optimiser.step()
 
@@ -122,6 +135,45 @@ if __name__ == "__main__":
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
                     f"avg validation loss = {val_losses[-1]:.4f}"
+                )
+
+            if global_step % 15000 == 0:
+
+                model.eval()
+
+                total_lev = 0.00
+                count = 0
+
+                with torch.no_grad():
+                    for lev_batch in lev_dataloader:
+                        sequences, lengths = lev_batch
+                        sequences, lengths = sequences.to(device), lengths.cpu()
+
+                        target = sequences[:, 1:]
+                        logits = model(sequences, lengths)
+
+                        # (batch_size, seq_len)
+                        pred_indices = logits.argmax(dim=-1)
+
+                        for p, t in zip(pred_indices, target):
+                            pred_str = vocab.decode(p.tolist())
+                            target_str = vocab.decode(t.tolist())
+                            total_lev += editdistance.eval(pred_str, target_str) / max(len(pred_str), len(target_str))
+                            if count < 5:
+                                print(
+                                    f"Epoch {epoch + 1}/{epochs}, "
+                                    f"Step {global_step}, "
+                                    f"Target name = {target_str}, "
+                                    f"Name reconstructed = {pred_str}"
+                                )
+                            count += 1
+
+                model.train()
+
+                print(
+                    f"Epoch {epoch + 1}/{epochs}, "
+                    f"Step {global_step}, "
+                    f"avg Levenshtein distance = {(total_lev / count):.4f}"
                 )
 
         print(f"Epoch {epoch + 1}/{epochs}, avg train loss: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")

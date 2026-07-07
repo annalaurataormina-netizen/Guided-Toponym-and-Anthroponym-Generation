@@ -7,13 +7,18 @@ from CharVocab import CharVocab
 class Decoder(nn.Module):
 
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int):
+
         super().__init__()
+
+        # Character vocabulary
         self.vocab = vocab
 
         # Dimensionality of character embeddings
         self.embed_dim = embed_dim
+
         # Dimensionality of the hidden state
         self.hidden_dim = hidden_dim
+
         # Number of layers in the RNN
         self.num_layers = num_layers
 
@@ -39,5 +44,5 @@ class Decoder(nn.Module):
         # hn, cn are (num_layers, batch_size, hidden_dim)
         out, (hn, cn) = self.rnn(self.embedding(x), (h0, c0))
 
-        # (batch_size, seq_len, len(vocab))
+        # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)

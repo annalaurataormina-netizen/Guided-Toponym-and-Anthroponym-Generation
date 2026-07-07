@@ -8,7 +8,10 @@ from CharVocab import CharVocab
 class Encoder(nn.Module):
 
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int):
+
         super().__init__()
+
+        # Character vocabulary
         self.vocab = vocab
 
         # Dimensionality of character embeddings
@@ -32,9 +35,9 @@ class Encoder(nn.Module):
         # Number of samples
         batch_size = x.size(0)
 
-        # Initial hidden state
+        # Initial hidden states
         h0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=x.device)
-        # Initial cell state
+        # Initial cell states
         c0 = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=x.device)
 
         # x is (batch_size, seq_len)
@@ -43,6 +46,8 @@ class Encoder(nn.Module):
 
         # Converts the padded, embedded tensor into a PackedSequence object — a special format that internally
         # records each sequence's true length, so the LSTM knows exactly how many real timesteps to process per sample.
+        # Tells PyTorch to stop processing the sequence at its true length to avoid polluting the final hidden state
+        # with all the <PAD>.
         packed = pack_padded_sequence(embedded, lengths.cpu(), batch_first=True, enforce_sorted=False)
 
         # packed_output is a PackedSequence object; after calling pad_packed_sequence becomes (batch, seq_len, hidden_dim).
