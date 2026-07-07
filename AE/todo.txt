@@ -1,6 +1,4 @@
-    # Start by using reasonable numbers for the hyperparameters
-    # Just do grid search for the learning rate atm
-    # Make it bidirectional
-    # Upper case with additional character
-    # Train the same model on both toponyms and anthroponyms
+    # Find reasonable parameters
+    # Just do grid search for the learning rate
     # Epochs: no need to do grid search better to do early stopping
+    # Upper case with additional character

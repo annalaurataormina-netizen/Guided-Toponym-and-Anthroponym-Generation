@@ -27,8 +27,7 @@ class Decoder(nn.Module):
 
         # Unidirectional LSTM
         # class torch.nn.LSTM(input_size, hidden_size, num_layers=1, bias=True,
-        # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0,
-        # device=None, dtype=None)
+        # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0, device=None, dtype=None)
         # batch_first returns (batch_size, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
 

@@ -49,3 +49,8 @@ def load_anthroponyms() -> list[str]:
 # Returns a list of strings (name_romanised) for all toponyms in the dataset.
 def load_toponyms() -> list[str]:
     return load_from_database('toponyms')
+
+
+# Returns a list of strings (name_romanised) for all anthroponyms and toponyms in the dataset.
+def load_all() -> list[str]:
+    return load_anthroponyms() + load_toponyms()

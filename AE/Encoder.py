@@ -24,12 +24,15 @@ class Encoder(nn.Module):
         # Embedding layer with size (len(vocab), embed_dim)
         self.embedding = nn.Embedding(len(vocab), embed_dim)
 
-        # Unidirectional LSTM
+        # Bidirectional LSTM
         # class torch.nn.LSTM(input_size, hidden_size, num_layers=1, bias=True,
-        # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0,
-        # device=None, dtype=None)
+        # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0, device=None, dtype=None)
         # batch_first returns (batch, seq_len, hidden_dim)
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
+        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=True)
+
+        # Projection layer for the final hidden states and the cell states
+        self.hidden_projection = nn.Linear(hidden_dim * 2, hidden_dim)
+        self.cell_projection = nn.Linear(hidden_dim * 2, hidden_dim)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         # Number of samples
@@ -53,5 +56,17 @@ class Encoder(nn.Module):
         # packed_output is a PackedSequence object; after calling pad_packed_sequence becomes (batch, seq_len, hidden_dim).
         # hn, cn are (num_layers, batch_size, hidden_dim)
         packed_output, (hn, cn) = self.rnn(packed, (h0, c0))
+
+        # Reshape to separate directions: (num_layers, 2, batch_size, hidden_dim)
+        hn = hn.view(self.num_layers, 2, batch_size, self.hidden_dim)
+        cn = cn.view(self.num_layers, 2, batch_size, self.hidden_dim)
+
+        # Concatenate forward and backward directions: (num_layers, batch_size, hidden_dim * 2)
+        hn = torch.cat([hn[:, 0], hn[:, 1]], dim=-1)
+        cn = torch.cat([cn[:, 0], cn[:, 1]], dim=-1)
+
+        # Project back down to hidden_dim so the decoder's interface is unchanged
+        hn = self.hidden_projection(hn)
+        cn = self.cell_projection(cn)
 
         return hn, cn

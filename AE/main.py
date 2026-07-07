@@ -14,7 +14,7 @@ from AE import AE
 from CharVocab import CharVocab
 from NameDataset import NameDataset
 from config import ALLOWED_CHARS
-from utils import load_toponyms, normalise
+from utils import load_all, normalise
 
 if __name__ == "__main__":
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 256, 16, 16, 1, 0.001, 1
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 10
 
     print("Batch size: ", batch_size)
     print("Embedding dimension: ", embed_dim)
@@ -38,10 +38,13 @@ if __name__ == "__main__":
     vocab = CharVocab(ALLOWED_CHARS)
 
     # Toponyms (list of name_romanised)
-    names = load_toponyms()
+    # names = load_toponyms()
 
     # Anthroponyms (list of name_romanised)
     # names = load_anthroponyms()
+
+    # Toponyms and Anthroponyms (list of name_romanised)
+    names = load_all()
 
     # List of name_romanised after splitting diacritics and lowercasing
     names_normalised = [normalise(n) for n in names]
@@ -143,7 +146,7 @@ if __name__ == "__main__":
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"avg validation loss = {val_losses[-1]:.4f}"
+                    f"Avg validation loss = {val_losses[-1]:.4f}"
                 )
 
             if global_step % 15_000 == 0:
@@ -182,10 +185,10 @@ if __name__ == "__main__":
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"avg Levenshtein distance = {(total_lev / count):.4f}"
+                    f"Avg Levenshtein distance = {(total_lev / count):.4f}"
                 )
 
-        print(f"Epoch {epoch + 1}/{epochs}, avg train loss: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
 
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
