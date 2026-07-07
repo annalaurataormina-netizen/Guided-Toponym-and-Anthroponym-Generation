@@ -10,6 +10,3 @@ __pycache__/
 err/
 *.err
 *.out
-
-# Generated figures
-*.png

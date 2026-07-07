@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/toponyms/clean.py", line 145, in <module>
-    main()
-  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/toponyms/clean.py", line 46, in main
-    for claim in claims.keys():
-                 ^^^^^^^^^^^
-AttributeError: 'list' object has no attribute 'keys'

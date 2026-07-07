@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/toponyms/finalise.py", line 7, in <module>
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    ^^^
-NameError: name 'sys' is not defined. Did you forget to import 'sys'?
