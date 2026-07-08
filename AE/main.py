@@ -63,8 +63,12 @@ if __name__ == "__main__":
     val_dataset = NameDataset(val_names, vocab)
     test_dataset = NameDataset(test_names, vocab)
 
+    # Same seed as the one used to split the dataset into train, validation and test, for consistency
+    g = torch.Generator()
+    g.manual_seed(1996)
+
     # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
