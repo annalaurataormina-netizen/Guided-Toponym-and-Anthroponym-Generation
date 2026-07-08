@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 1, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 30
 
     print("Batch size: ", batch_size)
     print("Embedding dimension: ", embed_dim)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     # For early stopping
     best_loss = float('inf')
-    patience, wait = 20, 0
+    patience, wait = 5, 0
     early_stopping = False
 
     for epoch in range(epochs):
