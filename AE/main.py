@@ -99,7 +99,7 @@ if __name__ == "__main__":
     # For early stopping (if performance doesn't improve for patience times when evaluation the model (every 2000 batches)
     # on the entire evaluation set, then early stopping is triggered
     best_loss = float('inf')
-    patience, wait = 5, 0
+    patience, wait = 10, 0
     early_stopping = False
 
     for epoch in range(epochs):
