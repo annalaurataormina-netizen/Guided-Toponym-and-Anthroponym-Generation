@@ -12,7 +12,7 @@ def split_diacritics(name: str) -> str:
 
 # Returns the string after splitting the diacritics from the underlying character and lowercasing.
 def normalise(name: str) -> str:
-    return split_diacritics(name).lower()
+    return split_diacritics(name)
 
 
 # Returns a list of name_romanised for all anthroponyms or toponyms.

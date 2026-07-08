@@ -169,7 +169,8 @@ if __name__ == "__main__":
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"Avg validation loss = {val_losses[-1]:.4f}"
+                    f"Avg validation loss = {val_losses[-1]:.4f}, "
+                    f"Avg training loss = {sum(train_losses[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -217,7 +218,7 @@ if __name__ == "__main__":
                     f"Avg Levenshtein distance = {(total_lev / count):.4f}"
                 )
 
-        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss for epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
 
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
