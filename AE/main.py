@@ -1,6 +1,6 @@
 import random
-import editdistance
 
+import editdistance
 import matplotlib
 import torch
 import torch.nn as nn
@@ -23,6 +23,10 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
+    # For the learning rate, try 0.005, 0.001 and 0.0005 given that 0.001 works well
+    # Each time save the loss with a different name
+    # 512, 32, 32, 2, 0.001, 30 work best so far
+    # Note encoder and decoder use the same hidden_dim and num_layers
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 30
 
     print("Batch size: ", batch_size)
@@ -34,7 +38,7 @@ if __name__ == "__main__":
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
-    print("Early stopping")
+    print("Early stopping (with patience 5)")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -48,10 +52,10 @@ if __name__ == "__main__":
     # Toponyms and Anthroponyms (list of name_romanised)
     names = load_all()
 
-    # List of name_romanised after splitting diacritics and lowercasing
+    # List of name_romanised after normalising (i.e., splitting diacritics)
     names_normalised = [normalise(n) for n in names]
 
-    # 80/20/20 split
+    # 80/20/20 split of the dataset into train/validation/test
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
     val_names, test_names = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)
 
@@ -59,19 +63,20 @@ if __name__ == "__main__":
     val_dataset = NameDataset(val_names, vocab)
     test_dataset = NameDataset(test_names, vocab)
 
+    # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    # Levenshtein
+    # Levenshtein (uses the same 1000 random samples from the validation set)
     lev_indices = random.sample(range(len(val_dataset)), 1000)
     lev_subset = Subset(val_dataset, lev_indices)
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
-    # Autoencoder
+    # Autoencoder (hidden_dim and num_layers are the same for both the encoder and the decoder)
     model = AE(vocab, embed_dim, hidden_dim, num_layers)
 
-    # Move Autoencoder to device
+    # Move model to device
     model.to(device)
 
     # Use cross entropy loss to train the model, ignoring <PAD> characters
@@ -80,15 +85,19 @@ if __name__ == "__main__":
     # Adam (Adaptive Moment Estimation) dynamically adjusts the learning rate for every parameter in the model
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
 
+    # Training losses, one for each batch
     train_losses = []
     train_steps = []
 
+    # Validation losses (for the whole validation set), one every 2000 batches
     val_losses = []
     val_steps = []
 
+    # Keeps track of the number of batches
     global_step = 0
 
-    # For early stopping
+    # For early stopping (if performance doesn't improve for patience times when evaluation the model (every 2000 batches)
+    # on the entire evaluation set, then early stopping is triggered
     best_loss = float('inf')
     patience, wait = 5, 0
     early_stopping = False
@@ -109,7 +118,7 @@ if __name__ == "__main__":
             # Zero out the gradients
             optimiser.zero_grad()
 
-            # Drop <SOS> as it can only ever be a starting input, never a valid target to predict.
+            # Drop <SOS> as it can only ever be a starting input, never a valid target to predict
             # target is (batch, seq_len)
             target = sequences[:, 1:]
 
@@ -119,7 +128,7 @@ if __name__ == "__main__":
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
-            # Automatically does softmax on the logits, converting them to probabilities.
+            # Automatically does softmax on the logits, converting them to probabilities
             loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
             # Backprop (compute gradients, update model params via backpropagation)
@@ -132,6 +141,7 @@ if __name__ == "__main__":
             train_steps.append(global_step)
             epoch_train_losses.append(loss.item())
 
+            # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
 
                 model.eval()
@@ -152,7 +162,8 @@ if __name__ == "__main__":
                 if val_loss < best_loss:
                     best_loss = val_loss
                     wait = 0
-                    torch.save(model.state_dict(), "best_model.pt")
+                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+                    torch.save(model.state_dict(), model_name)
 
                 else:
                     wait += 1
@@ -176,6 +187,8 @@ if __name__ == "__main__":
                 if early_stopping:
                     break
 
+            # Every 15000 batches, Levenshtein distance is calculated on 1000 (always the same) random
+            # samples from the evaluation set
             if global_step % 15_000 == 0:
 
                 model.eval()
@@ -218,7 +231,8 @@ if __name__ == "__main__":
                     f"Avg Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
                 )
 
-        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
+        print(
+            f"Epoch {epoch + 1}/{epochs}, Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
 
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
@@ -226,5 +240,5 @@ if __name__ == "__main__":
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    plt.savefig("loss.png")
+    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
     plt.close()

@@ -1,2 +1,0 @@
-    # Find reasonable parameters
-    # Just do grid search for the learning rate

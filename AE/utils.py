@@ -10,12 +10,12 @@ def split_diacritics(name: str) -> str:
     return unicodedata.normalize('NFD', name)
 
 
-# Returns the string after splitting the diacritics from the underlying character and lowercasing.
+# Returns the string after splitting the diacritics from the underlying character.
 def normalise(name: str) -> str:
     return split_diacritics(name)
 
 
-# Returns a list of name_romanised for all anthroponyms or toponyms.
+# Returns a list of name_romanised for all anthroponyms or toponyms in the database.
 def load_from_database(target: str) -> list[str]:
     load_dotenv()
 

@@ -7,7 +7,6 @@ from CharVocab import CharVocab
 class Decoder(nn.Module):
 
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int):
-
         super().__init__()
 
         # Character vocabulary
@@ -19,7 +18,7 @@ class Decoder(nn.Module):
         # Dimensionality of the hidden state
         self.hidden_dim = hidden_dim
 
-        # Number of layers in the RNN
+        # Number of layers
         self.num_layers = num_layers
 
         # Embedding layer with size (len(vocab), embed_dim)
@@ -31,11 +30,10 @@ class Decoder(nn.Module):
         # batch_first returns (batch_size, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
 
-        # Returns (batch_size, seq_len, len(vocab))
+        # Linear projection that returns (batch_size, seq_len, len(vocab))
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
 
     def forward(self, x: torch.Tensor, hn_encoder: torch.Tensor, cn_encoder: torch.Tensor) -> torch.Tensor:
-
         # Initial hidden state and cell state
         h0, c0 = hn_encoder, cn_encoder
 

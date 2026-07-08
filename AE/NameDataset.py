@@ -6,16 +6,17 @@ from CharVocab import CharVocab
 class NameDataset:
 
     def __init__(self, data: list[str], vocab: CharVocab):
-        # Data (list of strings)
+
+        # Data (list of name_romanised)
         self.data = data
 
         # Character vocabulary
         self.vocab = vocab
 
-        # Max length among the strings in the dataset (+2 because of the <SOS> and <EOS> characters).
+        # Max length among the strings in the dataset (used for padding).
         self.max_len = max(len(self.vocab.encode(name)) for name in data)
 
-    # Encodes and pads string corresponding to the index.
+    # Encodes (and pads up to max_len in the dataset) name in the dataset.
     def encode(self, idx: int) -> list[int]:
         encoded = self.vocab.encode(self.data[idx])
         return self.vocab.pad(encoded, self.max_len)
@@ -24,6 +25,6 @@ class NameDataset:
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
         return torch.tensor(self.encode(idx)), len(self.vocab.encode(self.data[idx]))
 
-    # Returns the number of samples.
+    # Returns the number of names in the dataset.
     def __len__(self) -> int:
         return len(self.data)

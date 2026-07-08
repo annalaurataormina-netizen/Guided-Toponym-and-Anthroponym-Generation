@@ -1,6 +1,6 @@
 import unicodedata
 
-# Combining Grapheme Joiner
+# Combining grapheme joiner
 EXCLUDE_CHARS = {'\u034f'}
 
 # Allowed characters
