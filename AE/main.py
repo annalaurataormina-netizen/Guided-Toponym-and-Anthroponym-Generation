@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 1, 0.001, 30
 
     print("Batch size: ", batch_size)
     print("Embedding dimension: ", embed_dim)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     # For early stopping
     best_loss = float('inf')
-    patience, wait = 50, 0
+    patience, wait = 20, 0
     early_stopping = False
 
     for epoch in range(epochs):
@@ -169,8 +169,8 @@ if __name__ == "__main__":
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"Avg validation loss = {val_losses[-1]:.4f}, "
-                    f"Avg training loss = {sum(train_losses[-2000:]) / 2000:.4f}"
+                    f"Avg validation loss (full validation set) = {val_losses[-1]:.4f}, "
+                    f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -215,10 +215,10 @@ if __name__ == "__main__":
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"Avg Levenshtein distance = {(total_lev / count):.4f}"
+                    f"Avg Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
                 )
 
-        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss for epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
 
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
