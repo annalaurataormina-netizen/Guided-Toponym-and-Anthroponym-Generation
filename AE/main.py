@@ -194,7 +194,10 @@ if __name__ == "__main__":
                         pred_indices = logits.argmax(dim=-1)
 
                         for p, t in zip(pred_indices, target):
-                            pred_str = vocab.decode(p.tolist())
+                            eos_idx = vocab.char2idx['<EOS>']
+                            p_list = p.tolist()
+                            p_list = p_list[:p_list.index(eos_idx)] if eos_idx in p_list else p_list
+                            pred_str = vocab.decode(p_list)
                             target_str = vocab.decode(t.tolist())
                             total_lev += editdistance.eval(pred_str, target_str) / max(len(pred_str), len(target_str))
                             if count < 5:
@@ -205,6 +208,8 @@ if __name__ == "__main__":
                                     f"Name reconstructed = {pred_str}"
                                 )
                             count += 1
+
+                model.train()
 
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
