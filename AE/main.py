@@ -29,6 +29,8 @@ if __name__ == "__main__":
     # Note encoder and decoder use the same hidden_dim and num_layers
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 32, 2, 0.001, 30
 
+    patience = 5
+
     print("Batch size: ", batch_size)
     print("Embedding dimension: ", embed_dim)
     print("Hidden dimension: ", hidden_dim)
@@ -38,7 +40,7 @@ if __name__ == "__main__":
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
-    print("Early stopping (with patience 5)")
+    print("Early stopping (with patience ", patience, ")")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     # For early stopping (if performance doesn't improve for patience times when evaluation the model (every 2000 batches)
     # on the entire evaluation set, then early stopping is triggered
     best_loss = float('inf')
-    patience, wait = 10, 0
+    wait = 10
     early_stopping = False
 
     for epoch in range(epochs):
