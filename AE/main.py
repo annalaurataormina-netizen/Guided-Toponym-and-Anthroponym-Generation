@@ -29,18 +29,20 @@ if __name__ == "__main__":
     # Note encoder and decoder use the same hidden_dim and num_layers
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
 
+    # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
+    # the model (doen every 2000 batches) on the entire evaluation set, then early stopping is triggered
     patience = 10
 
-    print("Batch size: ", batch_size)
-    print("Embedding dimension: ", embed_dim)
-    print("Hidden dimension: ", hidden_dim)
-    print("Number of layers: ", num_layers)
-    print("Learning rate: ", lr)
-    print("Epochs: ", epochs)
+    print(f"Batch size: {batch_size}")
+    print(f"Embedding dimension: {embed_dim}")
+    print(f"Hidden dimension: {hidden_dim}")
+    print(f"Number of layers: {num_layers}")
+    print(f"Learning rate: {lr}")
+    print(f"Epochs: {epochs}")
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
-    print("Early stopping (with patience ", str(patience), ")")
+    print(f"Early stopping (with patience {patience})")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -75,7 +77,8 @@ if __name__ == "__main__":
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # Levenshtein (uses the same 1000 random samples from the validation set)
-    lev_indices = random.sample(range(len(val_dataset)), 1000)
+    rng = random.Random(1996)
+    lev_indices = rng.sample(range(len(val_dataset)), 1000)
     lev_subset = Subset(val_dataset, lev_indices)
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
@@ -102,9 +105,9 @@ if __name__ == "__main__":
     # Keeps track of the number of batches
     global_step = 0
 
-    # For early stopping (if performance doesn't improve for patience times when evaluation the model (every 2000 batches)
-    # on the entire evaluation set, then early stopping is triggered
+
     best_loss = float('inf')
+
     wait = 0
     early_stopping = False
 
