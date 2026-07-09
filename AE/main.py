@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.005, 30
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (doen every 2000 batches) on the entire evaluation set, then early stopping is triggered
