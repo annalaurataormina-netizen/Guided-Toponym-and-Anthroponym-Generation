@@ -247,4 +247,5 @@ if __name__ == "__main__":
     plt.title("Loss over time")
     plt.legend()
     fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
+    plt.savefig(fig_name)
     plt.close()
