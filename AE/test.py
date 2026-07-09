@@ -54,7 +54,6 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
 
     global_step = 0
-    test_losses = []
 
     with torch.no_grad():
 
@@ -79,9 +78,7 @@ if __name__ == "__main__":
 
             global_step += 1
 
-            test_losses.append(loss.item())
-
             print(
                 f"Step {global_step}, "
-                f"Avg test loss (last 2000 batches) = {sum(test_losses[-2000:]) / 2000:.4f}"
+                f"Avg test loss (last 2000 batches) = {loss.item()}.4f}"
             )
