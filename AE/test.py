@@ -80,5 +80,5 @@ if __name__ == "__main__":
 
             print(
                 f"Step {global_step}, "
-                f"Avg test loss (last 2000 batches) = {loss.item():.4f}}"
+                f"Avg test loss (last 2000 batches) = {loss.item():.4f}"
             )
