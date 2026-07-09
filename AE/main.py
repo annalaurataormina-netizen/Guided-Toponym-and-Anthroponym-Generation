@@ -40,7 +40,7 @@ if __name__ == "__main__":
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
-    print("Early stopping (with patience ", patience, ")")
+    print("Early stopping (with patience ", str(patience), ")")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
