@@ -81,9 +81,7 @@ if __name__ == "__main__":
 
             test_losses.append(loss.item())
 
-            if global_step % 2_000 == 0:
-
-                print(
-                    f"Step {global_step}, "
-                    f"Avg test loss (last 2000 batches) = {sum(test_losses[-2000:]) / 2000:.4f}"
-                )
+            print(
+                f"Step {global_step}, "
+                f"Avg test loss (last 2000 batches) = {sum(test_losses[-2000:]) / 2000:.4f}"
+            )
