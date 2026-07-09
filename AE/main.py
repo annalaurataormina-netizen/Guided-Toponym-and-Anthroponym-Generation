@@ -105,7 +105,6 @@ if __name__ == "__main__":
     # Keeps track of the number of batches
     global_step = 0
 
-
     best_loss = float('inf')
 
     wait = 0
@@ -252,3 +251,5 @@ if __name__ == "__main__":
     fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
     plt.savefig(fig_name)
     plt.close()
+
+    model.eval()
