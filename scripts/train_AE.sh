@@ -3,4 +3,4 @@
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE/err/train_%j.err
 
 cd /vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/AE
-python3 main.py
+python3 train.py
