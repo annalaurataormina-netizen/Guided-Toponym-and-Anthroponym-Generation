@@ -16,8 +16,8 @@ from NameDataset import NameDataset
 from config import ALLOWED_CHARS
 from utils import load_all, normalise
 
-if __name__ == "__main__":
 
+def train():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
@@ -65,16 +65,14 @@ if __name__ == "__main__":
 
     train_dataset = NameDataset(train_names, vocab)
     val_dataset = NameDataset(val_names, vocab)
-    test_dataset = NameDataset(test_names, vocab)
 
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
     g.manual_seed(1996)
 
     # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # Levenshtein (uses the same 1000 random samples from the validation set)
     rng = random.Random(1996)
@@ -102,7 +100,7 @@ if __name__ == "__main__":
     val_losses = []
     val_steps = []
 
-    # Keeps track of the number of batches
+    # Tracks the number of batches
     global_step = 0
 
     best_loss = float('inf')
@@ -253,3 +251,7 @@ if __name__ == "__main__":
     plt.close()
 
     model.eval()
+
+
+if __name__ == "__main__":
+    train()
