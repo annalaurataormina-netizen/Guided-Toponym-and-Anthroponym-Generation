@@ -1,0 +1,2 @@
+- Train VAE (with beta-scheduling)
+- Evaluate generation (pronounceability, novelty, diversity)

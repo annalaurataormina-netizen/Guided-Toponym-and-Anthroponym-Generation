@@ -10,11 +10,11 @@ from torch.utils.data import DataLoader, Subset
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from AE import AE
-from CharVocab import CharVocab
-from NameDataset import NameDataset
-from config import ALLOWED_CHARS
-from utils import load_all, normalise
+from VAE import VAE
+from AE.CharVocab import CharVocab
+from AE.NameDataset import NameDataset
+from AE.config import ALLOWED_CHARS
+from AE.utils import load_all, normalise
 
 
 def train():
@@ -27,18 +27,20 @@ def train():
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta = 512, 64, 64, 2, 64, 0.001, 30, 0.001
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
-    # the model (done every 2000 batches) on the entire evaluation set, then early stopping is triggered
+    # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
     patience = 10
 
     print(f"Batch size: {batch_size}")
     print(f"Embedding dimension: {embed_dim}")
     print(f"Hidden dimension: {hidden_dim}")
     print(f"Number of layers: {num_layers}")
+    print(f"Latent dimension: {latent_dim}")
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
+    print(f"Beta: {beta}")
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
@@ -80,8 +82,8 @@ def train():
     lev_subset = Subset(val_dataset, lev_indices)
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
-    # Autoencoder (hidden_dim and num_layers are the same for both the encoder and the decoder)
-    model = AE(vocab, embed_dim, hidden_dim, num_layers)
+    # Variational Autoencoder (hidden_dim and num_layers are the same for both the encoder and decoder)
+    model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
 
     # Move model to device
     model.to(device)
@@ -129,13 +131,21 @@ def train():
             target = sequences[:, 1:]
 
             # Forward pass
-            # Returns (batch_size, seq_len, len(vocab))
-            logits = model(sequences, lengths)
+            # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
+            logits, mu, logvar = model(sequences, lengths)
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
-            # CrossEntropyLoss internally applies log_softmax and computes the negative log likelihood
-            loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
+            # CrossEntropyLoss internally applies log_softmax to logits and computes the negative log likelihood loss
+            reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
+
+            # KL divergence
+            kl_loss = -0.5 * torch.mean(
+                torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+            )
+
+            # Reconstruction loss + KL divergence
+            loss = reconstruction_loss + beta * kl_loss
 
             # Backprop (compute gradients, update model params via backpropagation)
             loss.backward()
@@ -147,7 +157,7 @@ def train():
             train_steps.append(global_step)
             epoch_train_losses.append(loss.item())
 
-            # Every 2000 batches, model is evaluated on the full validation set
+            # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
 
                 model.eval()
@@ -159,8 +169,11 @@ def train():
                         sequences, lengths = sequences.to(device), lengths.cpu()
 
                         target = sequences[:, 1:]
-                        logits = model(sequences, lengths)
-                        loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
+                        logits, mu, logvar = model(sequences, lengths)
+
+                        reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
+                        kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / sequences.size(0)
+                        loss = reconstruction_loss + beta * kl_loss
 
                         val_loss += loss.item()
 
@@ -170,7 +183,7 @@ def train():
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_b{beta}.pt'
                     torch.save(model.state_dict(), model_name)
 
                 else:
@@ -210,7 +223,7 @@ def train():
                         sequences, lengths = sequences.to(device), lengths.cpu()
 
                         target = sequences[:, 1:]
-                        logits = model(sequences, lengths)
+                        logits, mu, logvar = model(sequences, lengths)
 
                         # (batch_size, seq_len)
                         pred_indices = logits.argmax(dim=-1)
@@ -248,7 +261,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
+    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}.png'
     plt.savefig(fig_name)
     plt.close()
 

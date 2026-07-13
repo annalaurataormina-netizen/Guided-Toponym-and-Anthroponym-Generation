@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 
-from CharVocab import CharVocab
+from AE.CharVocab import CharVocab
 
 
 class Encoder(nn.Module):
 
-    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int):
         super().__init__()
 
         # Character vocabulary
@@ -22,6 +22,9 @@ class Encoder(nn.Module):
         # Number of layers
         self.num_layers = num_layers
 
+        # Size of the latent representation
+        self.latent_dim = latent_dim
+
         # Embedding layer with size (len(vocab), embed_dim)
         self.embedding = nn.Embedding(len(vocab), embed_dim)
 
@@ -31,11 +34,11 @@ class Encoder(nn.Module):
         # batch_first returns (batch, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=True)
 
-        # Projection layer for the final hidden states and the cell states
-        self.hidden_projection = nn.Linear(hidden_dim * 2, hidden_dim)
-        self.cell_projection = nn.Linear(hidden_dim * 2, hidden_dim)
+        # Projection layer to product distribution parameters of the latent variable
+        self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
+        self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
 
-    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # Number of samples
         batch_size = x.size(0)
 
@@ -67,8 +70,28 @@ class Encoder(nn.Module):
         hn = torch.cat([hn[:, 0], hn[:, 1]], dim=-1)
         cn = torch.cat([cn[:, 0], cn[:, 1]], dim=-1)
 
-        # Project back down to hidden_dim so the decoder's interface is unchanged
-        hn = self.hidden_projection(hn)
-        cn = self.cell_projection(cn)
+        # (batch_size, num_layers, hidden_dim * 2)
+        hn, cn = hn.permute(1, 0, 2), cn.permute(1, 0, 2)
 
-        return hn, cn
+        # (batch_size, num_layers * hidden_dim * 2)
+        hn, cn = hn.reshape(batch_size, -1), cn.reshape(batch_size, -1)
+
+        # (batch_size, num_layers * hidden_dim * 2 * 2)
+        z_input = torch.cat([hn, cn], dim=-1)
+
+        # (batch_size, latent_dim)
+        # log-variance is numerically more stable to predict
+        mu = self.fc_mu(z_input)
+        logvar = self.fc_logvar(z_input)
+
+        # Standard deviation
+        std = torch.exp(0.5 * logvar)
+
+        # Random noise
+        eps = torch.randn_like(std)
+
+        # Sample latent vector
+        z = mu + eps * std
+
+        # z is (batch_size, latent_dim)
+        return z, mu, logvar

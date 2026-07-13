@@ -21,6 +21,9 @@ def interpolate():
     state_dict = torch.load("best_model_bs512_ed64_hd64_nl2_lr0.001_ep30.pt", map_location=device)
     model.load_state_dict(state_dict)
 
+    # Evaluation mode
+    model.eval()
+
     names = ['Ludovico', 'Francesco']
     data = NameDataset(names, vocab)
 
@@ -31,16 +34,17 @@ def interpolate():
 
     len1, len2 = torch.tensor([len1]), torch.tensor([len2])
 
-    h1, c1 = model.encoder(x1, len1)
-    h2, c2 = model.encoder(x2, len2)
+    with torch.no_grad():
+        h1, c1 = model.encoder(x1, len1)
+        h2, c2 = model.encoder(x2, len2)
 
-    alpha = 0.5
-    h = alpha * h1 + (1 - alpha) * h2
-    c = alpha * c1 + (1 - alpha) * c2
+        alpha = 0.5
+        h = alpha * h1 + (1 - alpha) * h2
+        c = alpha * c1 + (1 - alpha) * c2
 
-    generated = model.decoder.generate(h, c)
+        generated = model.decoder.generate(h, c)
 
-    print(generated)
+        print(generated)
 
 
 if __name__ == "__main__":

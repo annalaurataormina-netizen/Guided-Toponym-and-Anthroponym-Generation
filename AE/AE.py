@@ -17,7 +17,7 @@ class AE(nn.Module):
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim, num_layers)
 
-        # Note encoder and decoder have the same hidden_dim and num_layeres.
+        # Note encoder and decoder have the same hidden_dim and num_layers.
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
 
