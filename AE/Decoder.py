@@ -43,3 +43,36 @@ class Decoder(nn.Module):
 
         # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)
+
+    @torch.no_grad()
+    def generate(self, hn_encoder: torch.Tensor, cn_encoder: torch.Tensor, max_len=50) -> str:
+
+        # Batch size inferred from hidden state
+        batch_size = hn_encoder.size(1)
+
+        # Start with <SOS>
+        x = torch.full((batch_size, 1), self.vocab.char2idx['<SOS>'],
+                       dtype=torch.long,
+                       device=hn_encoder.device)
+
+        h, c = hn_encoder, cn_encoder
+        generated = []
+
+        for _ in range(max_len):
+
+            # One decoding step
+            embedded = self.embedding(x)
+            out, (h, c) = self.rnn(embedded, (h, c))
+            logits = self.fc(out[:, -1])  # (batch, vocab_size)
+
+            # Greedy decoding
+            x = logits.argmax(dim=-1, keepdim=True)
+
+            token = x.item()
+
+            generated.append(token)
+
+            if token == self.vocab.char2idx['<EOS>']:
+                break
+
+        return self.vocab.decode(generated)
