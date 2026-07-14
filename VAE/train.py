@@ -1,3 +1,4 @@
+import os
 import random
 
 import editdistance
@@ -18,6 +19,8 @@ from AE.utils import load_all, normalise
 
 
 def train():
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # always resolves to .../VAE regardless of cwd
+
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
@@ -27,7 +30,7 @@ def train():
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta = 512, 64, 64, 2, 64, 0.001, 30, 0.001
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta = 512, 64, 64, 2, 64, 0.001, 30, 0
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -45,6 +48,7 @@ def train():
     print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
+    print("No beta scheduling")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -96,10 +100,14 @@ def train():
 
     # Training losses, one for each batch
     train_losses = []
+    train_kl_losses = []
+    train_reconstruction_losses = []
     train_steps = []
 
     # Validation losses (for the whole validation set), one every 2000 batches
     val_losses = []
+    val_kl_losses = []
+    val_reconstruction_losses = []
     val_steps = []
 
     # Tracks the number of batches
@@ -116,6 +124,8 @@ def train():
             break
 
         epoch_train_losses = []
+        epoch_train_kl_losses = []
+        epoch_train_reconstruction_losses = []
 
         for train_batch in train_dataloader:
 
@@ -154,14 +164,21 @@ def train():
             global_step += 1
 
             train_losses.append(loss.item())
+            train_kl_losses.append(kl_loss.item())
+            train_reconstruction_losses.append(reconstruction_loss.item())
             train_steps.append(global_step)
+
             epoch_train_losses.append(loss.item())
+            epoch_train_reconstruction_losses.append(reconstruction_loss.item())
+            epoch_train_kl_losses.append(kl_loss.item())
 
             # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
 
                 model.eval()
-                val_loss = 0.0
+                val_loss = 0
+                val_kl_loss = 0
+                val_reconstruction_loss = 0
 
                 with torch.no_grad():
                     for val_batch in val_dataloader:
@@ -176,15 +193,20 @@ def train():
                         loss = reconstruction_loss + beta * kl_loss
 
                         val_loss += loss.item()
+                        val_kl_loss += kl_loss.item()
+                        val_reconstruction_loss += reconstruction_loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
+                avg_kl_loss = val_kl_loss / len(val_dataloader)
+                avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
 
                 # For early stopping
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
                     model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_b{beta}.pt'
-                    torch.save(model.state_dict(), model_name)
+                    model_path = os.path.join(script_dir, model_name)
+                    torch.save(model.state_dict(), model_path)
 
                 else:
                     wait += 1
@@ -194,6 +216,8 @@ def train():
                         break
 
                 val_losses.append(avg_val_loss)
+                val_kl_losses.append(avg_kl_loss)
+                val_reconstruction_losses.append(avg_reconstruction_loss)
                 val_steps.append(global_step)
 
                 model.train()
@@ -202,7 +226,11 @@ def train():
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
                     f"Avg validation loss (full validation set) = {val_losses[-1]:.4f}, "
-                    f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}"
+                    f"Avg validation reconstruction loss (full validation set) = {val_reconstruction_losses[-1]:.4f}, "
+                    f"Avg validation KL divergence (full validation set) = {val_kl_losses[-1]:.4f}, "
+                    f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}, "
+                    f"Avg training reconstruction loss (last 2000 batches) = {sum(train_reconstruction_losses[-2000:]) / 2000:.4f}, "
+                    f"Avg training KL divergence (last 2000 batches) = {sum(train_kl_losses[-2000:]) / 2000:.4f}, "
                 )
 
                 if early_stopping:
@@ -214,7 +242,7 @@ def train():
 
                 model.eval()
 
-                total_lev = 0.00
+                total_lev = 0
                 count = 0
 
                 with torch.no_grad():
@@ -253,16 +281,25 @@ def train():
                 )
 
         print(
-            f"Epoch {epoch + 1}/{epochs}, Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}")
+            f"Epoch {epoch + 1}/{epochs},"
+            f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f},"
+            f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f},"
+            f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}"
+        )
 
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
+    plt.plot(val_steps, val_reconstruction_losses, label="Validation Reconstruction")
+    plt.plot(val_steps, val_kl_losses, label="Validation KL")
+    plt.plot(train_steps, train_reconstruction_losses, label="Training Reconstruction")
+    plt.plot(train_steps, train_kl_losses, label="Training KL")
     plt.xlabel("Training step")
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}.png'
-    plt.savefig(fig_name)
+    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_b{beta}.png'
+    fig_path = os.path.join(script_dir, fig_name)
+    plt.savefig(fig_path)
     plt.close()
 
     model.eval()

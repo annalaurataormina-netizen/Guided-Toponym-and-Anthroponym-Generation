@@ -1,2 +1,3 @@
-- Train VAE (with beta-scheduling)
-- Evaluate generation (pronounceability, novelty, diversity)
+- Train VAE with different betas [Tue]
+- Train VAE (with beta-scheduling) [Wed]
+- Evaluate generation (pronounceability, novelty, diversity) [Thu]
