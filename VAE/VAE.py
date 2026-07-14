@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 
 from AE.CharVocab import CharVocab
-from Decoder import Decoder
-from Encoder import Encoder
+from .Decoder import Decoder
+from .Encoder import Encoder
 
 
 class VAE(nn.Module):
@@ -26,4 +26,4 @@ class VAE(nn.Module):
         decoder_input = x[:, :-1]
 
         # The decoder reconstructs the sequence from z using teacher forcing
-        return self.decoder(decoder_input, z)
+        return self.decoder(decoder_input, z), mu, logvar

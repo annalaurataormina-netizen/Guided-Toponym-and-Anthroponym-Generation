@@ -8,7 +8,7 @@ from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
 from AE.utils import load_all, normalise
-from VAE import VAE
+from .VAE import VAE
 
 
 def test():

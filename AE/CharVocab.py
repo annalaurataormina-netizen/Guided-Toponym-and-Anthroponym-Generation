@@ -1,4 +1,4 @@
-from config import ALLOWED_CHARS
+from .config import ALLOWED_CHARS
 
 
 class CharVocab:

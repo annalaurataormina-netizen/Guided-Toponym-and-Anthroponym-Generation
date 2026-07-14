@@ -10,11 +10,11 @@ from torch.utils.data import DataLoader, Subset
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from AE import AE
-from CharVocab import CharVocab
-from NameDataset import NameDataset
-from config import ALLOWED_CHARS
-from utils import load_all, normalise
+from .AE import AE
+from .CharVocab import CharVocab
+from .NameDataset import NameDataset
+from .config import ALLOWED_CHARS
+from .utils import load_all, normalise
 
 
 def train():

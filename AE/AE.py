@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from CharVocab import CharVocab
-from Decoder import Decoder
-from Encoder import Encoder
+from .CharVocab import CharVocab
+from .Decoder import Decoder
+from .Encoder import Encoder
 
 
 class AE(nn.Module):

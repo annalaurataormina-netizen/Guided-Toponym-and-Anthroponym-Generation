@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, Subset
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from VAE import VAE
+from .VAE import VAE
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS

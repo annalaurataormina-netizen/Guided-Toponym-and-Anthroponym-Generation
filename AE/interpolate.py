@@ -1,9 +1,9 @@
 import torch
 
-from AE import AE
-from CharVocab import CharVocab
-from NameDataset import NameDataset
-from config import ALLOWED_CHARS
+from .AE import AE
+from .CharVocab import CharVocab
+from .NameDataset import NameDataset
+from .config import ALLOWED_CHARS
 
 
 def interpolate():

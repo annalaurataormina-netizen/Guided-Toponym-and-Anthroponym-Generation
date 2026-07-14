@@ -3,7 +3,7 @@ import torch
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from VAE import VAE
+from .VAE import VAE
 
 
 def interpolate():
