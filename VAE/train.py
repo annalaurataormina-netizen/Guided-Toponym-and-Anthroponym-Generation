@@ -101,12 +101,14 @@ def train():
     # Training losses, one for each batch
     train_losses = []
     train_kl_losses = []
+    train_kl_losses_adj = []
     train_reconstruction_losses = []
     train_steps = []
 
     # Validation losses (for the whole validation set), one every 2000 batches
     val_losses = []
     val_kl_losses = []
+    val_kl_losses_adj = []
     val_reconstruction_losses = []
     val_steps = []
 
@@ -125,6 +127,7 @@ def train():
 
         epoch_train_losses = []
         epoch_train_kl_losses = []
+        epoch_train_kl_losses_adj = []
         epoch_train_reconstruction_losses = []
 
         for train_batch in train_dataloader:
@@ -165,12 +168,14 @@ def train():
 
             train_losses.append(loss.item())
             train_kl_losses.append(kl_loss.item())
+            train_kl_losses_adj.append(kl_loss.item() * beta)
             train_reconstruction_losses.append(reconstruction_loss.item())
             train_steps.append(global_step)
 
             epoch_train_losses.append(loss.item())
             epoch_train_reconstruction_losses.append(reconstruction_loss.item())
             epoch_train_kl_losses.append(kl_loss.item())
+            epoch_train_kl_losses_adj.append(kl_loss.item() * beta)
 
             # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
@@ -178,6 +183,7 @@ def train():
                 model.eval()
                 val_loss = 0
                 val_kl_loss = 0
+                val_kl_loss_adj = 0
                 val_reconstruction_loss = 0
 
                 with torch.no_grad():
@@ -194,10 +200,12 @@ def train():
 
                         val_loss += loss.item()
                         val_kl_loss += kl_loss.item()
+                        val_kl_loss_adj += kl_loss.item() * beta
                         val_reconstruction_loss += reconstruction_loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
                 avg_kl_loss = val_kl_loss / len(val_dataloader)
+                avg_kl_loss_adj = val_kl_loss_adj / len(val_dataloader)
                 avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
 
                 # For early stopping
@@ -217,6 +225,7 @@ def train():
 
                 val_losses.append(avg_val_loss)
                 val_kl_losses.append(avg_kl_loss)
+                val_kl_losses_adj.append(avg_kl_loss_adj)
                 val_reconstruction_losses.append(avg_reconstruction_loss)
                 val_steps.append(global_step)
 
@@ -228,9 +237,10 @@ def train():
                     f"Avg validation loss (full validation set) = {val_losses[-1]:.4f}, "
                     f"Avg validation reconstruction loss (full validation set) = {val_reconstruction_losses[-1]:.4f}, "
                     f"Avg validation KL divergence (full validation set) = {val_kl_losses[-1]:.4f}, "
+                    f"Avg validation beta-adjusted KL divergence (full validation set) = {val_kl_losses_adj[-1]:.4f}, "
                     f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}, "
                     f"Avg training reconstruction loss (last 2000 batches) = {sum(train_reconstruction_losses[-2000:]) / 2000:.4f}, "
-                    f"Avg training KL divergence (last 2000 batches) = {sum(train_kl_losses[-2000:]) / 2000:.4f}, "
+                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -282,9 +292,10 @@ def train():
 
         print(
             f"Epoch {epoch + 1}/{epochs},"
-            f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f},"
-            f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f},"
-            f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}"
+            f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}, "
+            f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f}, "
+            f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}, "
+            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}"
         )
 
     plt.plot(train_steps, train_losses, label="Training")
