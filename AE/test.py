@@ -23,7 +23,7 @@ def test():
     names = load_all()
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.0015, 30
 
     # List of name_romanised after normalising (i.e., splitting diacritics)
     names_normalised = [normalise(n) for n in names]
@@ -39,7 +39,7 @@ def test():
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = AE(vocab, embed_dim, hidden_dim, num_layers)
-    state_dict = torch.load("best_model_bs512_ed64_hd64_nl2_lr0.001_ep30.pt", map_location=device)
+    state_dict = torch.load("best_model_bs512_ed64_hd64_nl2_lr0.0015_ep30.pt", map_location=device)
     model.load_state_dict(state_dict)
 
     # Put the model in evaluation mode if you're doing inference
