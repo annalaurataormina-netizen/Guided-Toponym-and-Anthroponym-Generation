@@ -133,11 +133,11 @@ def interpolate():
 
     # Novelty
     print(f"Unique rate wrt training data: {compute_novelty(generated, train_dataset):.2%}")
-    print(f"Near endpoint): {near_endpoint_count / total:.2%}")
+    print(f"Near endpoints (Levenshtein distance <= 0.1): {near_endpoint_count / total:.2%}")
 
     # Diversity
     print(f"Unique rate (among generated names): {len(set(generated)) / len(generated):.2%}")
-    print(f"Near other): {near_other_generated_count / pairs:.2%}")
+    print(f"Near other (Levenshtein distance <= 0.1): {near_other_generated_count / pairs:.2%}")
 
     # Smoothness
     print(

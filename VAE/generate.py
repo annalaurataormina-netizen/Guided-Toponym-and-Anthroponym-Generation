@@ -70,7 +70,7 @@ def generate():
 
     # Diversity
     print(f"Unique rate (among generated names): {len(set(generated)) / len(generated):.2%}")
-    print(f"Near other (edit distance <= 0.25): {duplicates / pairs:.2%}")
+    print(f"Near other (Levenshtein distance <= 0.25): {duplicates / pairs:.2%}")
 
 
 if __name__ == "__main__":
