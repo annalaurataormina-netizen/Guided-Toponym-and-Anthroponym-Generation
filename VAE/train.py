@@ -30,7 +30,7 @@ def train():
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta = 512, 64, 64, 2, 64, 0.001, 30, 0
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max = 512, 64, 64, 2, 64, 0.001, 30, 0.005
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -43,12 +43,11 @@ def train():
     print(f"Latent dimension: {latent_dim}")
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
-    print(f"Beta: {beta}")
     print("Optimiser: Adam")
     print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    print("No beta scheduling")
+    print(f"Linear ramp-up of beta over the first epoch from 0 to {beta_max}")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -130,7 +129,14 @@ def train():
         epoch_train_kl_losses_adj = []
         epoch_train_reconstruction_losses = []
 
-        for train_batch in train_dataloader:
+        warm_up_steps = len(train_dataloader)
+
+        for batch_idx, train_batch in enumerate(train_dataloader):
+
+            if epoch == 0:
+                beta = beta_max * (batch_idx + 1) / warm_up_steps
+            else:
+                beta = beta_max
 
             sequences, lengths = train_batch
 
@@ -212,7 +218,7 @@ def train():
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_b{beta}.pt'
+                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
                     model_path = os.path.join(script_dir, model_name)
                     torch.save(model.state_dict(), model_path)
 
@@ -234,6 +240,7 @@ def train():
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
+                    f"Beta = {beta:.5f}, "
                     f"Avg validation loss (full validation set) = {val_losses[-1]:.4f}, "
                     f"Avg validation reconstruction loss (full validation set) = {val_reconstruction_losses[-1]:.4f}, "
                     f"Avg validation KL divergence (full validation set) = {val_kl_losses[-1]:.4f}, "
@@ -308,7 +315,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_b{beta}.png'
+    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
     fig_path = os.path.join(script_dir, fig_name)
     plt.savefig(fig_path)
     plt.close()

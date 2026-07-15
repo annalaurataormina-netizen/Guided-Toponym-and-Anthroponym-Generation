@@ -1,3 +1,2 @@
-- Train VAE with 2 betas [Tue]
-- Train VAE with beta-scheduling, if needed [Wed]
+- Train VAE with beta-scheduling [Wed]
 - Evaluate generation both for interpolation and not [Wed/Thu]
