@@ -30,7 +30,8 @@ def train():
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_cycles, ratio = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 6, 0.75
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
+    # n_cycles, ratio = 6, 0.75
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -47,7 +48,8 @@ def train():
     print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
+    print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -129,22 +131,21 @@ def train():
         epoch_train_kl_losses_adj = []
         epoch_train_reconstruction_losses = []
 
-        warm_up_steps = len(train_dataloader)
-
         for batch_idx, train_batch in enumerate(train_dataloader):
 
+            warmup_steps = len(train_dataloader) * n_epochs_ramp_up
+
             # Linear annealing
-            '''
-            if epoch == 0:
-                beta = beta_max * (batch_idx + 1) / warm_up_steps
+            if global_step < warmup_steps:
+                beta = beta_max * global_step / warmup_steps
             else:
                 beta = beta_max
-            '''
-
-            total_steps = len(train_dataloader) * epochs
 
             # Cyclical annealing
+            '''
+            total_steps = len(train_dataloader) * epochs
             beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
+            '''
 
             sequences, lengths = train_batch
 
@@ -166,10 +167,18 @@ def train():
             # CrossEntropyLoss internally applies log_softmax to logits and computes the negative log likelihood loss
             reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
-            # KL divergence
+            # KL divergence (w/free bits)
+            kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+            free_bits = 0.05
+            kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
+            kl_loss = kl_per_dim.sum(dim=1).mean()
+
+            # KL divergence (w/o free bits)
+            '''
             kl_loss = -0.5 * torch.mean(
                 torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
             )
+            '''
 
             # Reconstruction loss + KL divergence
             loss = reconstruction_loss + beta * kl_loss
@@ -209,7 +218,18 @@ def train():
                         logits, mu, logvar = model(sequences, lengths)
 
                         reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
+
+                        # KL divergence (w/o free bits)
+                        '''
                         kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / sequences.size(0)
+                        '''
+
+                        # KL divergence (w/free bits)
+                        kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+                        free_bits = 0.05
+                        kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
+                        kl_loss = kl_per_dim.sum(dim=1).mean()
+
                         loss = reconstruction_loss + beta * kl_loss
 
                         val_loss += loss.item()
@@ -306,7 +326,7 @@ def train():
                 )
 
         print(
-            f"Epoch {epoch + 1}/{epochs},"
+            f"Epoch {epoch + 1}/{epochs}, "
             f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}, "
             f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f}, "
             f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}, "
