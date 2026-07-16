@@ -77,7 +77,6 @@ def compute_novelty(generated: list[str], train_dataset: NameDataset) -> float:
 
 # Computes the proportion of character n-grams in generated names that also occur in the training set.
 def compute_ngram_coverage(generated, train_dataset, n=3):
-
     # Build the training n-gram vocabulary
     train_ngrams = set()
 
@@ -85,7 +84,7 @@ def compute_ngram_coverage(generated, train_dataset, n=3):
         name, _ = train_dataset[i]
 
         for j in range(len(name) - n + 1):
-            train_ngrams.add(name[j:j+n].lower())
+            train_ngrams.add(name[j:j + n].lower())
 
     # Count generated n-grams
     total = 0
@@ -96,7 +95,19 @@ def compute_ngram_coverage(generated, train_dataset, n=3):
 
         for j in range(len(name) - n + 1):
             total += 1
-            if name[j:j+n] in train_ngrams:
+            if name[j:j + n] in train_ngrams:
                 matched += 1
 
     return matched / total if total > 0 else 0.0
+
+
+def cyclical_beta(step, total_steps, n_cycles, ratio, beta_max):
+    cycle_length = total_steps / n_cycles
+    cycle_position = (step % cycle_length) / cycle_length
+
+    if cycle_position < ratio:
+        beta = beta_max * (cycle_position / ratio)
+    else:
+        beta = beta_max
+
+    return beta

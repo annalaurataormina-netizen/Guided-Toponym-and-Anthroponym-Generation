@@ -15,7 +15,7 @@ from .VAE import VAE
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from AE.utils import load_all, normalise
+from AE.utils import load_all, normalise, cyclical_beta
 
 
 def train():
@@ -30,7 +30,7 @@ def train():
     # Each time save the loss with a different name
     # 512, 32, 32, 2, 0.001, 30 work best so far
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max = 512, 64, 64, 2, 64, 0.001, 30, 0.005
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_cycles, ratio = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 6, 0.75
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -47,7 +47,7 @@ def train():
     print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    print(f"Linear ramp-up of beta over the first epoch from 0 to {beta_max}")
+    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -133,10 +133,18 @@ def train():
 
         for batch_idx, train_batch in enumerate(train_dataloader):
 
+            # Linear annealing
+            '''
             if epoch == 0:
                 beta = beta_max * (batch_idx + 1) / warm_up_steps
             else:
                 beta = beta_max
+            '''
+
+            total_steps = len(train_dataloader) * epochs
+
+            # Cyclical annealing
+            beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
 
             sequences, lengths = train_batch
 
