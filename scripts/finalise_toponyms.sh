@@ -3,4 +3,4 @@
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/toponyms/err/finalise_%j.err
 
 cd /vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/
-python3 -m toponyms/finalise
+python3 -m pipeline.toponyms/finalise

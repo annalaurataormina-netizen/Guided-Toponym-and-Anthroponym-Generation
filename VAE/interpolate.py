@@ -8,12 +8,15 @@ from sklearn.model_selection import train_test_split
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from AE.utils import load_all, normalise, compute_novelty, compute_ngram_coverage
+from ..utils import load_all, normalise, compute_novelty, compute_ngram_coverage
 from .VAE import VAE
+
+'''
+IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
+'''
 
 
 def interpolate():
-
     # Set random seed for reproducibility
     random.seed(1996)
     torch.manual_seed(1996)
@@ -34,12 +37,16 @@ def interpolate():
     train_dataset = NameDataset(train_names, vocab)
 
     # Model hyperparameters
-    embed_dim, hidden_dim, num_layers, latent_dim = 64, 64, 2, 64
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
+    # n_cycles, ratio = 6, 0.75
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
-    state_dict = torch.load("", map_location=device)
+    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+    state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
+
+    print(f"Model name: {model_name}")
 
     # Evaluation mode
     model.eval()
@@ -89,18 +96,21 @@ def interpolate():
     total = 0
     pairs = 0
 
+    threshold = 0.1
+
     for trajectory in interpolations:
         for i, name in enumerate(trajectory["generated"]):
             total += 1
-            if (editdistance.eval(name, trajectory["source_name"]) / max(len(name), len(trajectory["source_name"])) <= 0.1
+            if (editdistance.eval(name, trajectory["source_name"]) / max(len(name),
+                                                                         len(trajectory["source_name"])) <= threshold
                     or
                     editdistance.eval(name, trajectory["destination_name"]) / max(len(name), len(
-                        trajectory["destination_name"])) <= 0.1):
+                        trajectory["destination_name"])) <= threshold):
                 near_endpoint_count += 1
             for j in range(i + 1, len(trajectory["generated"])):
                 other_name = trajectory["generated"][j]
                 pairs += 1
-                if editdistance.eval(name, other_name) / max(len(name), len(other_name)) <= 0.1:
+                if editdistance.eval(name, other_name) / max(len(name), len(other_name)) <= threshold:
                     near_other_generated_count += 1
 
     smoothness_distances = []
@@ -133,11 +143,11 @@ def interpolate():
 
     # Novelty
     print(f"Unique rate wrt training data: {compute_novelty(generated, train_dataset):.2%}")
-    print(f"Near endpoints (Levenshtein distance <= 0.1): {near_endpoint_count / total:.2%}")
+    print(f"Near endpoints (normalised Levenshtein distance <= {threshold}): {near_endpoint_count / total:.2%}")
 
     # Diversity
     print(f"Unique rate (among generated names): {len(set(generated)) / len(generated):.2%}")
-    print(f"Near other (Levenshtein distance <= 0.1): {near_other_generated_count / pairs:.2%}")
+    print(f"Near other (normalised Levenshtein distance <= {threshold}): {near_other_generated_count / pairs:.2%}")
 
     # Smoothness
     print(

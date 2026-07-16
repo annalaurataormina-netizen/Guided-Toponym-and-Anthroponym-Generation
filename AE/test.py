@@ -8,11 +8,12 @@ from .AE import AE
 from .CharVocab import CharVocab
 from .NameDataset import NameDataset
 from .config import ALLOWED_CHARS
-from .utils import load_all, normalise
+from ..utils import load_all, normalise
 
 '''
 IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
 '''
+
 
 def test():
     # Set device
@@ -45,6 +46,8 @@ def test():
     model_name = f'AE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
     state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
+
+    print(f"Model name: {model_name}")
 
     # Put the model in evaluation mode if you're doing inference
     model.to(device)
@@ -108,12 +111,12 @@ def test():
             # Prints the loss for every batch
             print(
                 f"Step {global_step}, "
-                f"Average loss = {loss.item():.4f}, "
-                f"Average normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
+                f"Avg loss = {loss.item():.4f}, "
+                f"Avg normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
             )
 
-    print(f"Average loss: {total_loss / len(test_dataloader):.4f}")
-    print(f"Average normalised Levenshtein distance: {total_lev / total_count:.4f}")
+    print(f"Avg loss: {total_loss / len(test_dataloader):.4f}")
+    print(f"Avg normalised Levenshtein distance: {total_lev / total_count:.4f}")
 
 
 if __name__ == "__main__":

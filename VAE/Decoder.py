@@ -33,9 +33,10 @@ class Decoder(nn.Module):
         # batch_first returns (batch_size, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
 
-        # Linear projection that returns (batch_size, seq_len, len(vocab))
+        # Linear projection from (batch_size, seq_len, hidden_dim) to (batch_size, seq_len, len(vocab))
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
 
+        # Linear projections from (batch_size, latent_dim) to (batch_size, num_layers * hidden_dim)
         self.hidden_init = nn.Linear(latent_dim, num_layers * hidden_dim)
         self.cell_init = nn.Linear(latent_dim, num_layers * hidden_dim)
 
@@ -52,8 +53,7 @@ class Decoder(nn.Module):
         c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
 
         # out is (batch_size, seq_len, hidden_dim)
-        # hn, cn are (num_layers, batch_size, hidden_dim)
-        out, (hn, cn) = self.rnn(self.embedding(x), (h0, c0))
+        out, (_, _) = self.rnn(self.embedding(x), (h0, c0))
 
         # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)
@@ -84,7 +84,7 @@ class Decoder(nn.Module):
             # One decoding step
             embedded = self.embedding(x)
             out, (h, c) = self.rnn(embedded, (h, c))
-            logits = self.fc(out[:, -1])  # (batch, vocab_size)
+            logits = self.fc(out[:, -1])
 
             # Greedy decoding
             x = logits.argmax(dim=-1, keepdim=True)

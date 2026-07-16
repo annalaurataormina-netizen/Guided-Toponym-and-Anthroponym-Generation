@@ -14,7 +14,7 @@ from .AE import AE
 from .CharVocab import CharVocab
 from .NameDataset import NameDataset
 from .config import ALLOWED_CHARS
-from .utils import load_all, normalise
+from ..utils import load_all, normalise
 
 
 def train():
@@ -24,7 +24,6 @@ def train():
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     # 512, 64, 64, 2, 0.0015, 30 work best so far with early stopping, Adam, bidirectional autoencoder
-    # Note encoder and decoder use the same hidden_dim and num_layers
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.0015, 30
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
@@ -44,12 +43,6 @@ def train():
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
-
-    # Toponyms (list of name_romanised)
-    # names = load_toponyms()
-
-    # Anthroponyms (list of name_romanised)
-    # names = load_anthroponyms()
 
     # Toponyms and Anthroponyms (list of name_romanised)
     names = load_all()
@@ -103,6 +96,7 @@ def train():
 
     best_loss = float('inf')
 
+    # For early stopping
     wait = 0
     early_stopping = False
 
@@ -116,7 +110,6 @@ def train():
         for train_batch in train_dataloader:
 
             sequences, lengths = train_batch
-
             sequences, lengths = sequences.to(device), lengths.cpu()
 
             # Zero out the gradients
@@ -234,7 +227,7 @@ def train():
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"Avg Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
+                    f"Avg normalised Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
                 )
 
         print(

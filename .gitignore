@@ -1,13 +1,17 @@
 # Virtual environments
-.env/
+.env
 venv/
 
 # Python
 __pycache__/
 *.py[c]
+.pytest_cache/
 
 # Logs
 err/
 out/
 *.err
 *.out
+
+# IDE
+.idea/

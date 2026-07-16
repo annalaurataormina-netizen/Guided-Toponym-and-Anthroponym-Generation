@@ -16,7 +16,7 @@ class VAE(nn.Module):
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
 
-        # Note encoder and decoder have the same hidden_dim and num_layers.
+        # Note that encoder and decoder have the same hidden_dim and num_layers.
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         # Encode input into latent distribution and sample z

@@ -5,6 +5,10 @@ from .CharVocab import CharVocab
 from .NameDataset import NameDataset
 from .config import ALLOWED_CHARS
 
+'''
+IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
+'''
+
 
 def interpolate():
     # Set device
@@ -21,6 +25,8 @@ def interpolate():
     model_name = f'AE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
     state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
+
+    print(f"Model name: {model_name}")
 
     # Evaluation mode
     model.eval()

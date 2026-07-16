@@ -34,12 +34,11 @@ class Encoder(nn.Module):
         # batch_first returns (batch, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=True)
 
-        # Projection layer to product distribution parameters of the latent variable
+        # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2) to (batch_size, latent_dim)
         self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
         self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        # Number of samples
         batch_size = x.size(0)
 
         # Initial hidden states (*2 because it's bidirectional)
@@ -93,5 +92,5 @@ class Encoder(nn.Module):
         # Sample latent vector
         z = mu + eps * std
 
-        # z is (batch_size, latent_dim)
+        # z, mu, logvar are (batch_size, latent_dim)
         return z, mu, logvar

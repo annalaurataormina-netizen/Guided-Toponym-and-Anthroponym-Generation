@@ -3,4 +3,4 @@
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/anthroponyms/err/check_%j.err
 
 cd /vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/
-python3 -m anthroponyms.check
+python3 -m pipeline.anthroponyms.check

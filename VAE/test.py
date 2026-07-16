@@ -7,8 +7,12 @@ from torch.utils.data import DataLoader
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from AE.utils import load_all, normalise
+from utils import load_all, normalise
 from .VAE import VAE
+
+'''
+IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
+'''
 
 
 def test():
@@ -23,7 +27,8 @@ def test():
     names = load_all()
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta = 512, 64, 64, 2, 64, 0.001, 30, 0.001
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
+    # n_cycles, ratio = 6, 0.75
 
     # List of name_romanised after normalising (i.e., splitting diacritics)
     names_normalised = [normalise(n) for n in names]
@@ -39,8 +44,11 @@ def test():
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
-    state_dict = torch.load("models/best_model_bs512_ed64_hd64_nl2_ld64_lr0.001_ep30_b0.001.pt", map_location=device)
+    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+    state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
+
+    print(f"Model name: {model_name}")
 
     # Put the model in evaluation mode if you're doing inference
     model.to(device)
@@ -52,20 +60,22 @@ def test():
     # Tracks the number of batches
     global_step = 0
 
+    # Loss tracking
     total_reconstruction_loss = 0
     total_kl_loss = 0
-    total_loss = 0
+
+    # Levenshtein distance tracking
     total_lev = 0
     total_count = 0
 
     with torch.no_grad():
         for test_batch in test_dataloader:
 
+            # Batch Levenshtein distance
             batch_lev = 0
             batch_count = 0
 
             sequences, lengths = test_batch
-
             sequences, lengths = sequences.to(device), lengths.cpu()
 
             # Drop <SOS> as it can only ever be a starting input, never a valid target to predict
@@ -73,7 +83,7 @@ def test():
             target = sequences[:, 1:]
 
             # Forward pass
-            # Returns (batch_size, seq_len, len(vocab))
+            # logits, mu, logvar are (batch_size, seq_len, len(vocab))
             logits, mu, logvar = model(sequences, lengths)
 
             # Convert predicted indices to characters
@@ -85,7 +95,6 @@ def test():
                 # Remove everything after <EOS>
                 p_list = p.tolist()
                 p_list = p_list[:p_list.index(eos_idx)] if eos_idx in p_list else p_list
-
                 pred_str = vocab.decode(p_list)
                 target_str = vocab.decode(t.tolist())
 
@@ -106,35 +115,24 @@ def test():
             )
 
             # KL divergence
-            kl_loss = -0.5 * torch.mean(
-                torch.sum(
-                    1 + logvar - mu.pow(2) - logvar.exp(),
-                    dim=1
-                )
-            )
-
-            loss = reconstruction_loss + beta * kl_loss
+            kl_loss = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(),dim=1))
 
             global_step += 1
 
             total_reconstruction_loss += reconstruction_loss.item()
             total_kl_loss += kl_loss.item()
-            total_loss += loss.item()
 
             # Prints the loss for every batch
             print(
                 f"Step {global_step}, "
                 f"Reconstruction loss = {reconstruction_loss.item():.4f}, "
-                f"KL loss = {kl_loss.item():.4f}, "
-                f"Beta KL = {(beta * kl_loss).item():.4f}, "
-                f"Total loss = {loss.item():.4f}, "
-                f"Average normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
+                f"KL divergence = {kl_loss.item():.4f}, "
+                f"Avg normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
             )
 
-    print(f"Average reconstruction loss: {total_reconstruction_loss / len(test_dataloader):.4f}")
-    print(f"Average KL loss: {total_kl_loss / len(test_dataloader):.4f}")
-    print(f"Average total loss: {total_loss / len(test_dataloader):.4f}")
-    print(f"Average normalised Levenshtein distance: {total_lev / total_count:.4f}")
+    print(f"Avg reconstruction loss: {total_reconstruction_loss / len(test_dataloader):.4f}")
+    print(f"Avg KL divergence: {total_kl_loss / len(test_dataloader):.4f}")
+    print(f"Avg normalised Levenshtein distance: {total_lev / total_count:.4f}")
 
 
 if __name__ == "__main__":

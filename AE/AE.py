@@ -8,7 +8,6 @@ from .Encoder import Encoder
 
 class AE(nn.Module):
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int):
-
         super().__init__()
 
         # Encoder
@@ -17,10 +16,9 @@ class AE(nn.Module):
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim, num_layers)
 
-        # Note encoder and decoder have the same hidden_dim and num_layers.
+        # Note that encoder and decoder have the same hidden_dim and num_layers.
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-
         # Take last hidden states and cell states of the encoder
         hn_encoder, cn_encoder = self.encoder(x, lengths)
 

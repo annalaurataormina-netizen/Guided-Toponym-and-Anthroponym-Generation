@@ -1,4 +1,3 @@
-import os
 import random
 
 import editdistance
@@ -15,21 +14,15 @@ from .VAE import VAE
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from AE.utils import load_all, normalise, cyclical_beta
+from utils import load_all, normalise
 
 
 def train():
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # always resolves to .../VAE regardless of cwd
-
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    # For the learning rate, try 0.005, 0.001 and 0.0005 given that 0.001 works well
-    # Each time save the loss with a different name
-    # 512, 32, 32, 2, 0.001, 30 work best so far
-    # Note encoder and decoder use the same hidden_dim and num_layers
     batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
     # n_cycles, ratio = 6, 0.75
 
@@ -53,12 +46,6 @@ def train():
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
-
-    # Toponyms (list of name_romanised)
-    # names = load_toponyms()
-
-    # Anthroponyms (list of name_romanised)
-    # names = load_anthroponyms()
 
     # Toponyms and Anthroponyms (list of name_romanised)
     names = load_all()
@@ -118,6 +105,7 @@ def train():
 
     best_loss = float('inf')
 
+    # For early stopping
     wait = 0
     early_stopping = False
 
@@ -148,7 +136,6 @@ def train():
             '''
 
             sequences, lengths = train_batch
-
             sequences, lengths = sequences.to(device), lengths.cpu()
 
             # Zero out the gradients
@@ -180,7 +167,7 @@ def train():
             )
             '''
 
-            # Reconstruction loss + KL divergence
+            # TotalLoss = Reconstructionloss + Beta * KLDivergence
             loss = reconstruction_loss + beta * kl_loss
 
             # Backprop (compute gradients, update model params via backpropagation)
@@ -246,9 +233,8 @@ def train():
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
-                    model_path = os.path.join(script_dir, model_name)
-                    torch.save(model.state_dict(), model_path)
+                    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+                    torch.save(model.state_dict(), model_name)
 
                 else:
                     wait += 1
@@ -302,12 +288,16 @@ def train():
                         pred_indices = logits.argmax(dim=-1)
 
                         for p, t in zip(pred_indices, target):
+
                             eos_idx = vocab.char2idx['<EOS>']
                             p_list = p.tolist()
                             p_list = p_list[:p_list.index(eos_idx)] if eos_idx in p_list else p_list
                             pred_str = vocab.decode(p_list)
                             target_str = vocab.decode(t.tolist())
+
+                            # Normalised Levenshtein distance between target and predicted strings
                             total_lev += editdistance.eval(pred_str, target_str) / max(len(pred_str), len(target_str))
+
                             if count < 5:
                                 print(
                                     f"Epoch {epoch + 1}/{epochs}, "
@@ -322,7 +312,7 @@ def train():
                 print(
                     f"Epoch {epoch + 1}/{epochs}, "
                     f"Step {global_step}, "
-                    f"Avg Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
+                    f"Avg normalised Levenshtein distance (portion of validation set) = {(total_lev / count):.4f}"
                 )
 
         print(
@@ -343,9 +333,8 @@ def train():
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
-    fig_path = os.path.join(script_dir, fig_name)
-    plt.savefig(fig_path)
+    fig_name = f'VAE/plots/loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
+    plt.savefig(fig_name)
     plt.close()
 
     model.eval()
