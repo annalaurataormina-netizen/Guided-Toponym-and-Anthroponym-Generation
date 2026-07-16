@@ -23,11 +23,9 @@ def train():
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    # For the learning rate, try 0.005, 0.001 and 0.0005 given that 0.001 works well
-    # Each time save the loss with a different name
-    # 512, 32, 32, 2, 0.001, 30 work best so far
+    # 512, 64, 64, 2, 0.0015, 30 work best so far with early stopping, Adam, bidirectional autoencoder
     # Note encoder and decoder use the same hidden_dim and num_layers
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.0015, 30
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire evaluation set, then early stopping is triggered
@@ -170,7 +168,7 @@ def train():
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+                    model_name = f'AE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
                     torch.save(model.state_dict(), model_name)
 
                 else:
@@ -248,7 +246,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
+    fig_name = f'AE/plots/loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.png'
     plt.savefig(fig_name)
     plt.close()
 

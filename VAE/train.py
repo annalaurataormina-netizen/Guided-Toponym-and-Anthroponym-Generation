@@ -169,7 +169,7 @@ def train():
 
             # KL divergence (w/free bits)
             kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-            free_bits = 0.05
+            free_bits = 0.02
             kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
             kl_loss = kl_per_dim.sum(dim=1).mean()
 

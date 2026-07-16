@@ -1,12 +1,9 @@
 import gzip
 import json
-import os
 import random
-import sys
 
 from langcodes import Language
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_claims, get_monolingual_claims, get_time_claims, place_to_country, countries_to_languages, \
     country_to_languages, qid_to_iso
 
@@ -151,8 +148,8 @@ def main():
                     entity['occurrences'] = given_names_occurrences.get(entity['id'], {})
 
                 entity['name'] = {Language.get(iso).language_name(): {'name': name, 'code': iso,
-                                                                           'language': Language.get(
-                                                                               iso).language_name()} for
+                                                                      'language': Language.get(
+                                                                          iso).language_name()} for
                                   iso, name in native_labels.items()}
 
                 # Retrieve all entity's labels

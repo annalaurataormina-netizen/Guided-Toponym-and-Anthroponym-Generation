@@ -39,7 +39,7 @@ def test():
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
-    state_dict = torch.load("best_model_bs512_ed64_hd64_nl2_ld64_lr0.001_ep30_b0.001.pt", map_location=device)
+    state_dict = torch.load("models/best_model_bs512_ed64_hd64_nl2_ld64_lr0.001_ep30_b0.001.pt", map_location=device)
     model.load_state_dict(state_dict)
 
     # Put the model in evaluation mode if you're doing inference

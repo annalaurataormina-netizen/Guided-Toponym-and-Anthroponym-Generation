@@ -14,11 +14,12 @@ def interpolate():
     vocab = CharVocab(ALLOWED_CHARS)
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 64, 64, 2, 0.0015, 30
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = AE(vocab, embed_dim, hidden_dim, num_layers)
-    state_dict = torch.load("best_model_bs512_ed64_hd64_nl2_lr0.001_ep30.pt", map_location=device)
+    model_name = f'AE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+    state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
 
     # Evaluation mode

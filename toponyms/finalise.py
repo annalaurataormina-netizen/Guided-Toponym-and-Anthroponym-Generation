@@ -1,16 +1,13 @@
 import gzip
 import json
-import os
-import sys
 from collections import Counter
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import romanise, qid_to_country_name, countries_to_languages
+from utils import romanise, qid_to_country_name, country_to_languages
 
 MIN_LENGTH_THRESHOLD = 3
 MAX_LENGTH_THRESHOLD = 50
 
-COUNTRY_TO_LANGUAGES = countries_to_languages()
+COUNTRY_TO_LANGUAGES = country_to_languages()
 
 # Languages that are not spoken nowadays.
 EXCLUDE_EXACT = {

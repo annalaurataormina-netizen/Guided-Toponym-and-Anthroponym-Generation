@@ -1,2 +1,0 @@
-- Train VAE with beta-scheduling [Wed]
-- Evaluate generation both for interpolation and generation [Thu]

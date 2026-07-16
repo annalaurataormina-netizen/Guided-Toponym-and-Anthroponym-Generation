@@ -1,11 +1,8 @@
 import gzip
 import json
-import os
-import sys
 
 from langcodes import Language
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import get_monolingual_claims, get_claims, country_to_languages, countries_to_languages
 
 # Dictionary mapping each country to a list of languages.
