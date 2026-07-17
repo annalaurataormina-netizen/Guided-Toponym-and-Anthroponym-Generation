@@ -23,7 +23,7 @@ def train():
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up, free_bits = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5, 0.05
     # n_cycles, ratio = 6, 0.75
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
@@ -42,6 +42,8 @@ def train():
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
     print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+	print(f"Free bits with {free_bits}")
+	print(f"Word dropout at 25%")
     # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
 
     # Vocabulary of characters
@@ -156,7 +158,6 @@ def train():
 
             # KL divergence (w/free bits)
             kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-            free_bits = 0.02
             kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
             kl_loss = kl_per_dim.sum(dim=1).mean()
 
