@@ -56,7 +56,7 @@ class Decoder(nn.Module):
         if self.training:
             mask = torch.rand(x.shape, device=x.device) < 0.25
             x = x.clone()
-            x[mask] = self.vocab.char2idx('<MASK>')
+            x[mask] = self.vocab.char2idx['<MASK>']
 
         # out is (batch_size, seq_len, hidden_dim)
         out, (_, _) = self.rnn(self.embedding(x), (h0, c0))
