@@ -1,9 +1,15 @@
 import gzip
 import json
+import os
+import unicodedata
 from typing import Dict, List
 
+import psycopg2.extras
 import requests
+from dotenv import load_dotenv
 from icu import Transliterator
+
+from AE.NameDataset import NameDataset
 
 TRANSLITERATOR = Transliterator.createInstance('Any-Latin; NFC')
 
@@ -335,15 +341,6 @@ def qid_to_iso() -> dict[str, str]:
         qid_to_iso[qid] = iso
 
     return qid_to_iso
-
-
-import os
-import unicodedata
-
-import psycopg2.extras
-from dotenv import load_dotenv
-
-from .NameDataset import NameDataset
 
 
 # Returns the string after splitting the diacritics from the underlying character.
