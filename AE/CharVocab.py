@@ -7,7 +7,7 @@ class CharVocab:
 
         # Start of Sequence, End of Sequence, Padding and Upper characters
         # The <UPPER> character uppercases the following (lowercase) character
-        self.SPECIAL_CHARS = ['<SOS>', '<EOS>', '<PAD>', '<UPPER>']
+        self.SPECIAL_CHARS = ['<SOS>', '<EOS>', '<PAD>', '<UPPER>', '<MASK>']
 
         # Dictionary mapping each character to an index
         self.char2idx = {c: i for i, c in enumerate(self.SPECIAL_CHARS)}
