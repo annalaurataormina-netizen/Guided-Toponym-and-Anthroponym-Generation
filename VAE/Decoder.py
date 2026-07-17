@@ -52,6 +52,12 @@ class Decoder(nn.Module):
         h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
         c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
 
+        # Character dropout
+        if self.training:
+            mask = torch.rand(x.shape, device=x.device) < 0.25
+            x = x.clone()
+            x[mask] = self.mask_token_id
+
         # out is (batch_size, seq_len, hidden_dim)
         out, (_, _) = self.rnn(self.embedding(x), (h0, c0))
 
