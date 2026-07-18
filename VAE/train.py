@@ -44,6 +44,7 @@ def train():
     # print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
     print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
+    print("No free bits")
     print(f"Word dropout at 25%")
 
     # Vocabulary of characters
