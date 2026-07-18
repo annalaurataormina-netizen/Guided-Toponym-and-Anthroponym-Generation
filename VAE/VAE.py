@@ -7,16 +7,14 @@ from .Encoder import Encoder
 
 
 class VAE(nn.Module):
-    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int, num_layers_encoder: int, num_layers_decoder: int, latent_dim: int):
         super().__init__()
 
         # Encoder
-        self.encoder = Encoder(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
+        self.encoder = Encoder(vocab, embed_dim, hidden_dim_encoder, num_layers_encoder, latent_dim)
 
         # Decoder
-        self.decoder = Decoder(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
-
-        # Note that encoder and decoder have the same hidden_dim and num_layers.
+        self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         # Encode input into latent distribution and sample z

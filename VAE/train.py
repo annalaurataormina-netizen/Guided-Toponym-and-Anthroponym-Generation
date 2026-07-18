@@ -23,7 +23,7 @@ def train():
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 2, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
 
@@ -33,8 +33,10 @@ def train():
 
     print(f"Batch size: {batch_size}")
     print(f"Embedding dimension: {embed_dim}")
-    print(f"Hidden dimension: {hidden_dim}")
-    print(f"Number of layers: {num_layers}")
+    print(f"Hidden dimension of the encoder: {hidden_dim_encoder}")
+    print(f"Hidden dimension of the decoder: {hidden_dim_decoder}")
+    print(f"Number of layers of the encoder: {num_layers_encoder}")
+    print(f"Number of layers of the decoder: {num_layers_decoder}")
     print(f"Latent dimension: {latent_dim}")
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
@@ -79,7 +81,7 @@ def train():
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
     # Variational Autoencoder (hidden_dim and num_layers are the same for both the encoder and decoder)
-    model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
+    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers, latent_dim)
 
     # Move model to device
     model.to(device)
