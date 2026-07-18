@@ -23,8 +23,9 @@ def train():
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up, free_bits = 512, 64, 64, 2, 64, 0.0015, 30, 0.005, 5, 0.05
-    n_cycles, ratio = 4, 0.5
+    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 2, 64, 0.0015, 30, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -41,8 +42,8 @@ def train():
     print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    # print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
-    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
+    print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Word dropout at 25%")
@@ -127,16 +128,16 @@ def train():
             warmup_steps = len(train_dataloader) * n_epochs_ramp_up
 
             # Linear annealing
-            '''
             if global_step < warmup_steps:
                 beta = beta_max * global_step / warmup_steps
             else:
                 beta = beta_max
-            '''
 
             # Cyclical annealing
+            '''
             total_steps = len(train_dataloader) * epochs
             beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
+            '''
 
             sequences, lengths = train_batch
             sequences, lengths = sequences.to(device), lengths.cpu()
