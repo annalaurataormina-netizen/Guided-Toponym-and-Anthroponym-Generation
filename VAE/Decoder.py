@@ -31,7 +31,7 @@ class Decoder(nn.Module):
         # class torch.nn.LSTM(input_size, hidden_size, num_layers=1, bias=True,
         # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0, device=None, dtype=None)
         # batch_first returns (batch_size, seq_len, hidden_dim)
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
+        self.rnn = nn.LSTM(embed_dim + latent_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=False)
 
         # Linear projection from (batch_size, seq_len, hidden_dim) to (batch_size, seq_len, len(vocab))
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
@@ -58,8 +58,13 @@ class Decoder(nn.Module):
             x = x.clone()
             x[mask] = self.vocab.char2idx['<MASK>']
 
+        # At every timestep, the RNN takes both x and z
+        emb = self.embedding(x)
+        z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
+        rnn_input = torch.cat([emb, z_rep], dim=-1)
+
         # out is (batch_size, seq_len, hidden_dim)
-        out, (_, _) = self.rnn(self.embedding(x), (h0, c0))
+        out, (_, _) = self.rnn(rnn_input, (h0, c0))
 
         # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)
@@ -88,8 +93,10 @@ class Decoder(nn.Module):
         for _ in range(max_len):
 
             # One decoding step
-            embedded = self.embedding(x)
-            out, (h, c) = self.rnn(embedded, (h, c))
+            emb = self.embedding(x)
+            z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
+            rnn_input = torch.cat([emb, z_rep], dim=-1)
+            out, (h, c) = self.rnn(rnn_input, (h, c))
             logits = self.fc(out[:, -1])
 
             # Greedy decoding
