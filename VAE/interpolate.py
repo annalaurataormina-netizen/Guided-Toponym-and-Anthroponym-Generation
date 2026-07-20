@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from AE.CharVocab import CharVocab
 from AE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from ..utils import load_all, normalise, compute_novelty, compute_ngram_coverage
+from utils import load_all, normalise, compute_novelty, compute_ngram_coverage
 from .VAE import VAE
 
 '''

@@ -67,7 +67,7 @@ def generate():
 
     for i, g in enumerate(generated):
         for j in range(i + 1, len(generated)):
-            if editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), generated[j]) <= threshold:
+            if editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), len(generated[j])) <= threshold:
                 duplicates += 1
             pairs += 1
 
