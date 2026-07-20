@@ -81,7 +81,7 @@ def train():
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
     # Variational Autoencoder (hidden_dim and num_layers are the same for both the encoder and decoder)
-    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers, latent_dim)
+    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim)
 
     # Move model to device
     model.to(device)
@@ -237,7 +237,7 @@ def train():
                 if avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+                    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
                     torch.save(model.state_dict(), model_name)
 
                 else:
@@ -337,7 +337,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'VAE/plots/loss_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
+    fig_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
     plt.savefig(fig_name)
     plt.close()
 
