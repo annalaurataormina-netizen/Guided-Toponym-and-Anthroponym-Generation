@@ -37,12 +37,13 @@ def interpolate():
     train_dataset = NameDataset(train_names, vocab)
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
 
     # Recreate the model architecture first, then load the weights from the saved model
-    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim)
+    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
+                latent_dim)
     model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
     state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
@@ -129,7 +130,9 @@ def interpolate():
             )
 
     print("5 random trajectories (including endpoints)")
-    trajectories = random.sample(range(len(interpolations)), 5)
+
+    trajectories = random.sample(interpolations, 5)
+
     for trajectory in trajectories:
         names = [
             trajectory["source_name"],
