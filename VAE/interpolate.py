@@ -143,7 +143,7 @@ def interpolate():
 
     # Pronounceability
     for n in (2, 3, 4):
-        print(f"{n}-gram coverage: {compute_ngram_coverage(generated, train_dataset, n):.2%}")
+        print(f"{n}-gram coverage: {compute_ngram_coverage(generated, train_names, n):.2%}")
 
     # Novelty
     print(f"Unique rate wrt training data: {compute_novelty(generated, train_dataset):.2%}")
