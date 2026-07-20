@@ -330,14 +330,14 @@ def train():
     plt.plot(train_steps, train_losses, label="Training")
     plt.plot(val_steps, val_losses, label="Validation")
     plt.plot(val_steps, val_reconstruction_losses, label="Validation Reconstruction")
-    plt.plot(val_steps, val_kl_losses, label="Validation KL")
+    plt.plot(val_steps, val_kl_losses_adj, label="Beta-adjusted Validation KL")
     plt.plot(train_steps, train_reconstruction_losses, label="Training Reconstruction")
-    plt.plot(train_steps, train_kl_losses, label="Training KL")
+    plt.plot(train_steps, train_kl_losses_adj, label="Beta-adjusted Training KL")
     plt.xlabel("Training step")
     plt.ylabel("Loss")
     plt.title("Loss over time")
     plt.legend()
-    fig_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
+    fig_name = f'VAE/plots/loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.png'
     plt.savefig(fig_name)
     plt.close()
 

@@ -27,8 +27,9 @@ def test():
     names = load_all()
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim, num_layers, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 2, 64, 0.001, 30, 0.005, 5
-    # n_cycles, ratio = 6, 0.75
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
 
     # List of name_romanised after normalising (i.e., splitting diacritics)
     names_normalised = [normalise(n) for n in names]
@@ -43,8 +44,8 @@ def test():
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # Recreate the model architecture first, then load the weights from the saved model
-    model = VAE(vocab, embed_dim, hidden_dim, num_layers, latent_dim)
-    model_name = f'best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim)
+    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
     state_dict = torch.load(model_name, map_location=device)
     model.load_state_dict(state_dict)
 

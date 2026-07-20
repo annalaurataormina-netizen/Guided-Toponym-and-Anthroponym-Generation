@@ -1,0 +1,6 @@
+- Evaluate generation on VAE
+- Contrastive learning (training + evaluation)
+- CVAE (training + evaluation)
+- Adversarial? (training + evaluation)
+- Final evaluation
+- Report
