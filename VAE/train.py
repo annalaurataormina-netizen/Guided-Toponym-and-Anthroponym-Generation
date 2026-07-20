@@ -233,14 +233,14 @@ def train():
                 avg_kl_loss_adj = val_kl_loss_adj / len(val_dataloader)
                 avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
 
-                # For early stopping
-                if avg_val_loss < best_loss:
+                # For early stopping (can only kick in after beta has stabilised)
+                if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
                     model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
                     torch.save(model.state_dict(), model_name)
 
-                else:
+                elif epoch >= n_epochs_ramp_up:
                     wait += 1
                     if wait >= patience:
                         print("Early stopping")

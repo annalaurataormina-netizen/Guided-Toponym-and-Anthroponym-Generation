@@ -102,6 +102,17 @@ class Decoder(nn.Module):
             # Greedy decoding
             x = logits.argmax(dim=-1, keepdim=True)
 
+            # Sampling
+            '''
+            probs = torch.softmax(logits, dim=-1)
+            x = torch.multinomial(probs.squeeze(1), num_samples=1)
+            '''
+
+            # Beam search
+            '''
+            
+            '''
+
             token = x.item()
 
             generated.append(token)
