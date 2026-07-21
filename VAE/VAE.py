@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 import torch.nn as nn
 
@@ -16,7 +18,7 @@ class VAE(nn.Module):
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim)
 
-    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> tuple[Any, Any, Any]:
         # Encode input into latent distribution and sample z
         z, mu, logvar = self.encoder(x, lengths)
 

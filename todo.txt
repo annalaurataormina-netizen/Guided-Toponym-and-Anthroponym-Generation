@@ -1,6 +1,7 @@
-- Evaluate generation on VAE
-- Contrastive learning (training + evaluation)
-- CVAE (training + evaluation)
-- Adversarial? (training + evaluation)
-- Final evaluation
-- Report
+- Contrastive learning (training) (5d)
+- Proper grid search (5d)
+- Evaluate Contrastive VAE (additional things to evaluate) (2d)
+- Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d)
+- Final evaluation: pronounceability, cultural consistency, novelty and diversity (5d)
+- Report (5d)
+- UI (5d) [maybe filter down the output based on pronounceability, anthroponym/toponym, gender, cultural consistency?]

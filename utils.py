@@ -353,8 +353,8 @@ def normalise(name: str) -> str:
     return split_diacritics(name)
 
 
-# Returns a list of name_romanised for all anthroponyms or toponyms in the database.
-def load_from_database(target: str) -> list[str]:
+# Returns a list of name_romanised and, eventually, their type for all anthroponyms or toponyms in the database.
+def load_from_database(target: str, culture: bool = False):
     load_dotenv()
 
     conn = psycopg2.connect(
@@ -370,49 +370,65 @@ def load_from_database(target: str) -> list[str]:
 
     entries = target + '.entries'
 
-    cur.execute(f"SELECT name_romanised FROM {entries}")
-    names = [row[0] for row in cur.fetchall()]
+    if not culture:
+        cur.execute(f"SELECT name_romanised FROM {entries}")
+        names = [row[0] for row in cur.fetchall()]
+    else:
+        cur.execute(f"SELECT name_romanised, type FROM {entries}")
+        names = cur.fetchall()
+        names = [list(name) for name in names]
 
     cur.close()
     conn.close()
 
+    anthroponym_types = [
+        'male given name',
+        'female given name',
+        'unisex given name',
+        'family name'
+    ]
+
+    if culture:
+        for name in names:
+            if any(t in name[1] for t in anthroponym_types):
+                name[1] = 0
+            else:
+                name[1] = 1
+
     return names
 
 
-# Returns a list of strings (name_romanised) for all anthroponyms in the dataset.
-def load_anthroponyms() -> list[str]:
-    return load_from_database('anthroponyms')
+# Returns a list of strings (name_romanised) and, eventually, their type for all anthroponyms in the dataset.
+def load_anthroponyms(culture: bool = False) -> list[str]:
+    return load_from_database('anthroponyms', culture)
 
 
-# Returns a list of strings (name_romanised) for all toponyms in the dataset.
-def load_toponyms() -> list[str]:
-    return load_from_database('toponyms')
+# Returns a list of strings (name_romanised) and, eventually, their type for all toponyms in the dataset.
+def load_toponyms(culture: bool = False) -> list[str]:
+    return load_from_database('toponyms', culture)
 
 
-# Returns a list of strings (name_romanised) for all anthroponyms and toponyms in the dataset.
-def load_all() -> list[str]:
-    return load_anthroponyms() + load_toponyms()
+# Returns a list of strings (name_romanised) and, eventually, their type for all anthroponyms and toponyms in the dataset.
+def load_all(culture: bool = False) -> list[str]:
+    return load_anthroponyms(culture) + load_toponyms(culture)
 
 
 # Returns the percentage of generated names that doesn't appear in the training dataset.
 def compute_novelty(generated: list[str], train_dataset: NameDataset) -> float:
     # Extract training names
-    train_names = set()
-
-    for i in range(len(train_dataset)):
-        name, _ = train_dataset[i]
-        train_names.add(name)
+    train_names = [name[0] for name in train_dataset.data]
 
     # Count generated names not seen in training
     novel_count = sum(name not in train_names for name in generated)
 
-    novelty = novel_count / len(generated)
-
-    return novelty
+    return novel_count / len(generated)
 
 
 # Computes the proportion of character n-grams in generated names that also occur in the training set.
-def compute_ngram_coverage(generated: list[str], train_names: list[str], n=3) -> float:
+def compute_ngram_coverage(generated: list[str], train_dataset: NameDataset, n=3) -> float:
+    # Extract training names
+    train_names = [name[0] for name in train_dataset.data]
+
     train_ngrams = set()
 
     for name in train_names:
