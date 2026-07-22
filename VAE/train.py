@@ -59,7 +59,7 @@ def train():
     # List of name_romanised after normalising (i.e., splitting diacritics)
     names_normalised = [normalise(n) for n in names]
 
-    # 80/20/20 split of the dataset into train/validation/test
+    # 80/10/10 split of the dataset into train/validation/test
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
     val_names, test_names = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)
 

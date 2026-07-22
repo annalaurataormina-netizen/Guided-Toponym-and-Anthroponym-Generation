@@ -18,7 +18,7 @@ class ContrastiveVAE(nn.Module):
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim)
 
-        # MLP for SupCon
+        # Projection head (MLP)
         self.projection_head = nn.Sequential(
             nn.Linear(latent_dim, proj_hidden_dim),
             nn.ReLU(),
@@ -32,5 +32,11 @@ class ContrastiveVAE(nn.Module):
         # You don't feed <EOS> since nothing comes after that. Uses teacher forcing.
         decoder_input = x[:, :-1]
 
+        # Logits are (batch_size, seq_len, len(vocab))
+        logits = self.decoder(decoder_input, z)
+
+        # SupCon projection is (batch_size, proj_output_dim)
+        projection = self.projection_head(mu)
+
         # The decoder reconstructs the sequence from z using teacher forcing
-        return self.decoder(decoder_input, z), mu, logvar, self.projection_head(mu)
+        return logits, mu, logvar, projection
