@@ -1,8 +1,7 @@
-- Contrastive learning (training) (5d)
-
-- Proper grid search (5d)
-- Evaluate Contrastive VAE (additional things to evaluate) (2d)
-- Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d)
-- Final evaluation: pronounceability, cultural consistency, novelty and diversity (5d)
-- Report (5d)
-- UI (5d) [maybe filter down the output based on pronounceability, anthroponym/toponym, gender, cultural consistency?]
+- Contrastive learning (training) (5d from Tue 21Jul)
+- Proper grid search (5d from Mon 27Jul)
+- Evaluate Contrastive VAE (additional things to evaluate) (1d from Tue 2Aug)
+- Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d from Tue 5Aug)
+- Final evaluation: pronounceability, cultural consistency, novelty and diversity (5d from Mon 10Aug)
+- Report (5d from Mon 17Aug)
+- UI (5d from Mon 24Aug) [maybe filter down the output based on pronounceability, anthroponym/toponym, gender, cultural consistency?]
