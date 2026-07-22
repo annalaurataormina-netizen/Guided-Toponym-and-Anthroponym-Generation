@@ -270,6 +270,7 @@ def train():
 
                         # SupCon loss
                         projection = F.normalize(projection, dim=1)
+                        projection = projection.unsqueeze(1)
                         supcon_loss = supcon_criterion(projection, labels)
 
                         loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
