@@ -5,9 +5,10 @@ import matplotlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from losses import SupConLoss
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
+
+from ContrastiveVAE.losses import SupConLoss
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -20,6 +21,13 @@ from utils import load_all, normalise
 
 
 def train():
+    # Set seed for reproducibility
+    seed = 1996
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+    
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
@@ -68,22 +76,22 @@ def train():
     names_normalised = [[normalise(n[0]), n[1]] for n in names]
 
     # 80/10/10 split of the dataset into train/validation/test
-    train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
-    val_names, _ = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)
+    train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True)
+    val_names, _ = train_test_split(temp_names, test_size=0.5, random_state=seed, shuffle=True)
 
     train_dataset = NameDataset(train_names, vocab)
     val_dataset = NameDataset(val_names, vocab)
 
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
-    g.manual_seed(1996)
+    g.manual_seed(seed)
 
     # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Levenshtein (uses the same 1000 random samples from the validation set)
-    rng = random.Random(1996)
+    rng = random.Random(seed)
     lev_indices = rng.sample(range(len(val_dataset)), 1000)
     lev_subset = Subset(val_dataset, lev_indices)
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
@@ -263,7 +271,6 @@ def train():
                         val_kl_loss_adj += beta * kl_loss.item()
                         val_supcon_loss += supcon_loss.item()
                         val_supcon_loss_adj += lambda_supcon * supcon_loss.item()
-
 
                 avg_val_loss = val_loss / len(val_dataloader)
                 avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
