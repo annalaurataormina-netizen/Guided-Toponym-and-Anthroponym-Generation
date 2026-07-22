@@ -374,7 +374,7 @@ def load_from_database(target: str, culture: bool = False):
         cur.execute(f"SELECT name_romanised FROM {entries}")
         names = [row[0] for row in cur.fetchall()]
     else:
-        cur.execute(f"SELECT name_romanised, type FROM {entries}")
+        cur.execute(f"SELECT name_romanised, types FROM {entries}")
         names = cur.fetchall()
         names = [list(name) for name in names]
 
