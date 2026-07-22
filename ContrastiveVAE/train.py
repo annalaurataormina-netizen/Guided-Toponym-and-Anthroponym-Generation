@@ -27,7 +27,7 @@ def train():
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
-    
+
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
@@ -72,8 +72,16 @@ def train():
     # Toponyms and Anthroponyms (name_romanised, label)
     names = load_all(culture=True)
 
-    # List of name_romanised after normalising (i.e., splitting diacritics)
-    names_normalised = [[normalise(n[0]), n[1]] for n in names]
+    # Create mapping (language_code -> integer)
+    language_to_id = {
+        lang: i for i, lang in enumerate(sorted(set(n[1] for n in names)))
+    }
+
+    # Normalise name (split diacritics) and replace language codes with integers
+    names_normalised = [
+        [normalise(name), language_to_id[lang]]
+        for name, lang in names
+    ]
 
     # 80/10/10 split of the dataset into train/validation/test
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True)
@@ -200,6 +208,7 @@ def train():
 
             # SupCon loss
             projection = F.normalize(projection, dim=1)
+            projection = projection.unsqueeze(1)
             supcon_loss = supcon_criterion(projection, labels)
 
             # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * SupCon Loss

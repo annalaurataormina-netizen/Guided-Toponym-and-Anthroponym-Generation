@@ -1,16 +1,16 @@
 import editdistance
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
 
 from AE.CharVocab import CharVocab
-from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from utils import load_all, normalise
 from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
+from ContrastiveVAE.NameDataset import NameDataset
 from ContrastiveVAE.losses import SupConLoss
+from utils import load_all, normalise
 
 '''
 IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
@@ -28,14 +28,22 @@ def test():
     # Toponyms and Anthroponyms (name_romanised, label)
     names = load_all(culture=True)
 
+    # Create mapping (language_code -> integer)
+    language_to_id = {
+        lang: i for i, lang in enumerate(sorted(set(n[1] for n in names)))
+    }
+
+    # Normalise name (split diacritics) and replace language codes with integers
+    names_normalised = [
+        [normalise(name), language_to_id[lang]]
+        for name, lang in names
+    ]
+
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up  = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.07, 0.05
-
-    # List (name_romanised, label) after normalising (i.e., splitting diacritics)
-    names_normalised = [[normalise(n[0]), n[1]] for n in names]
 
     # 80/20/20 split of the dataset into train/validation/test (uses same seed as when training the model)
     _, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
@@ -123,10 +131,11 @@ def test():
             )
 
             # KL divergence
-            kl_loss = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(),dim=1))
+            kl_loss = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
 
             # SupCon loss
             projection = F.normalize(projection, dim=1)
+            projection = projection.unsqueeze(1)
             supcon_loss = supcon_criterion(projection, labels)
 
             global_step += 1

@@ -9,7 +9,9 @@ from VAE.Encoder import Encoder
 
 
 class ContrastiveVAE(nn.Module):
-    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int, num_layers_encoder: int, num_layers_decoder: int, latent_dim: int, proj_hidden_dim: int, proj_output_dim: int):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int,
+                 num_layers_encoder: int, num_layers_decoder: int, latent_dim: int, proj_hidden_dim: int,
+                 proj_output_dim: int):
         super().__init__()
 
         # Encoder

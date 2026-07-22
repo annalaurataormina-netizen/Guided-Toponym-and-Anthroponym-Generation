@@ -31,8 +31,16 @@ def interpolate():
     # Toponyms and Anthroponyms (list of name_romanised)
     names = load_all(culture=True)
 
-    # List (name_romanised, label) after normalising (i.e., splitting diacritics)
-    names_normalised = [[normalise(n[0]), n[1]] for n in names]
+    # Create mapping (language_code -> integer)
+    language_to_id = {
+        lang: i for i, lang in enumerate(sorted(set(n[1] for n in names)))
+    }
+
+    # Normalise name (split diacritics) and replace language codes with integers
+    names_normalised = [
+        [normalise(name), language_to_id[lang]]
+        for name, lang in names
+    ]
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)

@@ -6,7 +6,6 @@ from AE.CharVocab import CharVocab
 class NameDataset:
 
     def __init__(self, data: list[list[str | int]], vocab: CharVocab):
-
         # Data (list of name_romanised with their cultural label)
         self.data = data
 
@@ -23,7 +22,8 @@ class NameDataset:
 
     # Returns encoded and padded string as a list of indices and length of the string.
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, int, torch.Tensor]:
-        return torch.tensor(self.encode(idx)), len(self.vocab.encode(self.data[idx][0])), torch.tensor(self.data[idx][1])
+        return torch.tensor(self.encode(idx)), len(self.vocab.encode(self.data[idx][0])), torch.tensor(
+            self.data[idx][1])
 
     # Returns the number of names in the dataset.
     def __len__(self) -> int:
