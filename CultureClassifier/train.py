@@ -43,6 +43,7 @@ def train():
 
     # Classifier hyperparameters
     hidden_dim, lr_classifier, epochs_classifier = 256, 0.001, 10
+    # 0.0001, 0.01, after settling on 256 vs 128
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -81,6 +82,11 @@ def train():
     model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
                 latent_dim)
     model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
+
+    print(f"Testing on {model_name}")
+    print(f"Hidden dimension: {hidden_dim}")
+    print(f"Epochs: {epochs}")
+    print(f"Learning rate: {lr_classifier}")
 
     model.to(device)
     state_dict = torch.load(model_name, map_location=device)
