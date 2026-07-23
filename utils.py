@@ -353,7 +353,7 @@ def normalise(name: str) -> str:
     return split_diacritics(name)
 
 
-# Returns a list of name_romanised and, eventually, their language_code for all anthroponyms or toponyms in the database.
+# Returns a list of name_romanised and, eventually, their language for all anthroponyms or toponyms in the database.
 def load_from_database(target: str, culture: bool = False):
     load_dotenv()
 
@@ -374,7 +374,7 @@ def load_from_database(target: str, culture: bool = False):
         cur.execute(f"SELECT name_romanised FROM {entries}")
         names = [row[0] for row in cur.fetchall()]
     else:
-        cur.execute(f"SELECT name_romanised, language_code FROM {entries}")
+        cur.execute(f"SELECT name_romanised, language FROM {entries}")
         names = cur.fetchall()
         names = [list(name) for name in names]
 
@@ -384,17 +384,17 @@ def load_from_database(target: str, culture: bool = False):
     return names
 
 
-# Returns a list of strings (name_romanised) and, eventually, their language_code for all anthroponyms in the dataset.
+# Returns a list of strings (name_romanised) and, eventually, their language for all anthroponyms in the dataset.
 def load_anthroponyms(culture: bool = False):
     return load_from_database('anthroponyms', culture)
 
 
-# Returns a list of strings (name_romanised) and, eventually, their language_code for all toponyms in the dataset.
+# Returns a list of strings (name_romanised) and, eventually, their language for all toponyms in the dataset.
 def load_toponyms(culture: bool = False):
     return load_from_database('toponyms', culture)
 
 
-# Returns a list of strings (name_romanised) and, eventually, their language_code for all anthroponyms and toponyms in the dataset.
+# Returns a list of strings (name_romanised) and, eventually, their language for all anthroponyms and toponyms in the dataset.
 def load_all(culture: bool = False):
     return load_anthroponyms(culture) + load_toponyms(culture)
 
