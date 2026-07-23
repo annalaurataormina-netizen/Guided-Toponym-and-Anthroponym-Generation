@@ -124,7 +124,7 @@ def train():
     batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
 
     # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_latentdataset, batch_sampler=batch_sampler, generator=g)
+    train_dataloader = DataLoader(train_latentdataset, batch_sampler=batch_sampler)
     val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
 
@@ -149,7 +149,12 @@ def train():
     classifier = CultureClassifier(latent_dim, hidden_dim, number_of_cultures)
     classifier.to(device)
 
+    '''
     criterion = nn.CrossEntropyLoss(weight=class_weights)
+    '''
+
+    criterion = nn.CrossEntropyLoss()
+
     optimiser = torch.optim.Adam(classifier.parameters(), lr=lr_classifier)
 
     classifier.train()
