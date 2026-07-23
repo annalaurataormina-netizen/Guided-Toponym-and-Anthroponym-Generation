@@ -119,7 +119,7 @@ def train():
     test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
     '''
 
-    labels = [label for _, _, label in train_latentdataset]
+    labels = [label for _, label in train_latentdataset]
 
     batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
 
