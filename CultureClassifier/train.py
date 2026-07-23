@@ -42,7 +42,7 @@ def train():
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
 
     # Classifier hyperparameters
-    hidden_dim, lr_classifier, epochs_classifier = 128, 0.001, 30
+    hidden_dim, lr_classifier, epochs_classifier = 256, 0.001, 10
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
