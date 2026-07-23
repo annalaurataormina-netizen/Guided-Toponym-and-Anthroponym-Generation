@@ -15,6 +15,10 @@ from CultureClassifier.LatentExtractor import LatentExtractor
 from VAE.VAE import VAE
 from utils import load_all, normalise
 
+'''
+IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
+'''
+
 
 def train():
     # Set seed for reproducibility
