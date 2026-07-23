@@ -42,7 +42,7 @@ def train():
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
 
     # Classifier hyperparameters
-    hidden_dim, lr_classifier, epochs_classifier = 128, 0.001, 10
+    hidden_dim, lr_classifier, epochs_classifier = 128, 0.001, 30
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -180,20 +180,16 @@ def train():
                 classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
                 torch.save(classifier.state_dict(), classifier_name)
 
-        print(
-            f"Epoch {epoch + 1}/{epochs_classifier}, "
-            f"Avg train loss per epoch: {sum(epoch_losses) / len(epoch_losses):.4f}"
-        )
+        print(f"Epoch {epoch + 1}/{epochs_classifier}, ")
+        print(f"Avg train loss per epoch: {sum(epoch_losses) / len(epoch_losses):.4f}")
 
     classifier.eval()
 
     val_pred_cultures = []
     val_labels = []
 
-    print(
-        f"Number of cultures: {number_of_cultures}, "
-        f"Random accuracy: {1 / number_of_cultures}"
-    )
+    print(f"Number of cultures: {number_of_cultures}")
+    print(f"Random accuracy: {1 / number_of_cultures}")
 
     classifier.load_state_dict(
         torch.load(classifier_name, map_location=device)
@@ -250,15 +246,13 @@ def train():
         zero_division=0
     )
 
-    print(
-        "VALIDATION"
-        f"Accuracy: {val_accuracy.item():.4f}, "
-        f"Balanced accuracy: {balanced_acc:.4f}, "
-        f"Macro F1: {macro_f1:.4f}, "
-        f"Weighted F1: {weighted_f1:.4f}, "
-        f"Confusion matrix:\n{conf_matrix}"
-        f"Classification report:\n{report}"
-    )
+    print("VALIDATION")
+    print(f"Accuracy: {val_accuracy.item():.4f}")
+    print(f"Balanced accuracy: {balanced_acc:.4f}")
+    print(f"Macro F1: {macro_f1:.4f}")
+    print(f"Weighted F1: {weighted_f1:.4f}")
+    print(f"Confusion matrix:\n{conf_matrix}")
+    print(f"Classification report:\n{report}")
 
     '''
     test_pred_cultures = []
@@ -315,15 +309,13 @@ def train():
         zero_division=0
     )
     
-    print(
-        "TEST"
-        f"Accuracy: {test_accuracy.item():.4f}, "
-        f"Balanced accuracy: {balanced_acc:.4f}, "
-        f"Macro F1: {macro_f1:.4f}, "
-        f"Weighted F1: {weighted_f1:.4f}, "
-        f"Confusion matrix:\n{conf_matrix}"
-        f"Classification report:\n{report}"
-    )
+    print("TEST")
+    print(f"Accuracy: {test_accuracy.item():.4f}")
+    print(f"Balanced accuracy: {balanced_acc:.4f}")
+    print(f"Macro F1: {macro_f1:.4f}")
+    print(f"Weighted F1: {weighted_f1:.4f}")
+    print(f"Confusion matrix:\n{conf_matrix}")
+    print(f"Classification report:\n{report}")
     '''
 
 
