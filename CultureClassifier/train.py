@@ -118,7 +118,7 @@ def train():
         minlength=number_of_cultures
     )
 
-    class_weights = torch.zeros(number_of_cultures)
+    class_weights = torch.zeros(number_of_cultures, device=device)
 
     mask = class_counts > 0
     class_weights[mask] = 1.0 / torch.sqrt(class_counts[mask].float())
