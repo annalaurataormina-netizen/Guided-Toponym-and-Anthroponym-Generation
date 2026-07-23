@@ -85,7 +85,7 @@ def train():
 
     print(f"Testing on {model_name}")
     print(f"Hidden dimension: {hidden_dim}")
-    print(f"Epochs: {epochs}")
+    print(f"Epochs: {epochs_classifier}")
     print(f"Learning rate: {lr_classifier}")
 
     model.to(device)
