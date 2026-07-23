@@ -23,14 +23,22 @@ class LabelBalancedBatchSampler(Sampler):
         for idx, label in enumerate(labels):
             label_to_indices[label].append(idx)
 
-        # Keep only languages with enough samples
-        self.label_to_indices = {
-            label: indices
-            for label, indices in label_to_indices.items()
-            if len(indices) >= samples_per_class
-        }
+        # Keep all languages
+        self.label_to_indices = dict(label_to_indices)
 
-        self.classes = list(self.label_to_indices.keys())
+        # Languages that can create SupCon positives
+        self.supcon_classes = [
+            label
+            for label, indices in self.label_to_indices.items()
+            if len(indices) >= samples_per_class
+        ]
+
+        # Rare languages
+        self.rare_classes = [
+            label
+            for label, indices in self.label_to_indices.items()
+            if len(indices) < samples_per_class
+        ]
 
         self.num_batches = len(labels) // batch_size
 

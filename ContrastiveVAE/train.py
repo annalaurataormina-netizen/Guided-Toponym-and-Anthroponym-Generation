@@ -18,6 +18,7 @@ from AE.CharVocab import CharVocab
 from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
+from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
 
 
 def train():
@@ -94,8 +95,12 @@ def train():
     g = torch.Generator()
     g.manual_seed(seed)
 
+    labels = [label for _, _, label in train_dataset]
+
+    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
+
     # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
+    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # Levenshtein (uses the same 1000 random samples from the validation set)
