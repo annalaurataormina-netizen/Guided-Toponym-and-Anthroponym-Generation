@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
+from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
 from CultureClassifier.LatentDataset import LatentDataset
@@ -112,7 +113,18 @@ def train():
     g.manual_seed(seed)
 
     # Shuffling means that batches are random, which is important when training the model
+    '''
     train_dataloader = DataLoader(train_latentdataset, batch_size=batch_size, shuffle=True, generator=g)
+    val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
+    '''
+
+    labels = [label for _, _, label in train_latentdataset]
+
+    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
+
+    # Shuffling means that batches are random, which is important when training the model
+    train_dataloader = DataLoader(train_latentdataset, batch_sampler=batch_sampler, generator=g)
     val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
 
