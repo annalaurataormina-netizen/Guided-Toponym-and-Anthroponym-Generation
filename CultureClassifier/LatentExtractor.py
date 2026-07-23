@@ -23,7 +23,14 @@ class LatentExtractor:
                 sequences, lengths, labels = batch
                 sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
-                _, mu, _, _ = self.encoder(sequences, lengths)
+                encoder_output = self.encoder(sequences, lengths)
+
+                # Works for both VAE and ContrastiveVAE
+                if len(encoder_output) == 3:
+                    _, mu, _ = encoder_output
+
+                else:
+                    _, mu, _, _ = encoder_output
 
                 latent_vectors.append(mu)
                 cultures.append(labels)
