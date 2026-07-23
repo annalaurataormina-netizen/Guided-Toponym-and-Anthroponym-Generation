@@ -12,7 +12,3 @@ class LatentDataset:
 
     def __len__(self) -> int:
         return len(self.latent_vectors)
-
-    @property
-    def num_cultures(self):
-        return len(self.labels.unique())

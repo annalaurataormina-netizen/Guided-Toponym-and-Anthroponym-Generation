@@ -110,15 +110,21 @@ def train():
     val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
 
-    number_of_cultures = train_latentdataset.num_cultures
+    number_of_cultures = len(language_to_id)
 
     # Compute class weights to reduce imbalance bias
-    class_counts = torch.bincount(train_latentdataset.labels)
+    class_counts = torch.bincount(
+        train_latentdataset.cultures,
+        minlength=number_of_cultures
+    )
 
-    class_weights = 1.0 / torch.sqrt(class_counts.float())
+    class_weights = torch.zeros(number_of_cultures)
 
-    # Normalise so average weight = 1
-    class_weights = class_weights / class_weights.mean()
+    mask = class_counts > 0
+    class_weights[mask] = 1.0 / torch.sqrt(class_counts[mask].float())
+
+    # Normalise so the average non-zero weight is 1
+    class_weights /= class_weights[mask].mean()
 
     class_weights = class_weights.to(device)
 
