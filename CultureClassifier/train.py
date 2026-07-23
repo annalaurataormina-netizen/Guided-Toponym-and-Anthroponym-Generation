@@ -114,7 +114,7 @@ def train():
 
     # Compute class weights to reduce imbalance bias
     class_counts = torch.bincount(
-        train_latentdataset.cultures,
+        train_latentdataset.labels,
         minlength=number_of_cultures
     )
 
