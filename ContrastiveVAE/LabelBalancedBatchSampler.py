@@ -32,11 +32,7 @@ class LabelBalancedBatchSampler(Sampler):
         for idx, label in enumerate(labels):
             label_to_indices[label].append(idx)
 
-        self.label_to_indices = {
-            label: indices
-            for label, indices in label_to_indices.items()
-            if len(indices) >= samples_per_class
-        }
+        self.label_to_indices = dict(label_to_indices)
 
         self.classes = list(self.label_to_indices.keys())
 
@@ -76,17 +72,24 @@ class LabelBalancedBatchSampler(Sampler):
 
             for cls in chosen_classes:
 
-                # Reshuffle this class only after it has been exhausted
-                if pointers[cls] + self.samples_per_class > len(pools[cls]):
-                    random.shuffle(pools[cls])
-                    pointers[cls] = 0
+                # Small classes: sample with replacement
+                if len(pools[cls]) < self.samples_per_class:
+                    batch.extend(
+                        random.choices(pools[cls], k=self.samples_per_class)
+                    )
 
-                start = pointers[cls]
-                end = start + self.samples_per_class
+                # Larger classes: use the reshuffle-on-exhaustion logic
+                else:
+                    if pointers[cls] + self.samples_per_class > len(pools[cls]):
+                        random.shuffle(pools[cls])
+                        pointers[cls] = 0
 
-                batch.extend(pools[cls][start:end])
+                    start = pointers[cls]
+                    end = start + self.samples_per_class
 
-                pointers[cls] = end
+                    batch.extend(pools[cls][start:end])
+
+                    pointers[cls] = end
 
             random.shuffle(batch)
 
