@@ -16,6 +16,9 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOA
 
 
 def evaluate_latent_space():
+
+    seed = 1996
+
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
@@ -75,14 +78,55 @@ def evaluate_latent_space():
     X = latents.cpu().numpy()
     y = labels.cpu().numpy()
 
-    print("Number of samples:", len(X))
+    print("Total samples:", len(X))
     print("Number of cultures:", len(np.unique(y)))
+
+    # --------------------------------
+    # Stratified subsample for geometry metrics
+    # --------------------------------
+
+    max_samples = 50000
+
+    if len(X) > max_samples:
+
+        rng = np.random.default_rng(seed)
+
+        sampled_indices = []
+
+        for culture in np.unique(y):
+            culture_indices = np.where(y == culture)[0]
+
+            # Keep proportional representation
+            n = int(
+                max_samples * len(culture_indices) / len(X)
+            )
+
+            n = max(n, 2)  # silhouette requires multiple samples per class
+
+            sampled_indices.extend(
+                rng.choice(
+                    culture_indices,
+                    size=min(n, len(culture_indices)),
+                    replace=False
+                )
+            )
+
+        sampled_indices = np.array(sampled_indices)
+
+        X_eval = X[sampled_indices]
+        y_eval = y[sampled_indices]
+
+    else:
+        X_eval = X
+        y_eval = y
+
+    print("Samples used for geometry metrics:", len(X_eval))
 
     # -----------------------------
     # Overall silhouette
     # -----------------------------
 
-    score = silhouette_score(X, y, metric="euclidean")
+    score = silhouette_score(X_eval, y_eval, metric="euclidean")
 
     print()
     print("Overall silhouette score:")
@@ -92,13 +136,13 @@ def evaluate_latent_space():
     # Per culture silhouette
     # -----------------------------
 
-    sample_scores = silhouette_samples(X, y, metric="euclidean")
+    sample_scores = silhouette_samples(X_eval, y_eval, metric="euclidean")
 
     print()
     print("Per culture silhouette:")
 
-    for culture in np.unique(y):
-        mask = y == culture
+    for culture in np.unique(y_eval):
+        mask = y_eval == culture
 
         print(
             f"Culture {culture}: "
@@ -116,17 +160,17 @@ def evaluate_latent_space():
         n_neighbors=k + 1
     )
 
-    neighbours.fit(X)
+    neighbours.fit(X_eval)
 
-    _, indices = neighbours.kneighbors(X)
+    _, indices = neighbours.kneighbors(X_eval)
 
     purity = []
 
     for i in range(len(X)):
-        neighbour_labels = y[indices[i][1:]]
+        neighbour_labels = y_eval[indices[i][1:]]
 
         purity.append(
-            np.mean(neighbour_labels == y[i])
+            np.mean(neighbour_labels == y_eval[i])
         )
 
     print()
