@@ -1,14 +1,13 @@
-from collections import defaultdict
 import math
 import random
+from collections import defaultdict
 
 import numpy as np
-import torch
 from torch.utils.data import Sampler
 
 
 class LabelBalancedBatchSampler(Sampler):
-    def __init__(self, labels: list[int], batch_size: int, samples_per_class: int=4):
+    def __init__(self, labels: list[int], batch_size: int, samples_per_class: int = 4):
         """
         Parameters
         ----------
@@ -39,7 +38,6 @@ class LabelBalancedBatchSampler(Sampler):
             if len(indices) >= samples_per_class
         }
 
-        self.label_to_indices = dict(label_to_indices)
         self.classes = list(self.label_to_indices.keys())
 
         # sqrt(class_size) sampling probabilities

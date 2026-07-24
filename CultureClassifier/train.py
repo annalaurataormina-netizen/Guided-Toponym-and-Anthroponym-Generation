@@ -141,15 +141,13 @@ def train():
     mask = class_counts > 0
     class_weights[mask] = 1.0 / torch.sqrt(class_counts[mask].float())
 
-    # Normalise so the average non-zero weight is 1
-    class_weights /= class_weights[mask].mean()
-
-    class_weights = class_weights.to(device)
-
     classifier = CultureClassifier(latent_dim, hidden_dim, number_of_cultures)
     classifier.to(device)
 
     '''
+    # Normalise so the average non-zero weight is 1
+    class_weights /= class_weights[mask].mean()
+    class_weights = class_weights.to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     '''
 
