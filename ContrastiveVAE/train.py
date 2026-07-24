@@ -33,7 +33,7 @@ def train():
     print(f"Using device: {device}")
 
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 32, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.25
@@ -52,14 +52,13 @@ def train():
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
     print("Optimiser: Adam")
-    print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
     print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
     # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
-    print(f"Word dropout at 25%")
+    print(f"Character dropout at 25%")
     print("Contrastive loss: Supervised Contrastive Loss (SupCon)")
     print(f"Projection head hidden dimension: {proj_hidden_dim}")
     print(f"Projection head output dimension: {proj_output_dim}")

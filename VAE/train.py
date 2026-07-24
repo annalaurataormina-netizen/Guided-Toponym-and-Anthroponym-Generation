@@ -41,14 +41,13 @@ def train():
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
     print("Optimiser: Adam")
-    print("No regularisation or dropout")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
     print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
     # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
-    print(f"Word dropout at 25%")
+    print(f"Character dropout at 25%")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
