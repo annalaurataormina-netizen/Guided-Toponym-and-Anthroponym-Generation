@@ -30,7 +30,7 @@ class LabelBalancedBatchSampler(Sampler):
         # Build mapping: class -> dataset indices
         label_to_indices = defaultdict(list)
         for idx, label in enumerate(labels):
-            label_to_indices[label].append(idx)
+            label_to_indices[int(label)].append(idx)
 
         self.label_to_indices = dict(label_to_indices)
 
