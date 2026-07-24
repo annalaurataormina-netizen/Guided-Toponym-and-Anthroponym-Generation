@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
 
+from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
 from ContrastiveVAE.losses import SupConLoss
 
 matplotlib.use('Agg')
@@ -36,7 +37,7 @@ def train():
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.5
+    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.24
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -89,10 +90,21 @@ def train():
     train_dataset = NameDataset(train_names, vocab)
     val_dataset = NameDataset(val_names, vocab)
 
+
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
     g.manual_seed(seed)
 
+    # DataLoader with LabelBalancedBatchSampler
+    '''
+    labels = [label for _, _, label in train_dataset]
+    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
+    # Shuffling means that batches are random, which is important when training the model
+    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    '''
+
+    # Plain DataLoader
     # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
@@ -149,9 +161,6 @@ def train():
     for epoch in range(epochs):
 
         if early_stopping:
-            break
-
-        if epoch >= 3:
             break
 
         epoch_train_losses = []
