@@ -8,6 +8,7 @@ from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.LatentExtractor import LatentExtractor
+from VAE.VAE import VAE
 from utils import load_all, normalise
 
 '''
@@ -51,16 +52,16 @@ def evaluate_latent_space():
 
     # Load model
     # ContrastiveVAE
+    '''
     model = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
     model_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
+    '''
 
     # VAE
-    '''
     model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
                 latent_dim)
     model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
-    '''
 
     print(model_name)
 
