@@ -166,7 +166,7 @@ def evaluate_latent_space():
 
     purity = []
 
-    for i in range(len(X)):
+    for i in range(len(X_eval)):
         neighbour_labels = y_eval[indices[i][1:]]
 
         purity.append(
