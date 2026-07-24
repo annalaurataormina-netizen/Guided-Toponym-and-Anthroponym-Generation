@@ -9,5 +9,5 @@
 ---> Deadline: 9Sep
 
 On the side to save time later:
-- Culture classifier (names)
+- Culture classifier (names, not latent codes)
 - N-gram language model
