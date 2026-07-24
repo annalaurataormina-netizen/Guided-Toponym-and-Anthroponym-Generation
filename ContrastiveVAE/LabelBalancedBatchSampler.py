@@ -41,7 +41,9 @@ class LabelBalancedBatchSampler(Sampler):
             [math.sqrt(len(self.label_to_indices[c])) for c in self.classes],
             dtype=np.float64,
         )
-        self.class_probabilities = weights / weights.sum()
+
+        self.class_probabilities = np.array(weights, dtype=np.float64)
+        self.class_probabilities = self.class_probabilities / np.sum(self.class_probabilities)
 
         # Keep roughly the same epoch length as standard training
         self.num_batches = len(labels) // batch_size
