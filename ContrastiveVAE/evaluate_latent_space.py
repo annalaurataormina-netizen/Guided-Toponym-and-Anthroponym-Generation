@@ -25,14 +25,13 @@ def evaluate_latent_space():
     print(f"Using device: {device}")
 
     # VAE hyperparameters
-    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
-    '''
 
     # ContrastiveVAE hyperparameters
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 32, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.25
-
+    '''
     vocab = CharVocab(ALLOWED_CHARS)
 
     # Load data

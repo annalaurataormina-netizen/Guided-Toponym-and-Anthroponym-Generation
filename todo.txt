@@ -1,9 +1,13 @@
 ---> Contrastive learning (training) (5d from Tue 21Jul)
 
-- Try conditional generation? (4d from Mon 27Jul)
-- Proper grid search (5d from Mon 5Aug)
-- Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d from Tue 5Aug)
-- Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier to get generation cultural accuracy, silhouette score, neighbors), novelty and diversity (5d from Mon 10Aug)
-- Report (5d from Mon 17Aug)
-- UI (5-10d from Mon 24Aug) [maybe filter down the output based on pronounceability, anthroponym/toponym, cultural consistency?]
-- Deadline: 9Sep
+---> Try conditional generation? (4d from Mon 27Jul)
+---> Proper grid search (5d from Mon 5Aug)
+---> Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d from Tue 5Aug)
+---> Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier to get generation cultural accuracy, silhouette score, neighbors), novelty and diversity (5d from Mon 10Aug)
+---> Report (5d from Mon 17Aug)
+---> UI (5-10d from Mon 24Aug) [maybe filter down the output based on pronounceability, anthroponym/toponym, cultural consistency?]
+---> Deadline: 9Sep
+
+On the side to save time later:
+- Culture classifier (names)
+- N-gram language model
