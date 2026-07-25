@@ -11,9 +11,9 @@ from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
 from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
 from ContrastiveVAE.NameDataset import NameDataset
-from CultureClassifier.CultureClassifier import CultureClassifier
-from CultureClassifier.LatentDataset import LatentDataset
-from CultureClassifier.LatentExtractor import LatentExtractor
+from CultureClassifierLatent.CultureClassifierLatent import CultureClassifierLatent
+from CultureClassifierLatent.LatentDataset import LatentDataset
+from CultureClassifierLatent.LatentExtractor import LatentExtractor
 from utils import load_all, normalise
 
 '''
@@ -142,7 +142,7 @@ def train():
     mask = class_counts > 0
     class_weights[mask] = 1.0 / torch.sqrt(class_counts[mask].float())
 
-    classifier = CultureClassifier(latent_dim, hidden_dim, number_of_cultures)
+    classifier = CultureClassifierLatent(latent_dim, hidden_dim, number_of_cultures)
     classifier.to(device)
 
     '''
@@ -199,7 +199,7 @@ def train():
 
             if avg_val_loss < best_loss:
                 best_loss = avg_val_loss
-                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
+                classifier_name = f'CultureClassifierLatent/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
                 torch.save(classifier.state_dict(), classifier_name)
 
         print(f"Epoch {epoch + 1}/{epochs_classifier}, ")

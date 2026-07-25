@@ -95,17 +95,6 @@ class LabelBalancedBatchSampler(Sampler):
 
             random.shuffle(batch)
 
-            print(
-                "classes selected:",
-                len(chosen_classes),
-                "samples selected:",
-                len(batch)
-            )
-
-            assert len(batch) == self.batch_size, (
-                f"Wrong batch size: got {len(batch)}, expected {self.batch_size}"
-            )
-
             yield batch
 
     def __len__(self) -> int:

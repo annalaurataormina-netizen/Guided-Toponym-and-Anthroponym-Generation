@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-class CultureClassifier(nn.Module):
+class CultureClassifierLatent(nn.Module):
 
     def __init__(self, latent_dim: int, hidden_dim: int, cultures: int):
         super().__init__()
