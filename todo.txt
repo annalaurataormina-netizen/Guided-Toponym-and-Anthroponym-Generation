@@ -1,6 +1,6 @@
 ---> Contrastive learning (training) (5d 21/22-27Jul)
+---> Conditional generation (training) (4d 27Jul-4Aug)
 
-- Try conditional generation? (4d 27Jul-4Aug)
 - Proper grid search (5d 5-10Aug)
 - Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d 5-7Aug)
 - Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier to get generation cultural accuracy, silhouette score, neighbors), novelty and diversity (5d Mon 10-14Aug)
@@ -9,6 +9,5 @@
 - Deadline: 9Sep
 
 On the side to save time later:
-- Culture classifier (names, not latent codes) [Mon 17Jul]
-- Write code for Conditional VAE [Tue 28Jul]
+- Culture classifier (names, not latent codes) [Mon 28Jul]
 - N-gram language model [Fri 7Aug]

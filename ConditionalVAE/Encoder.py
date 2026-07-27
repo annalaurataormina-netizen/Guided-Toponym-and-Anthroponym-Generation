@@ -7,7 +7,8 @@ from AE.CharVocab import CharVocab
 
 class Encoder(nn.Module):
 
-    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int,
+                 num_cultures: int, culture_embed_dim: int):
         super().__init__()
 
         # Character vocabulary
@@ -34,11 +35,15 @@ class Encoder(nn.Module):
         # batch_first returns (batch, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=True)
 
-        # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2) to (batch_size, latent_dim)
-        self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
-        self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
+        # Embedding layer with size (num_cultures, culture_embedding_dim)
+        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
 
-    def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2 + culture_embed_dim) to (batch_size, latent_dim)
+        self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2 + culture_embed_dim, latent_dim)
+        self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2 + culture_embed_dim, latent_dim)
+
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size = x.size(0)
 
         # Initial hidden states (*2 because it's bidirectional)
@@ -59,7 +64,7 @@ class Encoder(nn.Module):
 
         # packed_output is a PackedSequence object; after calling pad_packed_sequence becomes (batch, seq_len, hidden_dim).
         # hn, cn are (num_layers * 2, batch_size, hidden_dim)
-        packed_output, (hn, cn) = self.rnn(packed, (h0, c0))
+        _, (hn, cn) = self.rnn(packed, (h0, c0))
 
         # Reshape to separate directions: (num_layers, 2, batch_size, hidden_dim)
         hn = hn.view(self.num_layers, 2, batch_size, self.hidden_dim)
@@ -75,8 +80,11 @@ class Encoder(nn.Module):
         # (batch_size, num_layers * hidden_dim * 2)
         hn, cn = hn.reshape(batch_size, -1), cn.reshape(batch_size, -1)
 
+        # culture_embedding is (batch_size, culture_embed_dim)
+        culture_embedding = self.culture_embedding(labels)
+
         # (batch_size, num_layers * hidden_dim * 2 * 2)
-        z_input = torch.cat([hn, cn], dim=-1)
+        z_input = torch.cat([hn, cn, culture_embedding], dim=-1)
 
         # (batch_size, latent_dim)
         # log-variance is numerically more stable to predict

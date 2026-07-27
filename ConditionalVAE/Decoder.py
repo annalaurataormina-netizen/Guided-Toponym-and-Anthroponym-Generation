@@ -6,7 +6,8 @@ from AE.CharVocab import CharVocab
 
 class Decoder(nn.Module):
 
-    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int,
+                 num_cultures: int, culture_embed_dim: int):
         super().__init__()
 
         # Character vocabulary
@@ -31,22 +32,30 @@ class Decoder(nn.Module):
         # class torch.nn.LSTM(input_size, hidden_size, num_layers=1, bias=True,
         # batch_first=False, dropout=0.0, bidirectional=False, proj_size=0, device=None, dtype=None)
         # batch_first returns (batch_size, seq_len, hidden_dim)
-        self.rnn = nn.LSTM(embed_dim + latent_dim, hidden_dim, num_layers, bias=True, batch_first=True,
+        self.rnn = nn.LSTM(embed_dim + latent_dim + culture_embed_dim, hidden_dim, num_layers, bias=True,
+                           batch_first=True,
                            bidirectional=False)
 
         # Linear projection from (batch_size, seq_len, hidden_dim) to (batch_size, seq_len, len(vocab))
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
 
-        # Linear projections from (batch_size, latent_dim) to (batch_size, num_layers * hidden_dim)
-        self.hidden_init = nn.Linear(latent_dim, num_layers * hidden_dim)
-        self.cell_init = nn.Linear(latent_dim, num_layers * hidden_dim)
+        # Linear projections from (batch_size, latent_dim + culture_embed_dim) to (batch_size, num_layers * hidden_dim)
+        self.hidden_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
+        self.cell_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
 
-    def forward(self, x: torch.Tensor, z: torch.Tensor) -> torch.Tensor:
+        # Embedding layer with size (num_cultures, culture_embedding_dim)
+        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+
+    def forward(self, x: torch.Tensor, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+
+        culture_embedding = self.culture_embedding(labels)
+
+        decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
         # z is (batch_size, latent_dim)
         # h0 and c0 are (batch_size, num_layers * hidden_dim)
-        h0 = self.hidden_init(z)
-        c0 = self.cell_init(z)
+        h0 = self.hidden_init(decoder_condition)
+        c0 = self.cell_init(decoder_condition)
 
         batch_size = z.size(0)
 
@@ -62,7 +71,8 @@ class Decoder(nn.Module):
         # At every timestep, the RNN takes both x and z
         emb = self.embedding(x)
         z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
-        rnn_input = torch.cat([emb, z_rep], dim=-1)
+        culture_rep = culture_embedding.unsqueeze(1).repeat(1, emb.size(1), 1)
+        rnn_input = torch.cat([emb, z_rep, culture_rep], dim=-1)
 
         # out is (batch_size, seq_len, hidden_dim)
         out, (_, _) = self.rnn(rnn_input, (h0, c0))
@@ -71,12 +81,16 @@ class Decoder(nn.Module):
         return self.fc(out)
 
     @torch.no_grad()
-    def generate(self, z: torch.Tensor, max_len=50) -> str:
+    def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50) -> str:
+
+        culture_embedding = self.culture_embedding(labels)
+
+        decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
         # z is (batch_size, latent_dim)
         # h0 and c0 are (batch_size, num_layers * hidden_dim)
-        h0 = self.hidden_init(z)
-        c0 = self.cell_init(z)
+        h0 = self.hidden_init(decoder_condition)
+        c0 = self.cell_init(decoder_condition)
 
         batch_size = z.size(0)
 
