@@ -7,7 +7,3 @@
 - Report (5d 17-21Aug)
 - UI (5d 24-28Aug) [maybe filter down the output based on pronounceability, anthroponym/toponym, cultural consistency?]
 - Deadline: 9Sep
-
-On the side to save time later:
-- Culture classifier (names, not latent codes) [Mon 28Jul]
-- N-gram language model [Fri 7Aug]

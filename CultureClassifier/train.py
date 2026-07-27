@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 
 import torch
 from sklearn.metrics import balanced_accuracy_score, f1_score, confusion_matrix, classification_report
@@ -8,12 +9,9 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
-from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
+from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
-from CultureClassifierLatent.CultureClassifierLatent import CultureClassifierLatent
-from CultureClassifierLatent.LatentDataset import LatentDataset
-from CultureClassifierLatent.LatentExtractor import LatentExtractor
+from CultureClassifier.CultureClassifier import CultureClassifier
 from utils import load_all, normalise
 
 '''
@@ -33,18 +31,14 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # ContrastiveVAE hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 32, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.25
-
-    # VAE hyperparameters
-    '''
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
-    '''
+    # ConditionalVAE hyperparameters
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
+    culture_embed_dim = 16
 
     # Classifier hyperparameters
-    hidden_dim, lr_classifier, epochs_classifier = 256, 0.001, 10
-    # 0.0001, 0.01, after settling on 256 vs 128
+    embed_dim_classifier, hidden_dim, num_layers, lr_classifier, epochs_classifier = 32, 64, 1, 0.001, 30
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -52,10 +46,27 @@ def train():
     # Toponyms and Anthroponyms (name_romanised, label)
     names = load_all(culture=True)
 
-    # Create mapping (language_code -> integer)
-    language_to_id = {
-        lang: i for i, lang in enumerate(sorted(set(n[1] for n in names)))
-    }
+    # ConditionalVAE
+    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
+
+    print(f"Testing on {model_name}")
+    print(f"Embedding dimension: {embed_dim_classifier}")
+    print(f"Hidden dimension: {hidden_dim}")
+    print(f"Number of layers: {num_layers}")
+    print(f"Epochs: {epochs_classifier}")
+    print(f"Learning rate: {lr_classifier}")
+
+    checkpoint = torch.load(model_name, map_location=device)
+
+    language_to_id = checkpoint["language_to_id"]
+    num_cultures = len(language_to_id)
+
+    # Recreate the model architecture first, then load the weights from the saved model
+    # ConditionalVAE
+    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.to(device)
 
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
@@ -71,88 +82,30 @@ def train():
     val_dataset = NameDataset(val_names, vocab)
     test_dataset = NameDataset(test_names, vocab)
 
-    # Recreate the model architecture first, then load the weights from the saved model
-    # ContrastiveVAE
-    model = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
-    model_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
-
-    # VAE
-    '''
-    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
-                latent_dim)
-    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
-    '''
-
-    print(f"Testing on {model_name}")
-    print(f"Hidden dimension: {hidden_dim}")
-    print(f"Epochs: {epochs_classifier}")
-    print(f"Learning rate: {lr_classifier}")
-
     model.to(device)
-    state_dict = torch.load(model_name, map_location=device)
-    model.load_state_dict(state_dict)
-
-    encoder = model.encoder
-    encoder.to(device)
-    encoder.eval()
-
-    extractor = LatentExtractor(encoder)
-
-    latent_vectors, cultures = extractor.extract(train_dataset, batch_size, device)
-    train_latentdataset = LatentDataset(latent_vectors, cultures)
-
-    latent_vectors, cultures = extractor.extract(val_dataset, batch_size, device)
-    val_latentdataset = LatentDataset(latent_vectors, cultures)
-
-    latent_vectors, cultures = extractor.extract(test_dataset, batch_size, device)
-    test_latentdataset = LatentDataset(latent_vectors, cultures)
+    model.eval()
 
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
     g.manual_seed(seed)
 
     # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_latentdataset, batch_size=batch_size, shuffle=True, generator=g)
-    val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    # Using LabelBalancedBatchSampler
-    '''
-    labels = [label for _, label in train_latentdataset]
-
-    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
-
-    # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_latentdataset, batch_sampler=batch_sampler)
-    val_dataloader = DataLoader(val_latentdataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_latentdataset, batch_size=batch_size, shuffle=False)
-    '''
-
-    number_of_cultures = len(language_to_id)
-
-    # Compute class weights to reduce imbalance bias
-    class_counts = torch.bincount(
-        train_latentdataset.labels,
-        minlength=number_of_cultures
-    )
-
-    class_weights = torch.zeros(number_of_cultures, device=device)
-
-    mask = class_counts > 0
-    class_weights[mask] = 1.0 / torch.sqrt(class_counts[mask].float())
-
-    classifier = CultureClassifierLatent(latent_dim, hidden_dim, number_of_cultures)
+    classifier = CultureClassifier(vocab, embed_dim_classifier, hidden_dim, num_layers, num_cultures)
     classifier.to(device)
 
-    '''
-    # Normalise so the average non-zero weight is 1
-    class_weights /= class_weights[mask].mean()
-    class_weights = class_weights.to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
-    '''
+    counts = Counter(label for _, label in train_names)
 
-    criterion = nn.CrossEntropyLoss()
+    class_weights = torch.tensor(
+        [1 / counts[i] for i in range(num_cultures)],
+        dtype=torch.float,
+        device=device
+    )
+
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
 
     optimiser = torch.optim.Adam(classifier.parameters(), lr=lr_classifier)
 
@@ -165,13 +118,13 @@ def train():
         epoch_losses = []
 
         for batch in train_dataloader:
-            latent_vectors, labels = batch
-            latent_vectors, labels = latent_vectors.to(device), labels.to(device)
+            sequences, lengths, labels = batch
+            sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
             # Zero out the gradients
             optimiser.zero_grad()
 
-            logits = classifier(latent_vectors)
+            logits = classifier(sequences, lengths)
 
             loss = criterion(logits, labels)
 
@@ -186,12 +139,12 @@ def train():
 
         with torch.no_grad():
             for batch in val_dataloader:
-                latent_vectors, labels_batch = batch
-                latent_vectors, labels_batch = latent_vectors.to(device), labels_batch.to(device)
+                sequences, lengths, labels = batch
+                sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
-                logits = classifier(latent_vectors)
+                logits = classifier(sequences, lengths)
 
-                val_loss = criterion(logits, labels_batch)
+                val_loss = criterion(logits, labels)
 
                 val_losses.append(val_loss.item())
 
@@ -199,7 +152,7 @@ def train():
 
             if avg_val_loss < best_loss:
                 best_loss = avg_val_loss
-                classifier_name = f'CultureClassifierLatent/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
+                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
                 torch.save(classifier.state_dict(), classifier_name)
 
         print(f"Epoch {epoch + 1}/{epochs_classifier}, ")
@@ -210,8 +163,8 @@ def train():
     val_pred_cultures = []
     val_labels = []
 
-    print(f"Number of cultures: {number_of_cultures}")
-    print(f"Random accuracy: {1 / number_of_cultures}")
+    print(f"Number of cultures: {num_cultures}")
+    print(f"Random accuracy: {1 / num_cultures}")
 
     classifier.load_state_dict(
         torch.load(classifier_name, map_location=device)
@@ -219,13 +172,13 @@ def train():
 
     with torch.no_grad():
         for batch in val_dataloader:
-            latent_vectors, labels_batch = batch
-            latent_vectors, labels_batch = latent_vectors.to(device), labels_batch.to(device)
+            sequences, lengths, labels = batch
+            sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
-            logits = classifier(latent_vectors)
+            logits = classifier(sequences, lengths)
             pred_cultures_batch = logits.argmax(dim=-1)
             val_pred_cultures.append(pred_cultures_batch)
-            val_labels.append(labels_batch)
+            val_labels.append(labels)
 
     val_pred_cultures = torch.cat(val_pred_cultures)
     val_labels = torch.cat(val_labels)
@@ -282,10 +235,10 @@ def train():
 
     with torch.no_grad():
         for batch in test_dataloader:
-            latent_vectors, labels_batch = batch
-            latent_vectors, labels_batch = latent_vectors.to(device), labels_batch.to(device)
+            sequences, lengths, labels = batch
+            sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
-            logits = classifier(latent_vectors)
+            logits = classifier(sequences, lengths)
             pred_cultures_batch = logits.argmax(dim=-1)
             test_pred_cultures.append(pred_cultures_batch)
             test_labels.append(labels_batch)
@@ -293,7 +246,7 @@ def train():
     test_pred_cultures = torch.cat(test_pred_cultures)
     test_labels = torch.cat(test_labels)
     test_accuracy = (test_pred_cultures == test_labels).float().mean()
-    
+
     # Convert tensors to CPU numpy arrays
     test_pred_cultures_np = test_pred_cultures.cpu().numpy()
     test_labels_np = test_labels.cpu().numpy()
@@ -310,7 +263,7 @@ def train():
         test_pred_cultures_np,
         average="macro"
     )
-    
+
     # Weighted F1
     weighted_f1 = f1_score(
         test_labels_np,
@@ -330,7 +283,7 @@ def train():
         test_pred_cultures_np,
         zero_division=0
     )
-    
+
     print("TEST")
     print(f"Accuracy: {test_accuracy.item():.4f}")
     print(f"Balanced accuracy: {balanced_acc:.4f}")

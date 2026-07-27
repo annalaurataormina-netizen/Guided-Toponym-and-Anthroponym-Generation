@@ -7,7 +7,7 @@ from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
 from ContrastiveVAE.NameDataset import NameDataset
-from CultureClassifierLatent.LatentExtractor import LatentExtractor
+from LatentCultureClassifier.LatentExtractor import LatentExtractor
 from VAE.VAE import VAE
 from utils import load_all, normalise
 

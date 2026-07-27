@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from AE.CharVocab import CharVocab
-from AE.NameDataset import NameDataset
+from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
 
