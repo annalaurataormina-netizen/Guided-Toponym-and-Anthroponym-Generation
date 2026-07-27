@@ -36,7 +36,7 @@ def train():
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.75
+    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -64,7 +64,7 @@ def train():
     print(f"Projection head output dimension: {proj_output_dim}")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
-    print(f"Sampler: LabelBalancedBatchSampler")
+    print(f"Sampler: standard")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
