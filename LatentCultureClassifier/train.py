@@ -33,13 +33,13 @@ def train():
     print(f"Using device: {device}")
 
     # ContrastiveVAE hyperparameters
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 32, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.25
+    '''
 
     # VAE hyperparameters
-    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
-    '''
 
     # Classifier hyperparameters
     hidden_dim, lr_classifier, epochs_classifier = 256, 0.001, 10
@@ -275,6 +275,8 @@ def train():
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
 
+    '''
+
     test_pred_cultures = []
     test_labels = []
 
@@ -336,7 +338,8 @@ def train():
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
-
+    
+    '''
 
 if __name__ == "__main__":
     train()
