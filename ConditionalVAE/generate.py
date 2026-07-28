@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 
 import editdistance
 import torch
@@ -16,82 +17,124 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOA
 
 
 def generate():
+
     # Set random seed for reproducibility
-    random.seed(1996)
-    torch.manual_seed(1996)
+    seed = 1996
+    random.seed(seed)
+    torch.manual_seed(seed)
 
     # Set device
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
 
-    # Toponyms and Anthroponyms (list of name_romanised)
+    # Toponyms and Anthroponyms (list of name_romanised, culture)
     names = load_all(culture=True)
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     culture_embed_dim = 16
 
     model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
+
     checkpoint = torch.load(model_name, map_location=device)
+
     language_to_id = checkpoint["language_to_id"]
     num_cultures = len(language_to_id)
 
-    # Recreate the model architecture first, then load the weights from the saved model
+    # Recreate model
     model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+
     model.load_state_dict(checkpoint["model_state_dict"])
+    model.to(device)
+    model.eval()
 
-    # List of name_romanised, culture label after normalising (i.e., splitting diacritics)
-    names_normalised = [
-        [normalise(name), language_to_id[lang]]
-        for name, lang in names
-    ]
+    # Normalise names and map cultures to ids
+    names_normalised = [[normalise(name), language_to_id[lang]] for name, lang in names]
 
-    train_names, _ = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
+    # Training split (same as training)
+    train_names, _ = train_test_split( names_normalised, test_size=0.2, random_state=seed, shuffle=True)
+
     train_dataset = NameDataset(train_names, vocab)
+
+    culture_counts = Counter(label for _, label in train_names)
+
+    min_samples = 1000
+
+    valid_cultures = [culture_id for culture_id, count in culture_counts.items() if count >= min_samples]
+
+    print(f"Total cultures: {num_cultures}")
+    print(f"Cultures evaluated: {len(valid_cultures)}")
+
+    n_samples_per_culture = 100
+    generated_by_culture = {}
+
+    with torch.no_grad():
+
+        for culture_id in valid_cultures:
+
+            generated = []
+
+            for _ in range(n_samples_per_culture):
+
+                z = torch.randn(1, latent_dim, device=device)
+                label = torch.tensor([culture_id], device=device)
+                name = model.decoder.generate(z, label)
+                generated.append(name)
+
+            generated_by_culture[culture_id] = generated
+
+    print(f"Generated {len(valid_cultures) * n_samples_per_culture} names")
+
+    generated = [name for names in generated_by_culture.values() for name in names]
 
     print(f"Model name: {model_name}")
 
-    # Evaluation mode
-    model.eval()
+    print(
+        f"100 random generated names: "
+        f"{random.sample(generated, min(100, len(generated)))}"
+    )
 
-    generated = []
+    for n in (2, 3, 4):
+        print(
+            f"{n}-gram coverage: "
+            f"{compute_ngram_coverage(generated, train_names, n):.2%}"
+        )
 
-    with torch.no_grad():
-        for _ in range(5000):
-            # Tensor of (latent_dim) where each number is sample from N(0,1)
-            z = torch.randn(1, latent_dim)
-            label = torch.tensor([random.choice(list(language_to_id.values()))])
-            name = model.decoder.generate(z, label)
-            generated.append(name)
+    print(
+        f"Exact novelty wrt training data: "
+        f"{compute_novelty(generated, train_dataset):.2%}"
+    )
+
+    print(f"Unique rate: {len(set(generated)) / len(generated):.2%}")
+
+    threshold = 0.25
 
     duplicates = 0
     pairs = 0
 
-    threshold = 0.25
-
-    for i, g in enumerate(generated):
+    for i in range(len(generated)):
         for j in range(i + 1, len(generated)):
-            if editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), len(generated[j])) <= threshold:
+
+            distance = editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), len(generated[j]))
+
+            if distance <= threshold:
                 duplicates += 1
+
             pairs += 1
 
-    print(f"100 random generated names: {random.sample(generated, 100)}")
+    print(f"Near duplicates (normalised Levenshtein <= {threshold}): {duplicates / pairs:.2%}")
 
-    # Pronounceability
-    for n in (2, 3, 4):
-        print(f"{n}-gram coverage: {compute_ngram_coverage(generated, train_names, n):.2%}")
+    print("\nPer-culture diversity:")
 
-    # Novelty
-    print(f"Exact novelty wrt training data: {compute_novelty(generated, train_dataset):.2%}")
-
-    # Diversity
-    print(f"Unique rate (among generated names): {len(set(generated)) / len(generated):.2%}")
-    print(f"Near other (normalised Levenshtein distance <= {threshold}): {duplicates / pairs:.2%}")
+    for culture_id, culture_names in generated_by_culture.items():
+        unique_rate = len(set(culture_names)) / len(culture_names)
+        print(f"Culture {culture_id}: {unique_rate:.2%} unique")
 
 
 if __name__ == "__main__":

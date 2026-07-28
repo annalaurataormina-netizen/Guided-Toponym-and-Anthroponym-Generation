@@ -102,7 +102,7 @@ def train():
     lev_subset = Subset(val_dataset, lev_indices)
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
-    # Variational Autoencoder
+    # Conditional Variational Autoencoder
     model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
 
