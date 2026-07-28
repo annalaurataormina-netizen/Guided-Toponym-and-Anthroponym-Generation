@@ -57,6 +57,13 @@ def train():
         for name, lang in names
     ]
 
+    culture_counts = Counter(label for _, label in names_normalised)
+    min_samples = 10
+    names_normalised = [
+        x for x in names_normalised
+        if culture_counts[x[1]] >= min_samples
+    ]
+
     # 80/10/10 split of the dataset into train/validation/test
     labels = [x[1] for x in names_normalised]
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True, stratify=labels)
