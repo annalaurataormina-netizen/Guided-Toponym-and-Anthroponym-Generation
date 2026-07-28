@@ -58,8 +58,10 @@ def train():
     ]
 
     # 80/10/10 split of the dataset into train/validation/test
-    train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True)
-    val_names, test_names = train_test_split(temp_names, test_size=0.5, random_state=seed, shuffle=True)
+    labels = [x[1] for x in names_normalised]
+    train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True, stratify=labels)
+    temp_labels = [x[1] for x in temp_names]
+    val_names, test_names = train_test_split(temp_names, test_size=0.5, random_state=seed, shuffle=True, stratify=temp_labels)
 
     train_dataset = NameDataset(train_names, vocab)
     val_dataset = NameDataset(val_names, vocab)
