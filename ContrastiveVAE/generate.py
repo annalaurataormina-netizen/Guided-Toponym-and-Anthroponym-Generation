@@ -80,11 +80,13 @@ def generate():
 
     threshold = 0.25
 
-    print("Empty:", sum(n == "" for n in generated))
-    print(random.sample(generated, 20))
+    empty = len([n for n in generated if n == ""])
+    print(f"Empty generations: {empty}/{len(generated)} ({100 * empty / len(generated):.2f}%)")
 
-    for i, g in enumerate(generated):
+    for i in range(len(generated)):
         for j in range(i + 1, len(generated)):
+            if generated[i] == "" and generated[j] == "":
+                continue
             if editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), len(generated[j])) <= threshold:
                 duplicates += 1
             pairs += 1
