@@ -41,6 +41,8 @@ def generate():
 
     model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
 
+    print(f"Model name: {model_name}")
+
     checkpoint = torch.load(model_name, map_location=device)
 
     language_to_id = checkpoint["language_to_id"]
