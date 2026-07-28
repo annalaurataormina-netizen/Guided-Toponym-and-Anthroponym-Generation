@@ -115,14 +115,14 @@ def train():
 
     optimiser = torch.optim.Adam(classifier.parameters(), lr=lr)
 
-    classifier.train()
-
     best_loss = float('inf')
 
     patience = 5
     epochs_without_improvement = 0
 
     for epoch in range(epochs):
+
+        classifier.train()
 
         epoch_losses = []
 
