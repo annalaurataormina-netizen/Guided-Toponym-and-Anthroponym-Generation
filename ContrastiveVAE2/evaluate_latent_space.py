@@ -2,10 +2,10 @@ import numpy as np
 import torch
 from sklearn.metrics import silhouette_score, silhouette_samples
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import normalize
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from LatentCultureClassifier.LatentExtractor import LatentExtractor
 from VAE.VAE import VAE
@@ -17,23 +17,16 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOA
 
 
 def evaluate_latent_space():
-
     seed = 1996
 
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # VAE hyperparameters
-    '''
+    # Hyperparameters
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
-    '''
 
-    # ContrastiveVAE hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
+    temperature, lambda_supcon = 0.1, 0.75
 
     vocab = CharVocab(ALLOWED_CHARS)
 
@@ -53,17 +46,9 @@ def evaluate_latent_space():
     dataset = NameDataset(names_normalised, vocab)
 
     # Load model
-    # ContrastiveVAE
-    model = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
-    model_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
-
-    # VAE
-    '''
-    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
-                latent_dim)
-    model_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
-    '''
+    model = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                num_layers_decoder, latent_dim)
+    model_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
 
     print(model_name)
 
@@ -72,7 +57,7 @@ def evaluate_latent_space():
     model.to(device)
     model.eval()
 
-    # Extract latent means
+    # Extract latent representations (mu)
     extractor = LatentExtractor(model.encoder)
 
     latents, labels = extractor.extract(dataset, batch_size, device)
@@ -119,15 +104,17 @@ def evaluate_latent_space():
         X_eval = X
         y_eval = y
 
+    X_eval = normalize(X_eval)
+
     print("Samples used for geometry metrics:", len(X_eval))
 
-    score = silhouette_score(X_eval, y_eval, metric="euclidean")
+    score = silhouette_score(X_eval, y_eval, metric="cosine")
 
     print()
     print("Overall silhouette score:")
     print(score)
 
-    sample_scores = silhouette_samples(X_eval, y_eval, metric="euclidean")
+    sample_scores = silhouette_samples(X_eval, y_eval, metric="cosine")
 
     print()
     print("Per culture silhouette:")
@@ -143,9 +130,7 @@ def evaluate_latent_space():
 
     k = 10
 
-    neighbours = NearestNeighbors(
-        n_neighbors=k + 1
-    )
+    neighbours = NearestNeighbors(n_neighbors=k + 1, metric="cosine")
 
     neighbours.fit(X_eval)
 

@@ -1,3 +1,4 @@
+import json
 import random
 from collections import Counter
 
@@ -9,7 +10,6 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
 from utils import load_all, normalise
@@ -59,14 +59,11 @@ def train():
     checkpoint = torch.load(model_name, map_location=device)
 
     language_to_id = checkpoint["language_to_id"]
-    num_cultures = len(language_to_id)
 
-    # Recreate the model architecture first, then load the weights from the saved model
-    # ConditionalVAE
-    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.to(device)
+    with open("language_to_id.json", "w") as f:
+        json.dump(language_to_id, f)
+
+    '''
 
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
@@ -82,9 +79,6 @@ def train():
     val_dataset = NameDataset(val_names, vocab)
     test_dataset = NameDataset(test_names, vocab)
 
-    model.to(device)
-    model.eval()
-
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
     g.manual_seed(seed)
@@ -99,13 +93,7 @@ def train():
 
     counts = Counter(label for _, label in train_names)
 
-    class_weights = torch.tensor(
-        [1 / counts[i] for i in range(num_cultures)],
-        dtype=torch.float,
-        device=device
-    )
-
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = nn.CrossEntropyLoss()
 
     optimiser = torch.optim.Adam(classifier.parameters(), lr=lr_classifier)
 
@@ -228,7 +216,7 @@ def train():
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
-
+    '''
     '''
     test_pred_cultures = []
     test_labels = []

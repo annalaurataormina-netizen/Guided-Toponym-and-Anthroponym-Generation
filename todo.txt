@@ -11,12 +11,12 @@
 
 To do (model step):
 - Train sequence classifier
-- Conditional VAE
-- Contrastive VAE
+- Try other Conditional VAE approaches
+- Try other Contrastive VAE approaches
 - Combine the 2?
 - SupCon and angular distance
 - Stratified sampling/upsampling
 - Other approaches to Contrastive (no projection head?)
 - Combine Conditional and Contrastive
-- Pick final model based on the downstream task
 - Train n-gram model
+- Pick final model based on the downstream task
