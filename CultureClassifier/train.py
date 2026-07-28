@@ -31,14 +31,8 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # ConditionalVAE hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    culture_embed_dim = 16
-
     # Classifier hyperparameters
-    embed_dim_classifier, hidden_dim, num_layers, lr_classifier, epochs_classifier = 32, 64, 1, 0.001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 64, 1, 0.001, 30
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -46,24 +40,16 @@ def train():
     # Toponyms and Anthroponyms (name_romanised, label)
     names = load_all(culture=True)
 
-    # ConditionalVAE
-    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
-
-    print(f"Testing on {model_name}")
-    print(f"Embedding dimension: {embed_dim_classifier}")
+    print(f"Embedding dimension: {embed_dim}")
     print(f"Hidden dimension: {hidden_dim}")
     print(f"Number of layers: {num_layers}")
-    print(f"Epochs: {epochs_classifier}")
-    print(f"Learning rate: {lr_classifier}")
+    print(f"Epochs: {epochs}")
+    print(f"Learning rate: {lr}")
 
-    checkpoint = torch.load(model_name, map_location=device)
+    with open("language_to_id.json", "r") as f:
+        language_to_id = json.load(f)
 
-    language_to_id = checkpoint["language_to_id"]
-
-    with open("language_to_id.json", "w") as f:
-        json.dump(language_to_id, f)
-
-    '''
+    num_cultures = len(language_to_id)
 
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
@@ -88,20 +74,31 @@ def train():
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    classifier = CultureClassifier(vocab, embed_dim_classifier, hidden_dim, num_layers, num_cultures)
+    classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
     classifier.to(device)
 
     counts = Counter(label for _, label in train_names)
+    class_weights = torch.tensor(
+        [
+            len(train_names) / (num_cultures * counts[i])
+            for i in range(num_cultures)
+        ],
+        dtype=torch.float,
+        device=device
+    )
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
 
-    optimiser = torch.optim.Adam(classifier.parameters(), lr=lr_classifier)
+    optimiser = torch.optim.Adam(classifier.parameters(), lr=lr)
 
     classifier.train()
 
     best_loss = float('inf')
 
-    for epoch in range(epochs_classifier):
+    patience = 5
+    epochs_without_improvement = 0
+
+    for epoch in range(epochs):
 
         epoch_losses = []
 
@@ -140,10 +137,17 @@ def train():
 
             if avg_val_loss < best_loss:
                 best_loss = avg_val_loss
-                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr_classifier}_ep{epochs_classifier}.pt'
+                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr}_ep{epochs}.pt'
                 torch.save(classifier.state_dict(), classifier_name)
 
-        print(f"Epoch {epoch + 1}/{epochs_classifier}, ")
+            else:
+                epochs_without_improvement += 1
+
+        if epochs_without_improvement >= patience:
+            print("Early stopping")
+            break
+
+        print(f"Epoch {epoch + 1}/{epochs}, ")
         print(f"Avg train loss per epoch: {sum(epoch_losses) / len(epoch_losses):.4f}")
 
     classifier.eval()
@@ -216,7 +220,6 @@ def train():
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
-    '''
     '''
     test_pred_cultures = []
     test_labels = []

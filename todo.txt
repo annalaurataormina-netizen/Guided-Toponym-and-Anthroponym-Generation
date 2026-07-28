@@ -19,4 +19,5 @@ To do (model step):
 - Other approaches to Contrastive (no projection head?)
 - Combine Conditional and Contrastive
 - Train n-gram model
+- Add evaluation scripts focusing on the downstream task
 - Pick final model based on the downstream task
