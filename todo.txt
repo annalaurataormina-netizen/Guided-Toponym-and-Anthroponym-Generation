@@ -10,9 +10,9 @@
 - Deadline: 9Sep
 
 To do (model step):
-- Train sequence classifier
-- Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2?
-- Stratified sampling/upsampling
-- Train n-gram model
-- Add evaluation scripts focusing on the downstream task
-- Pick final model based on the downstream task
+1. Train sequence classifier
+2. Add evaluation scripts focusing on the downstream task
+3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2?
+4. Upsampling
+5. Train n-gram model
+6. Pick final model based on the downstream task

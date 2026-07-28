@@ -49,8 +49,6 @@ def train():
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
 
-    num_cultures = len(language_to_id)
-
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
         [normalise(name), language_to_id[lang]]
@@ -63,6 +61,23 @@ def train():
         x for x in names_normalised
         if culture_counts[x[1]] >= min_samples
     ]
+
+    # Re-index remaining cultures
+    remaining_cultures = sorted(
+        set(label for _, label in names_normalised)
+    )
+
+    old_to_new = {
+        old: new
+        for new, old in enumerate(remaining_cultures)
+    }
+
+    names_normalised = [
+        [name, old_to_new[label]]
+        for name, label in names_normalised
+    ]
+
+    num_cultures = len(remaining_cultures)
 
     # 80/10/10 split of the dataset into train/validation/test
     labels = [x[1] for x in names_normalised]
