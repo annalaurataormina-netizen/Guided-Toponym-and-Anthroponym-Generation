@@ -30,8 +30,11 @@ def evaluate_latent_space():
     '''
 
     # ContrastiveVAE hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.1, 0.75
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
+    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
+
     vocab = CharVocab(ALLOWED_CHARS)
 
     # Load data
@@ -81,10 +84,6 @@ def evaluate_latent_space():
     print("Total samples:", len(X))
     print("Number of cultures:", len(np.unique(y)))
 
-    # --------------------------------
-    # Stratified subsample for geometry metrics
-    # --------------------------------
-
     max_samples = 50000
 
     if len(X) > max_samples:
@@ -132,10 +131,6 @@ def evaluate_latent_space():
     print("Overall silhouette score:")
     print(score)
 
-    # -----------------------------
-    # Per culture silhouette
-    # -----------------------------
-
     sample_scores = silhouette_samples(X_eval, y_eval, metric="euclidean")
 
     print()
@@ -149,10 +144,6 @@ def evaluate_latent_space():
             f"{sample_scores[mask].mean():.4f} "
             f"(n={mask.sum()})"
         )
-
-    # -----------------------------
-    # kNN purity
-    # -----------------------------
 
     k = 10
 

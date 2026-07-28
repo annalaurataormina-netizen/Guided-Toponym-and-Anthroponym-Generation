@@ -275,7 +275,6 @@ def train():
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
 
-    '''
     test_pred_cultures = []
     test_labels = []
 
@@ -337,7 +336,6 @@ def train():
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
-    '''
 
 
 if __name__ == "__main__":
