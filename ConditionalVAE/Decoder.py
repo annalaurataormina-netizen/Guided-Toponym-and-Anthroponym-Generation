@@ -110,7 +110,8 @@ class Decoder(nn.Module):
             # One decoding step
             emb = self.embedding(x)
             z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
-            rnn_input = torch.cat([emb, z_rep], dim=-1)
+            culture_rep = culture_embedding.unsqueeze(1).repeat(1, emb.size(1), 1)
+            rnn_input = torch.cat([emb, z_rep, culture_rep], dim=-1)
             out, (h, c) = self.rnn(rnn_input, (h, c))
             logits = self.fc(out[:, -1])
 

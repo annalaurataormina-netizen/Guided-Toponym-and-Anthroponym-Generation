@@ -3,7 +3,7 @@
 
 - Grid search (5d 5-10Aug)
 - Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d 5-7Aug)
-- Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier, silhouette score, neighbors), novelty and diversity (5d Mon 10-14Aug)
+- Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier, silhouette score, neighbors), novelty and diversity + train the classifiers properly (5d Mon 10-14Aug)
 - Report (5d 17-21Aug)
 - UI (5d 24-28Aug) [maybe filter down the output based on pronounceability, anthroponym/toponym, cultural consistency?]
 - Deadline: 9Sep

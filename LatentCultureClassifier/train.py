@@ -43,7 +43,6 @@ def train():
 
     # Classifier hyperparameters
     hidden_dim, lr_classifier, epochs_classifier = 256, 0.001, 10
-    # 0.0001, 0.01, after settling on 256 vs 128
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
