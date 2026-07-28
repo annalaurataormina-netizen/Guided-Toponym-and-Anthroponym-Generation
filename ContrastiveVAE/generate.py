@@ -80,6 +80,9 @@ def generate():
 
     threshold = 0.25
 
+    print("Empty:", sum(n == "" for n in generated))
+    print(random.sample(generated, 20))
+
     for i, g in enumerate(generated):
         for j in range(i + 1, len(generated)):
             if editdistance.eval(generated[i], generated[j]) / max(len(generated[i]), len(generated[j])) <= threshold:
