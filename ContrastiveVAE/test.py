@@ -40,10 +40,10 @@ def test():
     ]
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 128, 64, 0.07, 0.05
+    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
 
     # 80/20/20 split of the dataset into train/validation/test (uses same seed as when training the model)
     _, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)

@@ -294,7 +294,7 @@ def train():
                     f"Avg validation beta-adjusted KL divergence (full validation set) = {val_kl_losses_adj[-1]:.4f}, "
                     f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}, "
                     f"Avg training reconstruction loss (last 2000 batches) = {sum(train_reconstruction_losses[-2000:]) / 2000:.4f}, "
-                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}, "
+                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -353,7 +353,7 @@ def train():
             f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}, "
             f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f}, "
             f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}, "
-            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}, "
+            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}"
         )
 
     base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}'
