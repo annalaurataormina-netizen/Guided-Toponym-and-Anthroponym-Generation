@@ -103,10 +103,7 @@ def generate():
     )
 
     for n in (2, 3, 4):
-        print(
-            f"{n}-gram coverage: "
-            f"{compute_ngram_coverage(generated, train_names, n):.2%}"
-        )
+        print(f"{n}-gram coverage: {compute_ngram_coverage(generated, train_dataset, n):.2%}")
 
     print(
         f"Exact novelty wrt training data: "
