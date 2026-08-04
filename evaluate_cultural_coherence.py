@@ -1,0 +1,189 @@
+import json
+import random
+from collections import Counter
+
+import torch
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
+
+from AE.CharVocab import CharVocab
+from AE.config import ALLOWED_CHARS
+from ConditionalVAE.ConditionalVAE import ConditionalVAE
+from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
+from ContrastiveVAE.NameDataset import NameDataset
+from CultureClassifier.CultureClassifier import CultureClassifier
+from VAE.VAE import VAE
+from utils import normalise, load_all
+
+'''
+IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS (OF GENERATOR AND CLASSIFIER) BELOW SO THAT THE RIGHT MODELS ARE LOADED.
+'''
+
+
+def evaluate(generator, classifier, language_to_id, train_names, device, n_per_culture=1000, min_culture_size=0):
+    vocab = CharVocab(ALLOWED_CHARS)
+
+    classifier.eval()
+
+    culture_sizes = Counter(label for _, label in train_names)
+
+    results = []
+
+    with torch.no_grad():
+        for language, label in sorted(language_to_id.items(), key=lambda x: x[1]):
+
+            train_examples = culture_sizes[label]
+
+            if train_examples < min_culture_size:
+                continue
+
+            generated = generator.generate(culture=label, n=n_per_culture)
+
+            dataset = NameDataset([[name, label] for name in generated], vocab)
+            dataloader = DataLoader(dataset, batch_size=512, shuffle=False)
+
+            correct = 0
+            top5_correct = 0
+            total = 0
+
+            for sequences, lengths, _ in dataloader:
+                sequences, lengths = sequences.to(device), lengths.cpu()
+
+                logits = classifier(sequences, lengths)
+
+                predictions = logits.argmax(dim=1)
+                top5_predictions = torch.topk(logits, k=5, dim=1).indices
+
+                correct += (predictions == label).sum().item()
+
+                top5_correct += (
+                        top5_predictions == label
+                ).any(dim=1).sum().item()
+
+                total += len(sequences)
+
+            generation_accuracy = correct / total
+            top5_generation_accuracy = top5_correct / total
+
+            results.append(
+                {
+                    "language": language,
+                    "train_examples": train_examples,
+                    "generation_accuracy": generation_accuracy,
+                    "top5_generation_accuracy": top5_generation_accuracy,
+                }
+            )
+
+    print("\nGeneration accuracy by culture")
+    print("--------------------------------")
+
+    for result in results:
+        print(
+            f"{result['language']}: "
+            f"examples={result['train_examples']}, "
+            f"accuracy={result['generation_accuracy']:.3f}, "
+            f"top5={result['top5_generation_accuracy']:.3f}"
+        )
+
+    print("\nAggregated results")
+
+    accuracies = [r["generation_accuracy"] for r in results]
+    top5_accuracies = [r["top5_generation_accuracy"] for r in results]
+
+    print(f"Mean generation accuracy: {sum(accuracies) / len(accuracies):.3f}")
+    print(f"Mean top-5 generation accuracy: {sum(top5_accuracies) / len(top5_accuracies):.3f}")
+
+    return results
+
+
+if __name__ == "__main__":
+    seed = 1996
+    random.seed(seed)
+    torch.manual_seed(seed)
+
+    device = torch.device(
+        "cuda" if torch.cuda.is_available() else "cpu"
+    )
+
+    print(f"Using device: {device}")
+
+    vocab = CharVocab(ALLOWED_CHARS)
+
+    # Load language mapping
+    with open("language_to_id.json", "r") as f:
+        language_to_id = json.load(f)
+
+    num_cultures = len(language_to_id)
+
+    # Load dataset
+    names = load_all(culture=True)
+
+    names_normalised = [
+        [normalise(name), language_to_id[label]]
+        for name, label in names
+    ]
+
+    # Same split logic as training
+    labels = [x[1] for x in names_normalised]
+
+    train_names, _ = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True)
+
+    # Load generator
+    # VAE / ContrastiveVAE2
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
+    temperature, lambda_supcon = 0.1, 0.75
+    generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim)
+    generator_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+
+    # ContrastiveVAE
+    '''
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
+    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
+    generator = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                   num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
+    generator_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
+    '''
+
+    # ConditionalVAE
+    '''
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 4, 0.5
+    culture_embed_dim = 16
+    generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
+    '''
+
+    generator.load_state_dict(torch.load(generator_name, map_location=device))
+
+    generator.to(device)
+    generator.eval()
+
+    # Load classifier
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 64, 1, 0.001, 30
+
+    classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
+
+    classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr}_ep{epochs}.pt'
+
+    classifier.load_state_dict(torch.load(classifier_name, map_location=device))
+
+    classifier.to(device)
+    classifier.eval()
+
+    evaluate(
+        generator=generator,
+        classifier=classifier,
+        language_to_id=language_to_id,
+        train_names=train_names,
+        device=device,
+        n_per_culture=1000,
+        min_culture_size=10
+    )
+
+# fill up the generate method

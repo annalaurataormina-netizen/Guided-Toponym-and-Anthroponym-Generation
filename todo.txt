@@ -1,18 +1,31 @@
----> Contrastive learning (training) (5d 21/22-27Jul)
----> Conditional generation (training) (4d 27Jul-28Jul)
-
-- Model (4d 4-12Aug)
-- Grid search (5d 13-20Aug)
-- Think about generation (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution) (2d 13-14Aug)
-- Final evaluation: pronounceability (n-gram language model), cultural consistency (cultural classifier, silhouette score, neighbors), novelty and diversity + train auxiliary classifiers properly (3d Mon 14-17Aug)
-- Report (5d 21-28Aug)
-- UI (5d 31Aug-4Sep) [maybe filter down the output based on pronounceability, anthroponym/toponym, cultural consistency?]
-- Deadline: 9Sep
+Steps:
+1. Model (4d 4-12Aug)
+2. Grid search (5d 13-20Aug)
+3. Generation (2d 13-14Aug)
+4. Final evaluation (3d Mon 14-17Aug)
+5. Report (5d 21-28Aug)
+6. UI (5d 31Aug-4Sep) [filter down output?]
+7. Deadline: 9Sep
 
 To do (model step):
-1. Train sequence classifier
-2. Add evaluation scripts focusing on the downstream task
-3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2?
-4. Upsampling
-5. Train n-gram model
-6. Pick final model based on the downstream task
+1. Train sequence classifier (4Aug)
+2. Evaluation scripts focusing on the downstream task (4Aug)
+3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-10Aug)
+4. Upsampling? (10Aug)
+5. Train n-gram model (10-11Aug)
+6. Pick final model based on the downstream task (12Aug)
+
+To do (grid search step):
+1. Work on grid search script
+2. Push grid search
+
+To do (generation step):
+1. Think (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution)
+2. Put script together
+
+To do (final evaluation step):
+1. Think about pronounceability (n-gram language model)
+2. Think about cultural consistency (cultural classifier, silhouette score, neighbors)
+3. Think about novelty and diversity
+4. Train auxiliary models properly
+5. Get scripts together

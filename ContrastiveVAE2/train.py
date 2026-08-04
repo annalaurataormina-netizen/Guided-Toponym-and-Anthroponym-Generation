@@ -299,7 +299,7 @@ def train():
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+                    model_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
                     torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
@@ -406,7 +406,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Total Loss over time")
     plt.legend()
-    plt.savefig(f"ContrastiveVAE/plots/total_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ContrastiveVAE2/plots/total_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -418,7 +418,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("VAE Loss over time")
     plt.legend()
-    plt.savefig(f"ContrastiveVAE/plots/vae_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ContrastiveVAE2/plots/vae_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -430,7 +430,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("SupCon Loss over time")
     plt.legend()
-    plt.savefig(f"ContrastiveVAE/plots/supcon_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ContrastiveVAE2/plots/supcon_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     model.eval()
