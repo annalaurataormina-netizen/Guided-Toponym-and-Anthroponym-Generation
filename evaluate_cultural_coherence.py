@@ -18,7 +18,7 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS (OF GENERATOR AND CLASSIFIER) BELOW 
 '''
 
 
-def evaluate(generator, classifier, language_to_id, train_names, device, n_per_culture=1000):
+def evaluate(generator, classifier, language_to_id, train_names, device, batch_size, n_per_culture=1000):
     vocab = CharVocab(ALLOWED_CHARS)
 
     classifier.eval()
@@ -35,7 +35,7 @@ def evaluate(generator, classifier, language_to_id, train_names, device, n_per_c
             generated = generator.generate(culture=label, n=n_per_culture, max_length=50)
 
             dataset = NameDataset([[name, label] for name in generated], vocab)
-            dataloader = DataLoader(dataset, batch_size=512, shuffle=False)
+            dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
             correct = 0
             top5_correct = 0
@@ -215,5 +215,6 @@ if __name__ == "__main__":
         language_to_id=language_to_id,
         train_names=train_names,
         device=device,
+        batch_size=batch_size,
         n_per_culture=1000,
     )
