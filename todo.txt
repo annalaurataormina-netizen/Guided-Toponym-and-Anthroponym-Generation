@@ -21,7 +21,7 @@ To do (grid search step):
 
 To do (generation step):
 1. Think (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution)
-2. Put script together
+2. Put script together (beam search?)
 
 To do (final evaluation step):
 1. Think about pronounceability (n-gram language model)

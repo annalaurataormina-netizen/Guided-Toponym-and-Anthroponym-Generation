@@ -14,6 +14,10 @@ class ContrastiveVAE(nn.Module):
                  proj_output_dim: int):
         super().__init__()
 
+        self.culture_stats = torch.load("ContrastiveVAE/culture_stats.pt", map_location="cpu")
+
+        self.latent_dim = latent_dim
+
         # Encoder
         self.encoder = Encoder(vocab, embed_dim, hidden_dim_encoder, num_layers_encoder, latent_dim)
 
@@ -42,3 +46,39 @@ class ContrastiveVAE(nn.Module):
 
         # The decoder reconstructs the sequence from z using teacher forcing
         return logits, mu, logvar, projection
+
+    def generate(self, culture, n, max_length=50):
+        self.eval()
+
+        generated_names = []
+
+        device = next(self.parameters()).device
+
+        with torch.no_grad():
+
+            culture_mu = self.culture_stats[culture]["mean"].to(device)
+            culture_std = self.culture_stats[culture]["std"].to(device)
+
+            z = culture_mu + culture_std * torch.randn(n, self.latent_dim, device=device)
+
+            current = torch.full((n, 1), self.decoder.vocab.sos_idx, dtype=torch.long, device=device)
+
+            finished = torch.zeros(n, dtype=torch.bool, device=device)
+
+            for _ in range(max_length):
+
+                logits = self.decoder(current, z)
+
+                next_tokens = torch.argmax(logits[:, -1, :], dim=-1).unsqueeze(1)
+
+                current = torch.cat([current, next_tokens], dim=1)
+
+                finished |= next_tokens.squeeze(1) == self.decoder.vocab.eos_idx
+
+                if finished.all():
+                    break
+
+            for sequence in current:
+                generated_names.append(self.decoder.vocab.decode(sequence.tolist()))
+
+        return generated_names

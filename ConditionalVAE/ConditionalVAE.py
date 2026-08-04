@@ -12,6 +12,8 @@ class ConditionalVAE(nn.Module):
                  culture_embed_dim: int):
         super().__init__()
 
+        self.latent_dim = latent_dim
+
         # Encoder
         self.encoder = Encoder(vocab, embed_dim, hidden_dim_encoder, num_layers_encoder, latent_dim, num_cultures,
                                culture_embed_dim)
@@ -30,3 +32,17 @@ class ConditionalVAE(nn.Module):
 
         # The decoder reconstructs the sequence from z using teacher forcing
         return self.decoder(decoder_input, z, labels), mu, logvar
+
+    def generate(self, culture, n, max_length=50):
+        self.eval()
+
+        device = next(self.parameters()).device
+
+        with torch.no_grad():
+            z = torch.randn(n, self.latent_dim, device=device)
+
+            labels = torch.full((n,), culture, dtype=torch.long, device=device)
+
+            names = self.decoder.generate(z, labels, max_length)
+
+        return names
