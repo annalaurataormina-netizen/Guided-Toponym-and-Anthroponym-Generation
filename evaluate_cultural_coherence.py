@@ -8,8 +8,6 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ConditionalVAE.ConditionalVAE import ConditionalVAE
-from ContrastiveVAE.ContrastiveVAE import ContrastiveVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
 from VAE.VAE import VAE
@@ -20,7 +18,7 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS (OF GENERATOR AND CLASSIFIER) BELOW 
 '''
 
 
-def evaluate(generator, classifier, language_to_id, train_names, device, n_per_culture=1000, min_culture_size=0):
+def evaluate(generator, classifier, language_to_id, train_names, device, n_per_culture=1000):
     vocab = CharVocab(ALLOWED_CHARS)
 
     classifier.eval()
@@ -33,9 +31,6 @@ def evaluate(generator, classifier, language_to_id, train_names, device, n_per_c
         for language, label in sorted(language_to_id.items(), key=lambda x: x[1]):
 
             train_examples = culture_sizes[label]
-
-            if train_examples < min_culture_size:
-                continue
 
             generated = generator.generate(culture=label, n=n_per_culture)
 
@@ -113,20 +108,48 @@ if __name__ == "__main__":
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
 
-    num_cultures = len(language_to_id)
-
-    # Load dataset
     names = load_all(culture=True)
 
+    # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
-        [normalise(name), language_to_id[label]]
-        for name, label in names
+        [normalise(name), language_to_id[lang]]
+        for name, lang in names
     ]
+
+    culture_counts = Counter(label for _, label in names_normalised)
+    min_samples = 10
+    names_normalised = [
+        x for x in names_normalised
+        if culture_counts[x[1]] >= min_samples
+    ]
+
+    # Re-index remaining cultures
+    remaining_cultures = sorted(
+        set(label for _, label in names_normalised)
+    )
+
+    old_to_new = {
+        old: new
+        for new, old in enumerate(remaining_cultures)
+    }
+
+    language_to_id = {
+        language: old_to_new[label]
+        for language, label in language_to_id.items()
+        if label in old_to_new
+    }
+
+    names_normalised = [
+        [name, old_to_new[label]]
+        for name, label in names_normalised
+    ]
+
+    num_cultures = len(language_to_id)
 
     # Same split logic as training
     labels = [x[1] for x in names_normalised]
 
-    train_names, _ = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True)
+    train_names, _ = train_test_split(names_normalised, test_size=0.2, random_state=seed, shuffle=True, stratify=labels)
 
     # Load generator
     # VAE / ContrastiveVAE2
@@ -134,7 +157,8 @@ if __name__ == "__main__":
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     temperature, lambda_supcon = 0.1, 0.75
-    generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim)
+    generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
+                    latent_dim)
     generator_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
 
     # ContrastiveVAE
@@ -169,7 +193,7 @@ if __name__ == "__main__":
 
     classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
 
-    classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_hd{hidden_dim}_lr{lr}_ep{epochs}.pt'
+    classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
 
     classifier.load_state_dict(torch.load(classifier_name, map_location=device))
 
@@ -183,7 +207,4 @@ if __name__ == "__main__":
         train_names=train_names,
         device=device,
         n_per_culture=1000,
-        min_culture_size=10
     )
-
-# fill up the generate method

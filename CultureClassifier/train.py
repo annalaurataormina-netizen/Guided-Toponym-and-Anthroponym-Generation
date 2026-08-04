@@ -77,7 +77,13 @@ def train():
         for name, label in names_normalised
     ]
 
-    num_cultures = len(remaining_cultures)
+    language_to_id = {
+        language: old_to_new[label]
+        for language, label in language_to_id.items()
+        if label in old_to_new
+    }
+
+    num_cultures = len(language_to_id)
 
     # 80/10/10 split of the dataset into train/validation/test
     labels = [x[1] for x in names_normalised]
