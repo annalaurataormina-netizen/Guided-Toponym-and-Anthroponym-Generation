@@ -211,6 +211,8 @@ if __name__ == "__main__":
     generator.load_state_dict(checkpoint["model_state_dict"])
     '''
 
+    print(f"Generator name: {generator_name}")
+
     generator.to(device)
     generator.eval()
 
@@ -220,6 +222,8 @@ if __name__ == "__main__":
     classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, classifier_num_cultures)
 
     classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+
+    print(f"Classifier name: {classifier_name}")
 
     classifier.load_state_dict(torch.load(classifier_name, map_location=device))
 
