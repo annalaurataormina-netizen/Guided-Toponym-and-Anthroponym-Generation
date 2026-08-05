@@ -226,14 +226,6 @@ if __name__ == "__main__":
     classifier.to(device)
     classifier.eval()
 
-    stats = torch.load("VAE/culture_stats.pt")
-
-    print(stats["language_to_id"])
-    print(generator_language_to_id)
-
-    print(stats["language_to_id"] == generator_language_to_id)
-
-    '''
     evaluate(
         generator=generator,
         classifier=classifier,
@@ -244,4 +236,3 @@ if __name__ == "__main__":
         batch_size=batch_size,
         n_per_culture=1000,
     )
-    '''
