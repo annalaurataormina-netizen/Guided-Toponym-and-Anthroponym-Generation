@@ -14,7 +14,10 @@ class ContrastiveVAE(nn.Module):
                  proj_output_dim: int):
         super().__init__()
 
-        self.culture_stats = torch.load("ContrastiveVAE/culture_stats.pt", map_location="cpu")
+        if culture_stats_path is not None:
+            self.culture_stats = torch.load(culture_stats_path, map_location="cpu")
+        else:
+            self.culture_stats = None
 
         self.latent_dim = latent_dim
 
