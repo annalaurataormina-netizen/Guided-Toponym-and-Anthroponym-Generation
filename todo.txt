@@ -8,9 +8,12 @@ Steps:
 7. Deadline: 9Sep
 
 To do (model step):
-1. Train sequence classifier (4Aug)
-2. Evaluation scripts focusing on the downstream task (4Aug)
-3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-10Aug)
+1. Train sequence classifier (4Aug) DONE
+512, 32, 256, 1, 0.0005, 30 are the best hyperparams
+2. Put scripts together to evaluate model on the downstream task DONE
+evaluate_culture_coherence.py and the generate methods (require .pt file)
+---> 3. Run the script on the existing models
+---> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-10Aug)
 4. Upsampling? (10Aug)
 5. Train n-gram model (10-11Aug)
 6. Pick final model based on the downstream task (12Aug)

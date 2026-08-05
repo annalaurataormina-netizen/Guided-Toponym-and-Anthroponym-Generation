@@ -32,7 +32,7 @@ def train():
     print(f"Using device: {device}")
 
     # Classifier hyperparameters
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 256, 1, 0.0001, 30
+    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 256, 1, 0.0005, 30
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
