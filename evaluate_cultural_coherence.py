@@ -226,11 +226,12 @@ if __name__ == "__main__":
     classifier.to(device)
     classifier.eval()
 
-    print("generator ids:")
-    print(sorted(generator_language_to_id_filtered.items())[:10])
+    stats = torch.load("VAE/culture_stats.pt")
 
-    print("culture stats:")
-    print(sorted(generator.culture_stats.keys())[:10])
+    print(stats["language_to_id"])
+    print(generator_language_to_id)
+
+    print(stats["language_to_id"] == generator_language_to_id)
 
     '''
     evaluate(
