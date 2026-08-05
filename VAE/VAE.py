@@ -50,7 +50,7 @@ class VAE(nn.Module):
 
             z = culture_mu + culture_std * torch.randn(n, self.latent_dim, device=device)
 
-            current = torch.full((n, 1), self.decoder.vocab.sos_idx, dtype=torch.long, device=device)
+            current = torch.full((n, 1), self.decoder.vocab.char2idx['<SOS>'], dtype=torch.long, device=device)
 
             finished = torch.zeros(n, dtype=torch.bool, device=device)
 
@@ -62,7 +62,7 @@ class VAE(nn.Module):
 
                 current = torch.cat([current, next_tokens], dim=1)
 
-                finished |= next_tokens.squeeze(1) == self.decoder.vocab.eos_idx
+                finished |= next_tokens.squeeze(1) == self.decoder.vocab.char2idx['<SOS>']
 
                 if finished.all():
                     break
