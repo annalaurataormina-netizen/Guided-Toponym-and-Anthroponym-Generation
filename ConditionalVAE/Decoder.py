@@ -80,74 +80,74 @@ class Decoder(nn.Module):
         # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)
 
-@torch.no_grad()
-def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50):
+    @torch.no_grad()
+    def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50):
 
-    culture_embedding = self.culture_embedding(labels)
+        culture_embedding = self.culture_embedding(labels)
 
-    decoder_condition = torch.cat([z, culture_embedding], dim=-1)
+        decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
-    batch_size = z.size(0)
+        batch_size = z.size(0)
 
-    h0 = self.hidden_init(decoder_condition)
-    c0 = self.cell_init(decoder_condition)
+        h0 = self.hidden_init(decoder_condition)
+        c0 = self.cell_init(decoder_condition)
 
-    h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
-    c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
+        h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
+        c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
 
-    # Start with <SOS>
-    x = torch.full(
-        (batch_size, 1),
-        self.vocab.char2idx['<SOS>'],
-        dtype=torch.long,
-        device=z.device
-    )
-
-    h, c = h0, c0
-
-    # One list per generated name
-    generated = [[] for _ in range(batch_size)]
-
-    finished = [False] * batch_size
-
-    for _ in range(max_len):
-
-        emb = self.embedding(x)
-
-        z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
-        culture_rep = culture_embedding.unsqueeze(1).repeat(
-            1, emb.size(1), 1
+        # Start with <SOS>
+        x = torch.full(
+            (batch_size, 1),
+            self.vocab.char2idx['<SOS>'],
+            dtype=torch.long,
+            device=z.device
         )
 
-        rnn_input = torch.cat(
-            [emb, z_rep, culture_rep],
-            dim=-1
-        )
+        h, c = h0, c0
 
-        out, (h, c) = self.rnn(
-            rnn_input,
-            (h, c)
-        )
+        # One list per generated name
+        generated = [[] for _ in range(batch_size)]
 
-        logits = self.fc(out[:, -1])
+        finished = [False] * batch_size
 
-        # (batch_size, 1)
-        x = logits.argmax(dim=-1, keepdim=True)
+        for _ in range(max_len):
 
-        for i in range(batch_size):
-            if not finished[i]:
-                token = x[i].item()
+            emb = self.embedding(x)
 
-                if token == self.vocab.char2idx['<EOS>']:
-                    finished[i] = True
-                else:
-                    generated[i].append(token)
+            z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
+            culture_rep = culture_embedding.unsqueeze(1).repeat(
+                1, emb.size(1), 1
+            )
 
-        # Stop early if all sequences finished
-        if all(finished):
-            break
+            rnn_input = torch.cat(
+                [emb, z_rep, culture_rep],
+                dim=-1
+            )
 
-    return [
-        self.vocab.decode(tokens)
-        for tokens in generated
-    ]
+            out, (h, c) = self.rnn(
+                rnn_input,
+                (h, c)
+            )
+
+            logits = self.fc(out[:, -1])
+
+            # (batch_size, 1)
+            x = logits.argmax(dim=-1, keepdim=True)
+
+            for i in range(batch_size):
+                if not finished[i]:
+                    token = x[i].item()
+
+                    if token == self.vocab.char2idx['<EOS>']:
+                        finished[i] = True
+                    else:
+                        generated[i].append(token)
+
+            # Stop early if all sequences finished
+            if all(finished):
+                break
+
+        return [
+            self.vocab.decode(tokens)
+            for tokens in generated
+        ]
