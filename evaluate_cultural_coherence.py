@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
+from VAE.VAE import VAE
 from utils import normalise, load_all
 
 '''
