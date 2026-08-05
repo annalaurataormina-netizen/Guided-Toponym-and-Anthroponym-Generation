@@ -121,13 +121,15 @@ if __name__ == "__main__":
     ]
 
     culture_counts = Counter(label for _, label in names_normalised)
+
     min_samples = 10
+
     names_normalised = [
-        x for x in names_normalised
-        if culture_counts[x[1]] >= min_samples
+        [name, label]
+        for name, label in names_normalised
+        if culture_counts[label] >= min_samples
     ]
 
-    # Re-index remaining cultures
     remaining_cultures = sorted(
         set(label for _, label in names_normalised)
     )
@@ -137,16 +139,22 @@ if __name__ == "__main__":
         for new, old in enumerate(remaining_cultures)
     }
 
-    classifier_language_to_id = {
+    names_normalised = [
+        [name, old_to_new[label]]
+        for name, label in names_normalised
+    ]
+
+    generator_language_to_id_filtered = {
         language: old_to_new[label]
         for language, label in generator_language_to_id.items()
         if label in old_to_new
     }
 
-    names_normalised = [
-        [name, old_to_new[label]]
-        for name, label in names_normalised
-    ]
+    classifier_language_to_id = {
+        language: old_to_new[label]
+        for language, label in generator_language_to_id.items()
+        if label in old_to_new
+    }
 
     generator_num_cultures = len(generator_language_to_id)
     classifier_num_cultures = len(classifier_language_to_id)
@@ -218,13 +226,21 @@ if __name__ == "__main__":
     classifier.to(device)
     classifier.eval()
 
+    print("generator ids:")
+    print(sorted(generator_language_to_id_filtered.items())[:10])
+
+    print("culture stats:")
+    print(sorted(generator.culture_stats.keys())[:10])
+
+    '''
     evaluate(
         generator=generator,
         classifier=classifier,
-        generator_language_to_id=generator_language_to_id,
+        generator_language_to_id=generator_language_to_id_filtered,
         classifier_language_to_id=classifier_language_to_id,
         train_names=train_names,
         device=device,
         batch_size=batch_size,
         n_per_culture=1000,
     )
+    '''
