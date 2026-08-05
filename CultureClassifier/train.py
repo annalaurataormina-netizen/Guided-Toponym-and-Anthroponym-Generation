@@ -167,7 +167,7 @@ def train():
 
             if avg_val_loss < best_loss:
                 best_loss = avg_val_loss
-                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+                classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}_ms{min_samples}.pt'
                 torch.save(classifier.state_dict(), classifier_name)
 
             else:
