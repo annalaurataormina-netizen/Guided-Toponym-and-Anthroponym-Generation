@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
+from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
-from VAE.VAE import VAE
 from utils import normalise, load_all
 
 '''
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     # Load generator
     # VAE
-	'''
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
@@ -159,62 +159,62 @@ if __name__ == "__main__":
     generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
                     latent_dim, culture_stats_path="VAE/culture_stats.pt")
     generator_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
-	'''
-
-    # ContrastiveVAE2
-    '''
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    temperature, lambda_supcon = 0.1, 0.75
-    generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
-                    latent_dim, culture_stats_path="ContrastiveVAE2/culture_stats.pt")
-    generator_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
     '''
 
-    # ContrastiveVAE
-    '''
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
-    generator = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                   num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
-    generator_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
-    '''
+# ContrastiveVAE2
+'''
+batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
+# free_bits = 0.05
+# n_cycles, ratio = 4, 0.5
+temperature, lambda_supcon = 0.1, 0.75
+generator = VAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder,
+                latent_dim, culture_stats_path="ContrastiveVAE2/culture_stats.pt")
+generator_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+'''
 
-    # ConditionalVAE
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    culture_embed_dim = 16
-    generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+# ContrastiveVAE
+'''
+batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
+# free_bits = 0.05
+# n_cycles, ratio = 4, 0.5
+proj_hidden_dim, proj_output_dim, temperature, lambda_supcon = 256, 128, 0.1, 0.75
+generator = ContrastiveVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+               num_layers_decoder, latent_dim, proj_hidden_dim, proj_output_dim)
+generator_name = f'ContrastiveVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_phd{proj_hidden_dim}_pod{proj_output_dim}_t{temperature}_l{lambda_supcon}.pt'
+'''
+
+# ConditionalVAE
+batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
+# free_bits = 0.05
+# n_cycles, ratio = 4, 0.5
+culture_embed_dim = 16
+generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
-    generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
- 
-    generator.load_state_dict(torch.load(generator_name, map_location=device))
+generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
 
-    generator.to(device)
-    generator.eval()
+generator.load_state_dict(torch.load(generator_name, map_location=device))
 
-    # Load classifier
-    batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 64, 1, 0.001, 30
+generator.to(device)
+generator.eval()
 
-    classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
+# Load classifier
+batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 256, 1, 0.0005, 30
 
-    classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
+classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
 
-    classifier.load_state_dict(torch.load(classifier_name, map_location=device))
+classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}.pt'
 
-    classifier.to(device)
-    classifier.eval()
+classifier.load_state_dict(torch.load(classifier_name, map_location=device))
 
-    evaluate(
-        generator=generator,
-        classifier=classifier,
-        language_to_id=language_to_id,
-        train_names=train_names,
-        device=device,
-        batch_size=batch_size,
-        n_per_culture=1000,
-    )
+classifier.to(device)
+classifier.eval()
+
+evaluate(
+    generator=generator,
+    classifier=classifier,
+    language_to_id=language_to_id,
+    train_names=train_names,
+    device=device,
+    batch_size=batch_size,
+    n_per_culture=1000,
+)
