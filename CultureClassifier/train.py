@@ -56,7 +56,7 @@ def train():
     ]
 
     culture_counts = Counter(label for _, label in names_normalised)
-    min_samples = 10
+    min_samples = 1000
     names_normalised = [
         x for x in names_normalised
         if culture_counts[x[1]] >= min_samples

@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     culture_counts = Counter(label for _, label in names_normalised)
 
-    min_samples = 10
+    min_samples = 1000
 
     names_normalised = [
         [name, label]
