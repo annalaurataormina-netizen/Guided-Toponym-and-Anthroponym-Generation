@@ -38,6 +38,7 @@ def evaluate(generator, classifier, generator_language_to_id, classifier_languag
             train_examples = culture_sizes[classifier_label]
 
             generated = generator.generate(culture=generator_label, n=n_per_culture, max_length=50)
+
             dataset = NameDataset([[name, classifier_label] for name in generated], vocab)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 

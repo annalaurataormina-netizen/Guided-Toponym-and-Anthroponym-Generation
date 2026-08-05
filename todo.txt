@@ -14,7 +14,7 @@ To do (model step):
 evaluate_culture_coherence.py and the generate methods (require .pt file)
 ---> 3. Run the script on the existing models
 ---> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-10Aug)
-4. Upsampling? (10Aug)
+4. Upsampling? Beam search? (10Aug)
 5. Train n-gram model (10-11Aug)
 6. Pick final model based on the downstream task (12Aug)
 

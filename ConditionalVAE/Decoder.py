@@ -80,60 +80,74 @@ class Decoder(nn.Module):
         # Logits are (batch_size, seq_len, len(vocab))
         return self.fc(out)
 
-    @torch.no_grad()
-    def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50) -> str:
+@torch.no_grad()
+def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50):
 
-        culture_embedding = self.culture_embedding(labels)
+    culture_embedding = self.culture_embedding(labels)
 
-        decoder_condition = torch.cat([z, culture_embedding], dim=-1)
+    decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
-        # z is (batch_size, latent_dim)
-        # h0 and c0 are (batch_size, num_layers * hidden_dim)
-        h0 = self.hidden_init(decoder_condition)
-        c0 = self.cell_init(decoder_condition)
+    batch_size = z.size(0)
 
-        batch_size = z.size(0)
+    h0 = self.hidden_init(decoder_condition)
+    c0 = self.cell_init(decoder_condition)
 
-        h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
-        c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
+    h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
+    c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
 
-        # Start with <SOS>
-        x = torch.full((batch_size, 1), self.vocab.char2idx['<SOS>'],
-                       dtype=torch.long,
-                       device=z.device)
+    # Start with <SOS>
+    x = torch.full(
+        (batch_size, 1),
+        self.vocab.char2idx['<SOS>'],
+        dtype=torch.long,
+        device=z.device
+    )
 
-        h, c = h0, c0
-        generated = []
+    h, c = h0, c0
 
-        for _ in range(max_len):
+    # One list per generated name
+    generated = [[] for _ in range(batch_size)]
 
-            # One decoding step
-            emb = self.embedding(x)
-            z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
-            culture_rep = culture_embedding.unsqueeze(1).repeat(1, emb.size(1), 1)
-            rnn_input = torch.cat([emb, z_rep, culture_rep], dim=-1)
-            out, (h, c) = self.rnn(rnn_input, (h, c))
-            logits = self.fc(out[:, -1])
+    finished = [False] * batch_size
 
-            # Greedy decoding
-            x = logits.argmax(dim=-1, keepdim=True)
+    for _ in range(max_len):
 
-            # Sampling
-            '''
-            probs = torch.softmax(logits, dim=-1)
-            x = torch.multinomial(probs.squeeze(1), num_samples=1)
-            '''
+        emb = self.embedding(x)
 
-            # Beam search
-            '''
+        z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
+        culture_rep = culture_embedding.unsqueeze(1).repeat(
+            1, emb.size(1), 1
+        )
 
-            '''
+        rnn_input = torch.cat(
+            [emb, z_rep, culture_rep],
+            dim=-1
+        )
 
-            token = x.item()
+        out, (h, c) = self.rnn(
+            rnn_input,
+            (h, c)
+        )
 
-            generated.append(token)
+        logits = self.fc(out[:, -1])
 
-            if token == self.vocab.char2idx['<EOS>']:
-                break
+        # (batch_size, 1)
+        x = logits.argmax(dim=-1, keepdim=True)
 
-        return self.vocab.decode(generated)
+        for i in range(batch_size):
+            if not finished[i]:
+                token = x[i].item()
+
+                if token == self.vocab.char2idx['<EOS>']:
+                    finished[i] = True
+                else:
+                    generated[i].append(token)
+
+        # Stop early if all sequences finished
+        if all(finished):
+            break
+
+    return [
+        self.vocab.decode(tokens)
+        for tokens in generated
+    ]
