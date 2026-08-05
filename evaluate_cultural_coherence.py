@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
+from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
-from VAE.VAE import VAE
 from utils import normalise, load_all
 
 '''
@@ -166,6 +166,7 @@ if __name__ == "__main__":
 
     # Load generator
     # VAE
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
@@ -173,6 +174,7 @@ if __name__ == "__main__":
                     latent_dim, culture_stats_path="VAE/culture_stats.pt")
     generator_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
+    '''
 
     # ContrastiveVAE2
     '''
@@ -199,7 +201,6 @@ if __name__ == "__main__":
     '''
 
     # ConditionalVAE
-    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
@@ -209,7 +210,6 @@ if __name__ == "__main__":
     generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
     checkpoint = torch.load(generator_name, map_location=device)
     generator.load_state_dict(checkpoint["model_state_dict"])
-    '''
 
     print(f"Generator name: {generator_name}")
 
