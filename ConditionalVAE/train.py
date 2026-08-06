@@ -33,7 +33,7 @@ def train():
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
+    n_cycles, ratio = 4, 0.5
     culture_embed_dim = 64
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
@@ -52,8 +52,8 @@ def train():
     print("Optimiser: Adam")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
-    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
+    # print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Character dropout at 25%")
