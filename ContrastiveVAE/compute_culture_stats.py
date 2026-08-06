@@ -54,21 +54,6 @@ if __name__ == "__main__":
 
     names_normalised = [[normalise(name), language_to_id[lang]] for name, lang in names]
 
-    # same filtering as training
-    from collections import Counter
-
-    culture_counts = Counter(label for _, label in names_normalised)
-
-    min_samples = 10
-
-    names_normalised = [[name, label] for name, label in names_normalised if culture_counts[label] >= min_samples]
-
-    remaining_cultures = sorted(set(label for _, label in names_normalised))
-
-    old_to_new = {old: new for new, old in enumerate(remaining_cultures)}
-
-    names_normalised = [[name, old_to_new[label]] for name, label in names_normalised]
-
     dataset = NameDataset(names_normalised, vocab)
 
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
