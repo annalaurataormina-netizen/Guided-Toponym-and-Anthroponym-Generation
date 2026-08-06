@@ -37,7 +37,7 @@ class Encoder(nn.Module):
 
         '''
         # Embedding layer with size (num_cultures, culture_embedding_dim)
-        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+        self.culture_embedding = culture_embedding
     
         # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2 + culture_embed_dim) to (batch_size, latent_dim)
         self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2 + culture_embed_dim, latent_dim)

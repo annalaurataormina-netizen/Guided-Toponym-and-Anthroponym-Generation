@@ -39,12 +39,12 @@ class Decoder(nn.Module):
         # Linear projection from (batch_size, seq_len, hidden_dim) to (batch_size, seq_len, len(vocab))
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
 
+        # Embedding layer with size (num_cultures, culture_embedding_dim)
+        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+
         # Linear projections from (batch_size, latent_dim + culture_embed_dim) to (batch_size, num_layers * hidden_dim)
         self.hidden_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
         self.cell_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
-
-        # Embedding layer with size (num_cultures, culture_embedding_dim)
-        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
 
     def forward(self, x: torch.Tensor, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
 
