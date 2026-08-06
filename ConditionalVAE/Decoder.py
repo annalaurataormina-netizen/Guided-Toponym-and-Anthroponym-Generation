@@ -7,7 +7,7 @@ from AE.CharVocab import CharVocab
 class Decoder(nn.Module):
 
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim: int, num_layers: int, latent_dim: int,
-                 num_cultures: int, culture_embed_dim: int):
+                 num_cultures: int, culture_embed_dim: int, culture_embedding: nn.Embedding):
         super().__init__()
 
         # Character vocabulary
@@ -40,7 +40,7 @@ class Decoder(nn.Module):
         self.fc = nn.Linear(self.hidden_dim, len(vocab))
 
         # Embedding layer with size (num_cultures, culture_embedding_dim)
-        self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+        self.culture_embedding = culture_embedding
 
         # Linear projections from (batch_size, latent_dim + culture_embed_dim) to (batch_size, num_layers * hidden_dim)
         self.hidden_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)

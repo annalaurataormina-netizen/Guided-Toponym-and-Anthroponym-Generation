@@ -14,13 +14,15 @@ class ConditionalVAE(nn.Module):
 
         self.latent_dim = latent_dim
 
+        culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+
         # Encoder
         self.encoder = Encoder(vocab, embed_dim, hidden_dim_encoder, num_layers_encoder, latent_dim, num_cultures,
-                               culture_embed_dim)
+                               culture_embed_dim, culture_embedding)
 
         # Decoder
         self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim, num_cultures,
-                               culture_embed_dim)
+                               culture_embed_dim, culture_embedding)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor]:
