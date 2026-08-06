@@ -162,7 +162,6 @@ if __name__ == "__main__":
 
     # Load generator
     # VAE
-    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 30, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
@@ -170,9 +169,9 @@ if __name__ == "__main__":
                     latent_dim, culture_stats_path="VAE/culture_stats.pt")
     generator_name = f'VAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
-    '''
 
     # ContrastiveVAE2
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 128, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
@@ -181,6 +180,7 @@ if __name__ == "__main__":
                     latent_dim, culture_stats_path="ContrastiveVAE2/culture_stats.pt")
     generator_name = f'ContrastiveVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
+    '''
 
     # ContrastiveVAE
     '''
