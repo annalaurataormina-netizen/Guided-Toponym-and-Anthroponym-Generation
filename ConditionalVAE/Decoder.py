@@ -50,6 +50,11 @@ class Decoder(nn.Module):
 
         culture_embedding = self.culture_embedding(labels)
 
+        # Culture dropout
+        if self.training:
+            mask = torch.rand(culture_embedding.size(0), device=culture_embedding.device) < 0.15
+            culture_embedding[mask] = 0
+
         decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
         # z is (batch_size, latent_dim)
