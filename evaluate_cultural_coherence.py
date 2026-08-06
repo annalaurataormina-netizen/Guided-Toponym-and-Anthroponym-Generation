@@ -18,7 +18,7 @@ IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS (OF GENERATOR AND CLASSIFIER) BELOW 
 '''
 
 
-def evaluate(generator, classifier, generator_language_to_id, classifier_language_to_id, train_names, device,
+def evaluate(generator, classifier, language_to_id, mapping, train_names, device,
              batch_size, n_per_culture=1000):
     vocab = CharVocab(ALLOWED_CHARS)
 
@@ -29,18 +29,15 @@ def evaluate(generator, classifier, generator_language_to_id, classifier_languag
     results = []
 
     with torch.no_grad():
-        for language, generator_label in sorted(generator_language_to_id.items(), key=lambda x: x[1]):
+        for language, label in sorted(language_to_id.items(), key=lambda x: x[1]):
 
-            if language not in classifier_language_to_id:
-                continue
+            old_label = mapping[label]
 
-            classifier_label = classifier_language_to_id[language]
+            train_examples = culture_sizes[label]
 
-            train_examples = culture_sizes[classifier_label]
+            generated = generator.generate(culture=old_label, n=n_per_culture, max_length=50)
 
-            generated = generator.generate(culture=generator_label, n=n_per_culture, max_length=50)
-
-            dataset = NameDataset([[name, classifier_label] for name in generated], vocab)
+            dataset = NameDataset([[name, label] for name in generated], vocab)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
             correct = 0
@@ -55,9 +52,9 @@ def evaluate(generator, classifier, generator_language_to_id, classifier_languag
                 predictions = logits.argmax(dim=1)
                 top5_predictions = torch.topk(logits, k=5, dim=1).indices
 
-                correct += (predictions == classifier_label).sum().item()
+                correct += (predictions == label).sum().item()
 
-                top5_correct += (top5_predictions == classifier_label).any(dim=1).sum().item()
+                top5_correct += (top5_predictions == label).any(dim=1).sum().item()
 
                 total += len(sequences)
 
@@ -108,15 +105,18 @@ if __name__ == "__main__":
 
     vocab = CharVocab(ALLOWED_CHARS)
 
-    # Load language mapping
+    # Load language mapping (used to train both models, but filtered down for the classifier)
     with open("language_to_id.json", "r") as f:
-        generator_language_to_id = json.load(f)
+        language_to_id = json.load(f)
+
+    # Before filtering
+    num_cultures = len(language_to_id.items())
 
     names = load_all(culture=True)
 
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
-        [normalise(name), generator_language_to_id[lang]]
+        [normalise(name), language_to_id[lang]]
         for name, lang in names
     ]
 
@@ -144,20 +144,16 @@ if __name__ == "__main__":
         for name, label in names_normalised
     ]
 
-    generator_language_to_id_filtered = {
+    language_to_id = {
         language: old_to_new[label]
-        for language, label in generator_language_to_id.items()
+        for language, label in language_to_id.items()
         if label in old_to_new
     }
 
-    classifier_language_to_id = {
-        language: old_to_new[label]
-        for language, label in generator_language_to_id.items()
-        if label in old_to_new
-    }
+    new_to_old = {new: old for old, new in old_to_new.items()}
 
-    generator_num_cultures = len(generator_language_to_id)
-    classifier_num_cultures = len(classifier_language_to_id)
+    # After filtering
+    num_cultures_filtered = len(language_to_id)
 
     # Same split logic as training
     labels = [x[1] for x in names_normalised]
@@ -207,7 +203,7 @@ if __name__ == "__main__":
     # n_cycles, ratio = 4, 0.5
     culture_embed_dim = 16
     generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                               num_layers_decoder, latent_dim, generator_num_cultures, culture_embed_dim)
+                               num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
     generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
     checkpoint = torch.load(generator_name, map_location=device)
     generator.load_state_dict(checkpoint["model_state_dict"])
@@ -220,7 +216,7 @@ if __name__ == "__main__":
     # Load classifier
     batch_size, embed_dim, hidden_dim, num_layers, lr, epochs = 512, 32, 256, 1, 0.0005, 30
 
-    classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, classifier_num_cultures)
+    classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures_filtered)
 
     classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}_ms{min_samples}.pt'
 
@@ -234,8 +230,8 @@ if __name__ == "__main__":
     evaluate(
         generator=generator,
         classifier=classifier,
-        generator_language_to_id=generator_language_to_id_filtered,
-        classifier_language_to_id=classifier_language_to_id,
+        language_to_id=language_to_id,
+        mapping=new_to_old,
         train_names=train_names,
         device=device,
         batch_size=batch_size,
