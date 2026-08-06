@@ -35,12 +35,18 @@ class Encoder(nn.Module):
         # batch_first returns (batch, seq_len, hidden_dim)
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers, bias=True, batch_first=True, bidirectional=True)
 
+        '''
         # Embedding layer with size (num_cultures, culture_embedding_dim)
         self.culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
-
+    
         # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2 + culture_embed_dim) to (batch_size, latent_dim)
         self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2 + culture_embed_dim, latent_dim)
         self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2 + culture_embed_dim, latent_dim)
+        '''
+
+        # Projection layer from (batch_size, num_layers * hidden_dim * 2 * 2) to (batch_size, latent_dim)
+        self.fc_mu = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
+        self.fc_logvar = nn.Linear(num_layers * hidden_dim * 2 * 2, latent_dim)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -80,11 +86,16 @@ class Encoder(nn.Module):
         # (batch_size, num_layers * hidden_dim * 2)
         hn, cn = hn.reshape(batch_size, -1), cn.reshape(batch_size, -1)
 
+        '''
         # culture_embedding is (batch_size, culture_embed_dim)
         culture_embedding = self.culture_embedding(labels)
 
-        # (batch_size, num_layers * hidden_dim * 2 * 2)
+        # (batch_size, num_layers * hidden_dim * 2 * 2 + culture_embed_dim)
         z_input = torch.cat([hn, cn, culture_embedding], dim=-1)
+        '''
+
+        # (batch_size, num_layers * hidden_dim * 2 * 2)
+        z_input = torch.cat([hn, cn], dim=-1)
 
         # (batch_size, latent_dim)
         # log-variance is numerically more stable to predict
