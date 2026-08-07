@@ -232,8 +232,6 @@ if __name__ == "__main__":
     checkpoint = torch.load(generator_name, map_location=device)
     '''
 
-    generator.load_state_dict(checkpoint["model_state_dict"])
-
     print(f"Generator name: {generator_name}")
 
     generator.to(device)
