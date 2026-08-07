@@ -13,8 +13,6 @@ To do (model step):
 2. Put scripts together to evaluate model on the downstream task DONE
 evaluate_culture_coherence.py and the generate methods (require .pt file)
 ---> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
-    - Triplet loss
-    - SupCon with Euclidean distance
     - Combine Contrastive + Conditional
 4. Upsampling? Beam search? (11Aug)
 5. Train n-gram model (11-12Aug)

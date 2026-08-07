@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 import torch.nn as nn
 
@@ -46,14 +48,16 @@ class Decoder(nn.Module):
         self.hidden_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
         self.cell_init = nn.Linear(latent_dim + culture_embed_dim, num_layers * hidden_dim)
 
-    def forward(self, x: torch.Tensor, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, z: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
         culture_embedding = self.culture_embedding(labels)
 
         # Culture dropout
+        '''
         if self.training:
             mask = torch.rand(culture_embedding.size(0), device=culture_embedding.device) < 0.15
             culture_embedding[mask] = 0
+        '''
 
         decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
@@ -83,7 +87,9 @@ class Decoder(nn.Module):
         out, (_, _) = self.rnn(rnn_input, (h0, c0))
 
         # Logits are (batch_size, seq_len, len(vocab))
-        return self.fc(out)
+        logits = self.fc(out)
+
+        return logits, out
 
     @torch.no_grad()
     def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50):

@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import psycopg2.extras
 import requests
+import torch
 from dotenv import load_dotenv
 from icu import Transliterator
 
@@ -445,3 +446,50 @@ def cyclical_beta(step: int, total_steps: int, n_cycles: int, ratio: float, beta
         beta = beta_max
 
     return beta
+
+
+def create_triplets(embeddings, labels):
+    """
+    Creates anchor-positive-negative triplets.
+
+    Anchor and positive have the same culture label.
+    Negative has a different culture label.
+    """
+
+    anchors = []
+    positives = []
+    negatives = []
+
+    for i in range(len(labels)):
+
+        anchor_label = labels[i]
+
+        positive_indices = torch.where(labels == anchor_label)[0]
+        negative_indices = torch.where(labels != anchor_label)[0]
+
+        # Remove anchor itself from positive candidates
+        positive_indices = positive_indices[positive_indices != i]
+
+        if len(positive_indices) == 0 or len(negative_indices) == 0:
+            continue
+
+        positive_idx = positive_indices[
+            torch.randint(len(positive_indices), (1,))
+        ]
+
+        negative_idx = negative_indices[
+            torch.randint(len(negative_indices), (1,))
+        ]
+
+        anchors.append(embeddings[i])
+        positives.append(embeddings[positive_idx])
+        negatives.append(embeddings[negative_idx])
+
+    if len(anchors) == 0:
+        return None
+
+    return (
+        torch.stack(anchors),
+        torch.stack(positives),
+        torch.stack(negatives)
+    )

@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
+import torch.nn.functional as F
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -15,7 +16,19 @@ from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from AE.CharVocab import CharVocab
 from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from utils import load_all, normalise, cyclical_beta
+from utils import load_all, normalise, create_triplets
+
+
+# This version applies metric learning to the decoder hidden representation.
+#
+# Triplet loss creates:
+#   anchor   = decoder representation of a name
+#   positive = decoder representation of another name from the same culture
+#   negative = decoder representation of a name from another culture
+#
+# The objective is therefore to make decoder representations culturally similar
+# while allowing the latent space itself to remain primarily governed by the VAE
+# objective.
 
 
 def train():
@@ -33,7 +46,8 @@ def train():
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
-    # n_cycles, ratio = 3, 0.5
+    # n_cycles, ratio = 4, 0.5
+    margin, lambda_triplet = 1.0, 0.75
     culture_embed_dim = 64
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
@@ -57,8 +71,10 @@ def train():
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Character dropout at 25%")
-    # print(f"Culture dropout at 15%")
-    print(f"Dimension of the culture embedding: {culture_embed_dim}")
+    print("Contrastive loss: Triple Loss on out")
+    print(f"Margin: {margin}")
+    print(f"Lambda: {lambda_triplet}")
+    print(f"Sampler: standard")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -88,6 +104,16 @@ def train():
     g = torch.Generator()
     g.manual_seed(seed)
 
+    # DataLoader with LabelBalancedBatchSampler
+    '''
+    labels = [label for _, _, label in train_dataset]
+    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
+    # Shuffling means that batches are random, which is important when training the model
+    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    '''
+
+    # Plain DataLoader
     # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
@@ -108,6 +134,9 @@ def train():
     # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
 
+    # Triplet criterion
+    triplet_criterion = nn.TripletMarginLoss(margin=margin, p=2)
+
     # Adam (Adaptive Moment Estimation) dynamically adjusts the learning rate for every parameter in the model
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -117,6 +146,8 @@ def train():
     train_reconstruction_losses = []
     train_kl_losses = []
     train_kl_losses_adj = []
+    train_triplet_losses = []
+    train_triplet_losses_adj = []
 
     # Validation losses (for the whole validation set), one every 2000 batches
     val_steps = []
@@ -124,6 +155,8 @@ def train():
     val_reconstruction_losses = []
     val_kl_losses = []
     val_kl_losses_adj = []
+    val_triplet_losses = []
+    val_triplet_losses_adj = []
 
     # Tracks the number of batches
     global_step = 0
@@ -143,6 +176,8 @@ def train():
         epoch_train_reconstruction_losses = []
         epoch_train_kl_losses = []
         epoch_train_kl_losses_adj = []
+        epoch_train_triplet_losses = []
+        epoch_train_triplet_losses_adj = []
 
         for batch_idx, train_batch in enumerate(train_dataloader):
 
@@ -172,7 +207,7 @@ def train():
 
             # Forward pass
             # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
-            logits, _, mu, logvar = model(sequences, lengths, labels)
+            logits, _, mu, logvar = model(sequences, lengths)
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
@@ -191,8 +226,32 @@ def train():
                 torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
             )
 
-            # Total Loss = Reconstruction loss + Beta * KL Divergence
-            loss = reconstruction_loss + beta * kl_loss
+            # Triplet loss
+            embedding = F.normalize(mu, dim=1)
+
+            triplets = create_triplets(
+                embedding,
+                labels
+            )
+
+            if triplets is not None:
+
+                anchor, positive, negative = triplets
+
+                triplet_loss = triplet_criterion(
+                    anchor,
+                    positive,
+                    negative
+                )
+
+            else:
+                triplet_loss = torch.tensor(
+                    0.0,
+                    device=device
+                )
+
+            # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * Triplet Loss
+            loss = reconstruction_loss + beta * kl_loss + lambda_triplet * triplet_loss
 
             # Backprop (compute gradients, update model params via backpropagation)
             loss.backward()
@@ -205,11 +264,15 @@ def train():
             train_reconstruction_losses.append(reconstruction_loss.item())
             train_kl_losses.append(kl_loss.item())
             train_kl_losses_adj.append(kl_loss.item() * beta)
+            train_triplet_losses.append(triplet_loss.item())
+            train_triplet_losses_adj.append(lambda_triplet * triplet_loss.item())
 
             epoch_train_losses.append(loss.item())
             epoch_train_reconstruction_losses.append(reconstruction_loss.item())
             epoch_train_kl_losses.append(kl_loss.item())
             epoch_train_kl_losses_adj.append(kl_loss.item() * beta)
+            epoch_train_triplet_losses.append(triplet_loss.item())
+            epoch_train_triplet_losses_adj.append(lambda_triplet * triplet_loss.item())
 
             # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
@@ -219,6 +282,8 @@ def train():
                 val_reconstruction_loss = 0
                 val_kl_loss = 0
                 val_kl_loss_adj = 0
+                val_triplet_loss = 0
+                val_triplet_loss_adj = 0
 
                 with torch.no_grad():
                     for val_batch in val_dataloader:
@@ -226,7 +291,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, _, mu, logvar = model(sequences, lengths, labels)
+                        logits, _, mu, logvar = model(sequences, lengths)
 
                         reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
@@ -242,37 +307,50 @@ def train():
                         kl_loss = kl_per_dim.sum(dim=1).mean()
                         '''
 
-                        loss = reconstruction_loss + beta * kl_loss
+                        # Triplet loss
+                        embedding = F.normalize(mu, dim=1)
+
+                        triplets = create_triplets(
+                            embedding,
+                            labels
+                        )
+
+                        if triplets is not None:
+                            anchor, positive, negative = triplets
+
+                            triplet_loss = triplet_criterion(
+                                anchor,
+                                positive,
+                                negative
+                            )
+                        else:
+                            triplet_loss = torch.tensor(
+                                0.0,
+                                device=device
+                            )
+
+                        loss = reconstruction_loss + beta * kl_loss + lambda_triplet * triplet_loss
 
                         val_loss += loss.item()
                         val_reconstruction_loss += reconstruction_loss.item()
                         val_kl_loss += kl_loss.item()
                         val_kl_loss_adj += beta * kl_loss.item()
+                        val_triplet_loss += triplet_loss.item()
+                        val_triplet_loss_adj += lambda_triplet * triplet_loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
                 avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
                 avg_kl_loss = val_kl_loss / len(val_dataloader)
                 avg_kl_loss_adj = val_kl_loss_adj / len(val_dataloader)
+                avg_triplet_loss = val_triplet_loss / len(val_dataloader)
+                avg_triplet_loss_adj = val_triplet_loss_adj / len(val_dataloader)
 
                 # For early stopping (can only kick in after beta has stabilised)
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_se_cd.pt'
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_ced{culture_embed_dim}.pt'
-                    '''
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_ced{culture_embed_dim}_se.pt'
-                    '''
-                    checkpoint = {
-                        "model_state_dict": model.state_dict(),
-                        "language_to_id": language_to_id,
-                    }
-                    torch.save(checkpoint, model_name)
+                    model_name = f'ConditionalVAE/models/best_model_triplet_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_m{margin}_l{lambda_triplet}.pt'
+                    torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
                     wait += 1
@@ -286,6 +364,8 @@ def train():
                 val_reconstruction_losses.append(avg_reconstruction_loss)
                 val_kl_losses.append(avg_kl_loss)
                 val_kl_losses_adj.append(avg_kl_loss_adj)
+                val_triplet_losses.append(avg_triplet_loss)
+                val_triplet_losses_adj.append(avg_triplet_loss_adj)
 
                 model.train()
 
@@ -297,9 +377,13 @@ def train():
                     f"Avg validation reconstruction loss (full validation set) = {val_reconstruction_losses[-1]:.4f}, "
                     f"Avg validation KL divergence (full validation set) = {val_kl_losses[-1]:.4f}, "
                     f"Avg validation beta-adjusted KL divergence (full validation set) = {val_kl_losses_adj[-1]:.4f}, "
+                    f"Avg validation Triplet loss (full validation set) = {val_triplet_losses[-1]:.4f}, "
+                    f"Avg validation lambda-adjusted Triplet loss (full validation set) = {val_triplet_losses_adj[-1]:.4f}, "
                     f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}, "
                     f"Avg training reconstruction loss (last 2000 batches) = {sum(train_reconstruction_losses[-2000:]) / 2000:.4f}, "
-                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}"
+                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}, "
+                    f"Avg training Triplet loss (last 2000 batches) = {sum(train_triplet_losses[-2000:]) / 2000:.4f}, "
+                    f"Avg training lambda-adjusted Triplet loss (last 2000 batches) = {sum(train_triplet_losses_adj[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -320,7 +404,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, _, mu, logvar = model(sequences, lengths, labels)
+                        logits, out, mu, logvar = model(sequences, lengths)
 
                         # (batch_size, seq_len)
                         pred_indices = logits.argmax(dim=-1)
@@ -358,10 +442,12 @@ def train():
             f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}, "
             f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f}, "
             f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}, "
-            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}"
+            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}, "
+            f"Avg Triplet loss per epoch: {sum(epoch_train_triplet_losses) / len(epoch_train_triplet_losses):.4f}, "
+            f"Avg lambda-adjusted Triplet loss per epoch: {sum(epoch_train_triplet_losses_adj) / len(epoch_train_triplet_losses_adj):.4f}"
         )
 
-    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}'
+    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_m{margin}_l{lambda_triplet}'
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")
@@ -370,7 +456,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Total Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/total_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/total_triplet_out_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -382,7 +468,19 @@ def train():
     plt.ylabel("Loss")
     plt.title("VAE Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/vae_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/vae_triplet_out_{base_fig_name}.png", bbox_inches="tight")
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(train_steps, train_triplet_losses, label="Training Triplet")
+    plt.plot(val_steps, val_triplet_losses, label="Validation Triplet")
+    plt.plot(train_steps, train_triplet_losses_adj, label="Lambda-adjusted Training Triplet")
+    plt.plot(val_steps, val_triplet_losses_adj, label="Lambda-adjusted Validation Triplet")
+    plt.xlabel("Training step")
+    plt.ylabel("Loss")
+    plt.title("Triplet Loss over time")
+    plt.legend()
+    plt.savefig(f"ConditionalVAE/plots/triplet_triplet_out_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     model.eval()

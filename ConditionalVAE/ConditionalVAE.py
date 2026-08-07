@@ -32,8 +32,10 @@ class ConditionalVAE(nn.Module):
         # You don't feed <EOS> since nothing comes after that. Uses teacher forcing.
         decoder_input = x[:, :-1]
 
+        logits, decoder_hidden = self.decoder(decoder_input, z, labels)
+
         # The decoder reconstructs the sequence from z using teacher forcing
-        return self.decoder(decoder_input, z, labels), mu, logvar
+        return logits, decoder_hidden, mu, logvar
 
     def generate(self, culture, n, max_length=50):
         self.eval()

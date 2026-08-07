@@ -93,7 +93,7 @@ def test():
 
             # Forward pass
             # logits, mu, logvar are (batch_size, seq_len, len(vocab))
-            logits, mu, logvar = model(sequences, lengths, labels)
+            logits, _, mu, logvar = model(sequences, lengths, labels)
 
             # Convert predicted indices to characters
             pred_indices = logits.argmax(dim=-1)

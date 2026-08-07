@@ -1,5 +1,6 @@
 import json
 import random
+import torch.nn.functional as F
 
 import editdistance
 import matplotlib
@@ -8,6 +9,8 @@ import torch.nn as nn
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
 
+from ContrastiveVAE.losses import SupConLoss
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -15,7 +18,25 @@ from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from AE.CharVocab import CharVocab
 from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from utils import load_all, normalise, cyclical_beta
+from utils import load_all, normalise
+
+
+# Unlike a standard Conditional VAE training loop, where the model is only
+# optimised with reconstruction loss + KL divergence, this training loop adds
+# a contrastive objective on the latent representation.
+#
+# In a normal Conditional VAE:
+#   name + culture label -> encoder -> z -> decoder(z, culture label)
+# The goal is only to reconstruct the input name while allowing the latent
+# representation to contain useful information.
+#
+# Here, the latent vector z (approximated by mu) is additionally encouraged
+# to organise itself according to culture. Latent vectors from names belonging
+# to the same culture are pulled closer together, while latent vectors from
+# different cultures are pushed apart through supervised contrastive learning.
+#
+# Therefore, the culture label is not only used as a decoder condition, but also
+# acts as supervision for shaping the latent space.
 
 
 def train():
@@ -33,7 +54,8 @@ def train():
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
-    # n_cycles, ratio = 3, 0.5
+    # n_cycles, ratio = 4, 0.5
+    temperature, lambda_supcon = 0.1, 0.75
     culture_embed_dim = 64
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
@@ -57,8 +79,10 @@ def train():
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Character dropout at 25%")
-    # print(f"Culture dropout at 15%")
-    print(f"Dimension of the culture embedding: {culture_embed_dim}")
+    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on mu without projection head")
+    print(f"Temperature: {temperature}")
+    print(f"Lambda: {lambda_supcon}")
+    print(f"Sampler: standard")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
@@ -88,6 +112,16 @@ def train():
     g = torch.Generator()
     g.manual_seed(seed)
 
+    # DataLoader with LabelBalancedBatchSampler
+    '''
+    labels = [label for _, _, label in train_dataset]
+    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
+    # Shuffling means that batches are random, which is important when training the model
+    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    '''
+
+    # Plain DataLoader
     # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
@@ -108,6 +142,9 @@ def train():
     # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
 
+    # SupCon criterion
+    supcon_criterion = SupConLoss(temperature=temperature)
+
     # Adam (Adaptive Moment Estimation) dynamically adjusts the learning rate for every parameter in the model
     optimiser = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -117,6 +154,8 @@ def train():
     train_reconstruction_losses = []
     train_kl_losses = []
     train_kl_losses_adj = []
+    train_supcon_losses = []
+    train_supcon_losses_adj = []
 
     # Validation losses (for the whole validation set), one every 2000 batches
     val_steps = []
@@ -124,6 +163,8 @@ def train():
     val_reconstruction_losses = []
     val_kl_losses = []
     val_kl_losses_adj = []
+    val_supcon_losses = []
+    val_supcon_losses_adj = []
 
     # Tracks the number of batches
     global_step = 0
@@ -143,6 +184,8 @@ def train():
         epoch_train_reconstruction_losses = []
         epoch_train_kl_losses = []
         epoch_train_kl_losses_adj = []
+        epoch_train_supcon_losses = []
+        epoch_train_supcon_losses_adj = []
 
         for batch_idx, train_batch in enumerate(train_dataloader):
 
@@ -172,7 +215,7 @@ def train():
 
             # Forward pass
             # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
-            logits, _, mu, logvar = model(sequences, lengths, labels)
+            logits, _, mu, logvar = model(sequences, lengths)
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
@@ -191,8 +234,12 @@ def train():
                 torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
             )
 
-            # Total Loss = Reconstruction loss + Beta * KL Divergence
-            loss = reconstruction_loss + beta * kl_loss
+            # SupCon loss
+            mu_norm = F.normalize(mu, dim=1)
+            supcon_loss = supcon_criterion(mu_norm.unsqueeze(1), labels)
+
+            # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * SupCon Loss
+            loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
 
             # Backprop (compute gradients, update model params via backpropagation)
             loss.backward()
@@ -205,11 +252,15 @@ def train():
             train_reconstruction_losses.append(reconstruction_loss.item())
             train_kl_losses.append(kl_loss.item())
             train_kl_losses_adj.append(kl_loss.item() * beta)
+            train_supcon_losses.append(supcon_loss.item())
+            train_supcon_losses_adj.append(lambda_supcon * supcon_loss.item())
 
             epoch_train_losses.append(loss.item())
             epoch_train_reconstruction_losses.append(reconstruction_loss.item())
             epoch_train_kl_losses.append(kl_loss.item())
             epoch_train_kl_losses_adj.append(kl_loss.item() * beta)
+            epoch_train_supcon_losses.append(supcon_loss.item())
+            epoch_train_supcon_losses_adj.append(lambda_supcon * supcon_loss.item())
 
             # Every 2000 batches, model is evaluated on the full evaluation set
             if global_step % 2_000 == 0:
@@ -219,6 +270,8 @@ def train():
                 val_reconstruction_loss = 0
                 val_kl_loss = 0
                 val_kl_loss_adj = 0
+                val_supcon_loss = 0
+                val_supcon_loss_adj = 0
 
                 with torch.no_grad():
                     for val_batch in val_dataloader:
@@ -226,7 +279,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, _, mu, logvar = model(sequences, lengths, labels)
+                        logits, _, mu, logvar = model(sequences, lengths)
 
                         reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
@@ -242,37 +295,32 @@ def train():
                         kl_loss = kl_per_dim.sum(dim=1).mean()
                         '''
 
-                        loss = reconstruction_loss + beta * kl_loss
+                        # SupCon loss
+                        mu_norm = F.normalize(mu, dim=1)
+                        supcon_loss = supcon_criterion(mu_norm.unsqueeze(1), labels)
+
+                        loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
 
                         val_loss += loss.item()
                         val_reconstruction_loss += reconstruction_loss.item()
                         val_kl_loss += kl_loss.item()
                         val_kl_loss_adj += beta * kl_loss.item()
+                        val_supcon_loss += supcon_loss.item()
+                        val_supcon_loss_adj += lambda_supcon * supcon_loss.item()
 
                 avg_val_loss = val_loss / len(val_dataloader)
                 avg_reconstruction_loss = val_reconstruction_loss / len(val_dataloader)
                 avg_kl_loss = val_kl_loss / len(val_dataloader)
                 avg_kl_loss_adj = val_kl_loss_adj / len(val_dataloader)
+                avg_supcon_loss = val_supcon_loss / len(val_dataloader)
+                avg_supcon_loss_adj = val_supcon_loss_adj / len(val_dataloader)
 
                 # For early stopping (can only kick in after beta has stabilised)
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_se_cd.pt'
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_ced{culture_embed_dim}.pt'
-                    '''
-                    '''
-                    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_ced{culture_embed_dim}_se.pt'
-                    '''
-                    checkpoint = {
-                        "model_state_dict": model.state_dict(),
-                        "language_to_id": language_to_id,
-                    }
-                    torch.save(checkpoint, model_name)
+                    model_name = f'ConditionalVAE/models/best_model_supcon_mu_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+                    torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
                     wait += 1
@@ -286,6 +334,8 @@ def train():
                 val_reconstruction_losses.append(avg_reconstruction_loss)
                 val_kl_losses.append(avg_kl_loss)
                 val_kl_losses_adj.append(avg_kl_loss_adj)
+                val_supcon_losses.append(avg_supcon_loss)
+                val_supcon_losses_adj.append(avg_supcon_loss_adj)
 
                 model.train()
 
@@ -297,9 +347,13 @@ def train():
                     f"Avg validation reconstruction loss (full validation set) = {val_reconstruction_losses[-1]:.4f}, "
                     f"Avg validation KL divergence (full validation set) = {val_kl_losses[-1]:.4f}, "
                     f"Avg validation beta-adjusted KL divergence (full validation set) = {val_kl_losses_adj[-1]:.4f}, "
+                    f"Avg validation SupCon loss (full validation set) = {val_supcon_losses[-1]:.4f}, "
+                    f"Avg validation lambda-adjusted SupCon loss (full validation set) = {val_supcon_losses_adj[-1]:.4f}, "
                     f"Avg training loss (last 2000 batches) = {sum(train_losses[-2000:]) / 2000:.4f}, "
                     f"Avg training reconstruction loss (last 2000 batches) = {sum(train_reconstruction_losses[-2000:]) / 2000:.4f}, "
-                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}"
+                    f"Avg training beta-adjusted KL divergence (last 2000 batches) = {sum(train_kl_losses_adj[-2000:]) / 2000:.4f}, "
+                    f"Avg training SupCon loss (last 2000 batches) = {sum(train_supcon_losses[-2000:]) / 2000:.4f}, "
+                    f"Avg training lambda-adjusted SupCon loss (last 2000 batches) = {sum(train_supcon_losses_adj[-2000:]) / 2000:.4f}"
                 )
 
                 if early_stopping:
@@ -320,7 +374,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, _, mu, logvar = model(sequences, lengths, labels)
+                        logits, _, mu, logvar = model(sequences, lengths)
 
                         # (batch_size, seq_len)
                         pred_indices = logits.argmax(dim=-1)
@@ -358,10 +412,12 @@ def train():
             f"Avg train loss per epoch: {sum(epoch_train_losses) / len(epoch_train_losses):.4f}, "
             f"Avg reconstruction loss per epoch: {sum(epoch_train_reconstruction_losses) / len(epoch_train_reconstruction_losses):.4f}, "
             f"Avg KL divergence per epoch: {sum(epoch_train_kl_losses) / len(epoch_train_kl_losses):.4f}, "
-            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}"
+            f"Avg beta-adjusted KL divergence per epoch: {sum(epoch_train_kl_losses_adj) / len(epoch_train_kl_losses_adj):.4f}, "
+            f"Avg SupCon loss per epoch: {sum(epoch_train_supcon_losses) / len(epoch_train_supcon_losses):.4f}, "
+            f"Avg lambda-adjusted SupCon loss per epoch: {sum(epoch_train_supcon_losses_adj) / len(epoch_train_supcon_losses_adj):.4f}"
         )
 
-    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}'
+    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}'
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")
@@ -370,7 +426,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Total Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/total_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/total_supcon_mu_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -382,7 +438,19 @@ def train():
     plt.ylabel("Loss")
     plt.title("VAE Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/vae_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/vae_supcon_mu_{base_fig_name}.png", bbox_inches="tight")
+    plt.close()
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(train_steps, train_supcon_losses, label="Training SupCon")
+    plt.plot(val_steps, val_supcon_losses, label="Validation SupCon")
+    plt.plot(train_steps, train_supcon_losses_adj, label="Lambda-adjusted Training SupCon")
+    plt.plot(val_steps, val_supcon_losses_adj, label="Lambda-adjusted Validation SupCon")
+    plt.xlabel("Training step")
+    plt.ylabel("Loss")
+    plt.title("SupCon Loss over time")
+    plt.legend()
+    plt.savefig(f"ConditionalVAE/plots/supcon_supcon_mu_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     model.eval()
