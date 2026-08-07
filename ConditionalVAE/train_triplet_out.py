@@ -207,7 +207,7 @@ def train():
 
             # Forward pass
             # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
-            logits, _, mu, logvar = model(sequences, lengths, labels)
+            logits, out, mu, logvar = model(sequences, lengths, labels)
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
@@ -227,7 +227,8 @@ def train():
             )
 
             # Triplet loss
-            embedding = F.normalize(mu, dim=1)
+            embedding = out.mean(dim=1)
+            embedding = F.normalize(embedding, dim=1)
 
             triplets = create_triplets(
                 embedding,
@@ -291,7 +292,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, _, mu, logvar = model(sequences, lengths, labels)
+                        logits, out, mu, logvar = model(sequences, lengths, labels)
 
                         reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
@@ -308,7 +309,8 @@ def train():
                         '''
 
                         # Triplet loss
-                        embedding = F.normalize(mu, dim=1)
+                        embedding = out.mean(dim=1)
+                        embedding = F.normalize(embedding, dim=1)
 
                         triplets = create_triplets(
                             embedding,

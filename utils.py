@@ -473,13 +473,8 @@ def create_triplets(embeddings, labels):
         if len(positive_indices) == 0 or len(negative_indices) == 0:
             continue
 
-        positive_idx = positive_indices[
-            torch.randint(len(positive_indices), (1,))
-        ]
-
-        negative_idx = negative_indices[
-            torch.randint(len(negative_indices), (1,))
-        ]
+        positive_idx = positive_indices[torch.randint(0, len(positive_indices), ())].item()
+        negative_idx = negative_indices[torch.randint(0, len(negative_indices), ())].item()
 
         anchors.append(embeddings[i])
         positives.append(embeddings[positive_idx])
