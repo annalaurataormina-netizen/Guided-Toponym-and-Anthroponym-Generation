@@ -227,7 +227,6 @@ def train():
             )
 
             # Triplet loss
-            embedding = out.mean(dim=1)
             embedding = F.normalize(embedding, dim=1)
 
             triplets = create_triplets(
@@ -309,7 +308,6 @@ def train():
                         '''
 
                         # Triplet loss
-                        embedding = out.mean(dim=1)
                         embedding = F.normalize(embedding, dim=1)
 
                         triplets = create_triplets(
