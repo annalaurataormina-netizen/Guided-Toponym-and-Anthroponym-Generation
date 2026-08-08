@@ -87,7 +87,7 @@ def train():
     print("No free bits")
     print(f"Character dropout at 25%")
     # print(f"Culture dropout at 15%")
-    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on out without projection head")
+    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on logits without projection head")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
     print(f"Sampler: standard")
@@ -243,12 +243,12 @@ def train():
             )
 
             # SupCon loss
-            decoder_embedding = decoder_hidden.mean(dim=1)
-            decoder_embedding = F.normalize(decoder_embedding, dim=1)
-            supcon_loss = supcon_criterion(
-                decoder_embedding.unsqueeze(1),
-                labels
-            )
+            pad_idx = vocab.char2idx['<PAD>']
+            mask = (target != pad_idx).unsqueeze(-1)  # (batch, seq_len, 1)
+            embedding = (logits * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+            embedding = F.normalize(embedding, dim=1)
+            features = embedding.unsqueeze(1)
+            supcon_loss = supcon_criterion(features, labels)
 
             # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * SupCon Loss
             loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
@@ -308,12 +308,12 @@ def train():
                         '''
 
                         # SupCon loss
-                        decoder_embedding = decoder_hidden.mean(dim=1)
-                        decoder_embedding = F.normalize(decoder_embedding, dim=1)
-                        supcon_loss = supcon_criterion(
-                            decoder_embedding.unsqueeze(1),
-                            labels
-                        )
+                        pad_idx = vocab.char2idx['<PAD>']
+                        mask = (target != pad_idx).unsqueeze(-1)  # (batch, seq_len, 1)
+                        embedding = (logits * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+                        embedding = F.normalize(embedding, dim=1)
+                        features = embedding.unsqueeze(1)
+                        supcon_loss = supcon_criterion(features, labels)
 
                         loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
 
@@ -335,7 +335,7 @@ def train():
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+                    model_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
                     torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
@@ -442,7 +442,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Total Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/total_supcon_out_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/total_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -454,7 +454,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("VAE Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/vae_supcon_out_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/vae_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -466,7 +466,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("SupCon Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/supcon_supcon_out_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"ConditionalVAE/plots/supcon_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     model.eval()
