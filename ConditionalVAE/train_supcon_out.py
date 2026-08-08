@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Subset
 
+from ContrastiveVAE.LabelBalancedBatchSampler import LabelBalancedBatchSampler
 from ContrastiveVAE.losses import SupConLoss
 
 matplotlib.use('Agg')
@@ -87,6 +88,8 @@ def train():
     print("No free bits")
     print(f"Character dropout at 25%")
     # print(f"Culture dropout at 15%")
+    print(f"Sampler: LabelBalancedBatchSampler")
+    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on out without projection head")
     print("Contrastive loss: Supervised Contrastive Loss (SupCon) on out without projection head")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
@@ -121,18 +124,17 @@ def train():
     g.manual_seed(seed)
 
     # DataLoader with LabelBalancedBatchSampler
-    '''
     labels = [label for _, _, label in train_dataset]
     batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
-    # Shuffling means that batches are random, which is important when training the model
     train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    '''
 
     # Plain DataLoader
     # Shuffling means that batches are random, which is important when training the model
+    '''
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    '''
 
     # Levenshtein (uses the same 1000 random samples from the validation set)
     rng = random.Random(seed)
@@ -335,7 +337,7 @@ def train():
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+                    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_s.pt'
                     torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
@@ -433,7 +435,7 @@ def train():
             f"Avg lambda-adjusted SupCon loss per epoch: {sum(epoch_train_supcon_losses_adj) / len(epoch_train_supcon_losses_adj):.4f}"
         )
 
-    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}'
+    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_s'
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")
