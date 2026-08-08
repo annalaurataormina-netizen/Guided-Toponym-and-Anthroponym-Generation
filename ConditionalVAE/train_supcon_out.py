@@ -18,7 +18,7 @@ from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from AE.CharVocab import CharVocab
 from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
-from utils import load_all, normalise
+from utils import load_all, normalise, cyclical_beta
 
 
 # -------------------------------------------------------------------------
