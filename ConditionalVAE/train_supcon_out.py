@@ -81,8 +81,8 @@ def train():
     print("Optimiser: Adam")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    # print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
-    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
+    print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Character dropout at 25%")
@@ -200,16 +200,16 @@ def train():
             warmup_steps = len(train_dataloader) * n_epochs_ramp_up
 
             # Linear annealing
-            '''
             if global_step < warmup_steps:
                 beta = beta_max * global_step / warmup_steps
             else:
                 beta = beta_max
-            '''
 
             # Cyclical annealing
+            '''
             total_steps = len(train_dataloader) * epochs
             beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
+            '''
 
             sequences, lengths, labels = train_batch
             sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
@@ -335,10 +335,10 @@ def train():
                 if epoch >= n_epochs_ramp_up and avg_val_loss < best_loss:
                     best_loss = avg_val_loss
                     wait = 0
-                    '''
                     model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
                     '''
                     model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}.pt'
+                    '''
                     torch.save(model.state_dict(), model_name)
 
                 elif epoch >= n_epochs_ramp_up:
@@ -436,10 +436,10 @@ def train():
             f"Avg lambda-adjusted SupCon loss per epoch: {sum(epoch_train_supcon_losses_adj) / len(epoch_train_supcon_losses_adj):.4f}"
         )
 
-    '''
     base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}'
     '''
     base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}'
+    '''
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")
