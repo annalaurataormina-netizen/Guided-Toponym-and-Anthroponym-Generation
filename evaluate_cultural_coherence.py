@@ -242,12 +242,14 @@ if __name__ == "__main__":
     generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_se_cd.pt'
     checkpoint = torch.load(generator_name, map_location=device)
     '''
+    '''
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_s.pt'
+    checkpoint = torch.load(generator_name, map_location=device)
+    '''
+    generator_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
     checkpoint = torch.load(generator_name, map_location=device)
 
     print(f"Generator name: {generator_name}")
-
-    'best_model_supcon_out_bs512_ed64_hde64_hdd32_nle2_nld1_ld32_lr0.0015_ep100_blf0t0.005_t0.1_l0.75_s.pt'
 
     generator.to(device)
 
