@@ -31,15 +31,16 @@ def test():
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     culture_embed_dim = 64
+    proj_hidden_dim, proj_output_dim = 256, 128
 
-    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
+    model_name = f'ConditionalVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
     checkpoint = torch.load(model_name, map_location=device)
     language_to_id = checkpoint["language_to_id"]
     num_cultures = len(language_to_id)
 
     # Recreate the model architecture first, then load the weights from the saved model
-    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    model = ConditionalVAE2(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim, proj_hidden_dim, proj_output_dim)
     model.load_state_dict(checkpoint["model_state_dict"])
 
     # List of name_romanised, culture label after normalising (i.e., splitting diacritics)

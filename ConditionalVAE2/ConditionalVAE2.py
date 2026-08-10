@@ -9,7 +9,7 @@ from ConditionalVAE.Encoder import Encoder
 class ConditionalVAE2(nn.Module):
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int,
                  num_layers_encoder: int, num_layers_decoder: int, latent_dim: int, num_cultures: int,
-                 culture_embed_dim: int):
+                 culture_embed_dim: int, proj_hidden_dim: int, proj_output_dim: int, ):
         super().__init__()
 
         self.latent_dim = latent_dim
@@ -24,8 +24,15 @@ class ConditionalVAE2(nn.Module):
         self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim, num_cultures,
                                culture_embed_dim, culture_embedding)
 
+        # Projection head (MLP)
+        self.projection_head = nn.Sequential(
+            nn.Linear(latent_dim, proj_hidden_dim),
+            nn.ReLU(),
+            nn.Linear(proj_hidden_dim, proj_output_dim)
+        )
+
     def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
-        torch.Tensor, torch.Tensor, torch.Tensor]:
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # Encode input into latent distribution and sample z
         z, mu, logvar = self.encoder(x, lengths, labels)
 
@@ -34,8 +41,11 @@ class ConditionalVAE2(nn.Module):
 
         logits, decoder_hidden = self.decoder(decoder_input, z, labels)
 
+        # SupCon projection is (batch_size, proj_output_dim)
+        projection = self.projection_head(mu)
+
         # The decoder reconstructs the sequence from z using teacher forcing
-        return logits, decoder_hidden, mu, logvar
+        return logits, decoder_hidden, mu, logvar, projection
 
     def generate(self, culture, n, max_length=50):
         self.eval()

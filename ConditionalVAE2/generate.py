@@ -38,8 +38,9 @@ def generate():
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
     culture_embed_dim = 64
+    proj_hidden_dim, proj_output_dim = 256, 128
 
-    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
+    model_name = f'ConditionalVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_phd{proj_hidden_dim}_pod{proj_output_dim}.pt'
 
     print(f"Model name: {model_name}")
 
@@ -49,8 +50,8 @@ def generate():
     num_cultures = len(language_to_id)
 
     # Recreate model
-    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    model = ConditionalVAE2(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim, proj_hidden_dim, proj_output_dim)
 
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)

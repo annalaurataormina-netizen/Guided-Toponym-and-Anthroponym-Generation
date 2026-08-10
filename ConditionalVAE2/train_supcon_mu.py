@@ -18,6 +18,7 @@ from AE.CharVocab import CharVocab
 from .ConditionalVAE2 import ConditionalVAE2
 from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise, cyclical_beta
+from ContrastiveVAE.NameDataset import NameDataset
 
 
 # -------------------------------------------------------------------------
@@ -63,6 +64,7 @@ def train():
     n_cycles, ratio = 2, 0.5
     temperature, lambda_supcon = 0.1, 0.75
     culture_embed_dim = 64
+    proj_hidden_dim, proj_output_dim = 256, 128
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
@@ -88,24 +90,12 @@ def train():
     print(f"Character dropout at 25%")
     # print(f"Culture dropout at 15%")
     # print(f"Sampler: LabelBalancedBatchSampler")
-    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on out without projection head")
+    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on mu with projection head")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
     print(f"Sampler: standard")
 
-    '''
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
-    '''
-    '''
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_cd.pt'
-    '''
-    '''
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}.pt'
-    '''
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_mmp.pt'
-    '''
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_lvds.pt'
-    '''
+    model_name = f'ConditionalVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_phd{proj_hidden_dim}_pod{proj_output_dim}.pt'
 
     print(model_name)
 
@@ -157,8 +147,9 @@ def train():
     lev_dataloader = DataLoader(lev_subset, batch_size=batch_size, shuffle=False)
 
     # Conditional Variational Autoencoder
-    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    model = ConditionalVAE2(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim, proj_hidden_dim,
+                            proj_output_dim)
 
     # Move model to device
     model.to(device)
@@ -265,7 +256,8 @@ def train():
 
             # SupCon loss (mean pooling with mask)
             valid_lengths = (lengths - 1).to(decoder_hidden.device)
-            mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(0) < valid_lengths.unsqueeze(1))
+            mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(
+                0) < valid_lengths.unsqueeze(1))
             decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
 
             # SupCon loss (last timestep)

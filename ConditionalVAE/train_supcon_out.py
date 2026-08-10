@@ -272,7 +272,7 @@ def train():
             '''
 
             # SupCon loss (last timestep)
-            last_indices = (lengths - 1).to(decoder_hidden.device)
+            last_indices = (lengths - 2).to(decoder_hidden.device)
             decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
