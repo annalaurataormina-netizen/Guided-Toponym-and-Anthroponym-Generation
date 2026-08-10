@@ -28,6 +28,11 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
 
     results = []
 
+    print("ι in vocab:", 'ι' in generator.vocab.char2idx)
+    print("ι index:", generator.vocab.char2idx.get('ι'))
+    print("ι in idx2char:", 'ι' in generator.vocab.idx2char.values())
+    print("ι in evaluation vocab:", 'ι' in vocab.char2idx)
+
     with torch.no_grad():
         for language, label in sorted(language_to_id.items(), key=lambda x: x[1]):
 
