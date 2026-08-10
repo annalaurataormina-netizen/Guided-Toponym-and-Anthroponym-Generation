@@ -226,8 +226,12 @@ if __name__ == "__main__":
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
     '''
+    generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_cd.pt'
+    generator.load_state_dict(torch.load(generator_name, map_location=device))
+    '''
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
+    '''
     '''
     generator_name = f'ConditionalVAE/models/best_model_triplet_mu_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_m{margin}_l{lambda_triplet}.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
