@@ -1,5 +1,5 @@
 Steps:
-1. Model (4d 4-12Aug)
+--> 1. Model (4d 4-12Aug)
 2. Grid search (5d 13-20Aug)
 3. Generation (1d 14Aug)
 4. Final evaluation (3d 17-20Aug)
@@ -12,13 +12,13 @@ To do (model step):
 512, 32, 256, 1, 0.0005, 30 are the best hyperparams
 2. Put scripts together to evaluate model on the downstream task DONE
 evaluate_culture_coherence.py and the generate methods (require .pt file)
----> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
-    - Combine Contrastive + Conditional
-4. Beam search? (11Aug)
-5. Pick final model based on the downstream task (12Aug)
+--> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
+--> 4. Beam search? (11Aug)
+--> 5. Fictionary cultures? (11Aug)
+--> 6. Pick final model based on the downstream task (12Aug)
 
 To do (grid search step):
-1. Work on grid search script
+1. Work on grid search script (add culture embedding size to the model name!)
 2. Push grid search
 
 To do (generation step):
