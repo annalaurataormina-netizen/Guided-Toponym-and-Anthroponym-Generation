@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from AE.CharVocab import CharVocab
 from .ConditionalVAE2 import ConditionalVAE2
 from AE.config import ALLOWED_CHARS
-from utils import load_all, normalise, cyclical_beta
+from utils import load_all, normalise
 from ContrastiveVAE.NameDataset import NameDataset
 
 
@@ -390,7 +390,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, decoder_hidden, mu, logvar = model(sequences, lengths, labels)
+                        logits, decoder_hidden, mu, logvar, projection = model(sequences, lengths, labels)
 
                         # (batch_size, seq_len)
                         pred_indices = logits.argmax(dim=-1)
