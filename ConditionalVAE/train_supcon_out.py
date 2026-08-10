@@ -273,25 +273,6 @@ def train():
 
             # SupCon loss (last timestep)
             last_indices = (lengths - 2).to(decoder_hidden.device)
-            print(
-                f"decoder_hidden shape: {decoder_hidden.shape}, "
-                f"lengths min/max: {lengths.min().item()}/{lengths.max().item()}, "
-                f"last_indices min/max: {last_indices.min().item()}/{last_indices.max().item()}"
-            )
-
-            assert last_indices.min().item() >= 0, (
-                f"Negative last index: {last_indices.min().item()}, lengths={lengths}"
-            )
-
-            assert last_indices.max().item() < decoder_hidden.size(1), (
-                f"Index {last_indices.max().item()} out of bounds for "
-                f"decoder_hidden dimension 1 of size {decoder_hidden.size(1)}"
-            )
-
-            assert decoder_hidden.size(0) == labels.size(0), (
-                f"Batch mismatch: decoder_hidden={decoder_hidden.size(0)}, "
-                f"labels={labels.size(0)}"
-            )
             decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)

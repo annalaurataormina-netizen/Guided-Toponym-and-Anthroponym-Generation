@@ -3,4 +3,4 @@
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/ConditionalVAE/err/train_supcon_out_%j.err
 
 cd /vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/
-python3 -m ConditionalVAE.train_supcon_out
+CUDA_LAUNCH_BLOCKING=1 python3 -m ConditionalVAE.train_supcon_out
