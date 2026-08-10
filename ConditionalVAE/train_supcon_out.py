@@ -271,10 +271,10 @@ def train():
             decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
             '''
 
-            # SupCon loss (last timestep)
+            # SupCon loss (last valid timestep)
             last_indices = (lengths - 2).to(decoder_hidden.device)
-            batch_indices = torch.arange(decoder_hidden.size(0))
-            decoder_embedding = decoder_hidden.cpu()[batch_indices, last_indices.cpu()].to(decoder_hidden.device)
+            batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
+            decoder_embedding = decoder_hidden[batch_indices, last_indices]
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
             supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
@@ -348,9 +348,10 @@ def train():
                         decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
                         '''
 
-                        # SupCon loss (last timestep)
-                        last_indices = (lengths - 1).to(decoder_hidden.device)
-                        decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
+                        # SupCon loss (last valid timestep)
+                        last_indices = (lengths - 2).to(decoder_hidden.device)
+                        batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
+                        decoder_embedding = decoder_hidden[batch_indices, last_indices]
 
                         decoder_embedding = F.normalize(decoder_embedding, dim=1)
                         supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
