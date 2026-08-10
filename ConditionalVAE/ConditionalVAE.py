@@ -34,6 +34,13 @@ class ConditionalVAE(nn.Module):
 
         logits, decoder_hidden = self.decoder(decoder_input, z, labels)
 
+        print(
+            f"sequences: {x.shape}, "
+            f"decoder_input: {decoder_input.shape}, "
+            f"decoder_hidden: {decoder_hidden.shape}, "
+            f"lengths[:10]: {lengths[:10].tolist()}"
+        )
+
         # The decoder reconstructs the sequence from z using teacher forcing
         return logits, decoder_hidden, mu, logvar
 
