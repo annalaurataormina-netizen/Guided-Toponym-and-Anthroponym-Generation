@@ -272,7 +272,7 @@ def train():
             '''
 
             # SupCon loss (last valid timestep)
-            last_indices = (lengths - 1).to(decoder_hidden.device)
+            last_indices = (lengths - 2).to(decoder_hidden.device)
             batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
             decoder_embedding = decoder_hidden[batch_indices, last_indices]
 
@@ -349,7 +349,7 @@ def train():
                         '''
 
                         # SupCon loss (last valid timestep)
-                        last_indices = (lengths - 1).to(decoder_hidden.device)
+                        last_indices = (lengths - 2).to(decoder_hidden.device)
                         batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
                         decoder_embedding = decoder_hidden[batch_indices, last_indices]
 
