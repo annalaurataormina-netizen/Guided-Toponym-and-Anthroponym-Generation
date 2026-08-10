@@ -54,6 +54,8 @@ class CharVocab:
 
             # Lowercase characters that come after <UPPER> are uppercased.
             elif upper:
+                char = self.idx2char[c]
+                print("TOKEN:", c, "CHAR:", repr(char), "UPPER:", repr(char.upper()))
                 name_str += self.idx2char[c].upper()
                 upper = False
 
@@ -87,3 +89,6 @@ if __name__ == '__main__':
     print(c1.upper() == c2.upper())
     print(c1.upper())
     print(vocab.char2idx[c1.upper()])
+    for idx, char in vocab.idx2char.items():
+        if char.upper() == 'Ι':
+            print(idx, repr(char))
