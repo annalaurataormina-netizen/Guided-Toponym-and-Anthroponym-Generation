@@ -1,0 +1,52 @@
+import torch
+import torch.nn as nn
+
+from AE.CharVocab import CharVocab
+from ConditionalVAE.Decoder import Decoder
+from ConditionalVAE.Encoder import Encoder
+
+
+class ConditionalVAE2(nn.Module):
+    def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int,
+                 num_layers_encoder: int, num_layers_decoder: int, latent_dim: int, num_cultures: int,
+                 culture_embed_dim: int):
+        super().__init__()
+
+        self.latent_dim = latent_dim
+
+        culture_embedding = nn.Embedding(num_cultures, culture_embed_dim)
+
+        # Encoder
+        self.encoder = Encoder(vocab, embed_dim, hidden_dim_encoder, num_layers_encoder, latent_dim, num_cultures,
+                               culture_embed_dim, culture_embedding)
+
+        # Decoder
+        self.decoder = Decoder(vocab, embed_dim, hidden_dim_decoder, num_layers_decoder, latent_dim, num_cultures,
+                               culture_embed_dim, culture_embedding)
+
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor]:
+        # Encode input into latent distribution and sample z
+        z, mu, logvar = self.encoder(x, lengths, labels)
+
+        # You don't feed <EOS> since nothing comes after that. Uses teacher forcing.
+        decoder_input = x[:, :-1]
+
+        logits, decoder_hidden = self.decoder(decoder_input, z, labels)
+
+        # The decoder reconstructs the sequence from z using teacher forcing
+        return logits, decoder_hidden, mu, logvar
+
+    def generate(self, culture, n, max_length=50):
+        self.eval()
+
+        device = next(self.parameters()).device
+
+        with torch.no_grad():
+            z = torch.randn(n, self.latent_dim, device=device)
+
+            labels = torch.full((n,), culture, dtype=torch.long, device=device)
+
+            names = self.decoder.generate(z, labels, max_length)
+
+        return names
