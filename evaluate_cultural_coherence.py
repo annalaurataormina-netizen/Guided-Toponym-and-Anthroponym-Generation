@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
-from ConditionalVAE.ConditionalVAE import ConditionalVAE
+from ConditionalVAE2.ConditionalVAE2 import ConditionalVAE2
 from ContrastiveVAE.NameDataset import NameDataset
 from CultureClassifier.CultureClassifier import CultureClassifier
 from utils import normalise, load_all
@@ -198,6 +198,7 @@ if __name__ == "__main__":
     '''
 
     # ConditionalVAE
+    '''
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     n_cycles, ratio = 2, 0.5
@@ -206,6 +207,7 @@ if __name__ == "__main__":
     # margin, lambda_triplet = 1.0, 0.75
     generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                                num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
+    '''
     '''
     generator_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
     checkpoint = torch.load(generator_name, map_location=device)
@@ -230,8 +232,10 @@ if __name__ == "__main__":
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_s.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
     '''
+    '''
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_mmp.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
+    '''
     '''
     generator_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_cd.pt'
     generator.load_state_dict(torch.load(generator_name, map_location=device))
@@ -264,6 +268,19 @@ if __name__ == "__main__":
     generator_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
     checkpoint = torch.load(generator_name, map_location=device)
     '''
+
+    # ConditionalVAE2
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
+    # free_bits = 0.05
+    # n_cycles, ratio = 2, 0.5
+    temperature, lambda_supcon = 0.1, 0.75
+    culture_embed_dim = 64
+    proj_hidden_dim, proj_output_dim = 256, 128
+    generator = ConditionalVAE2(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
+                                num_layers_decoder, latent_dim, num_cultures, culture_embed_dim, proj_hidden_dim,
+                                proj_output_dim)
+
+    generator_name = f'ConditionalVAE2/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}_phd{proj_hidden_dim}_pod{proj_output_dim}.pt'
 
     print(f"Generator name: {generator_name}")
 
