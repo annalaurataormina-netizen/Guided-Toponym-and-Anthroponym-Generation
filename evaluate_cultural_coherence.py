@@ -37,11 +37,21 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
 
             generated = generator.generate(culture=old_label, n=n_per_culture, max_length=50)
 
-            for name in generated:
-                if 'ι' in name:
-                    print("FOUND IOTA:", repr(name))
+            data = [[name, label] for name in generated]
 
-            dataset = NameDataset([[name, label] for name in generated], vocab)
+            for i, item in enumerate(data):
+                name = item[0]
+                try:
+                    vocab.encode(name)
+                except KeyError as e:
+                    print("ERROR AT:", i)
+                    print("NAME:", repr(name))
+                    print("CHAR:", repr(e.args[0]))
+                    print("ORD:", ord(e.args[0]))
+                    raise
+
+            dataset = NameDataset(data, vocab)
+
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
             correct = 0

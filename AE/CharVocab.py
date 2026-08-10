@@ -80,6 +80,10 @@ if __name__ == '__main__':
     print(vocab.encode('hello'))
     print(vocab.decode(vocab.encode('hello')))
     assert vocab.encode('hello') != vocab.decode(vocab.encode('world'))
-    # c = 'ι'
+    c1 = 'ι'
+    c2 = 'i'
     # print(vocab.char2idx['ι'])
     print(vocab.idx2char)
+    print(c1.upper() == c2.upper())
+    print(c1.upper())
+    print(vocab.char2idx[c1.upper()])
