@@ -265,16 +265,16 @@ def train():
             '''
 
             # SupCon loss (mean pooling with mask)
+            '''
             valid_lengths = (lengths - 1).to(decoder_hidden.device)
             mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(0) < valid_lengths.unsqueeze(1))
             decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
+            '''
 
             # SupCon loss (last valid timestep)
-            '''
-            last_indices = (lengths - 2).to(decoder_hidden.device)
+            last_indices = (lengths - 1).to(decoder_hidden.device)
             batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
             decoder_embedding = decoder_hidden[batch_indices, last_indices]
-            '''
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
             supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
@@ -342,16 +342,16 @@ def train():
                         '''
 
                         # SupCon loss (mean pooling with mask)
+                        '''
                         valid_lengths = (lengths - 1).to(decoder_hidden.device)
                         mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(0) < valid_lengths.unsqueeze(1))
                         decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
+                        '''
 
                         # SupCon loss (last valid timestep)
-                        '''
-                        last_indices = (lengths - 2).to(decoder_hidden.device)
+                        last_indices = (lengths - 1).to(decoder_hidden.device)
                         batch_indices = torch.arange(decoder_hidden.size(0), device=decoder_hidden.device)
                         decoder_embedding = decoder_hidden[batch_indices, last_indices]
-                        '''
 
                         decoder_embedding = F.normalize(decoder_embedding, dim=1)
                         supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
