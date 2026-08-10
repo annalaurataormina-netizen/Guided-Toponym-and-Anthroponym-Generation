@@ -273,6 +273,27 @@ def train():
 
             # SupCon loss (last timestep)
             last_indices = (lengths - 2).to(decoder_hidden.device)
+            bad = (last_indices < 0) | (last_indices >= decoder_hidden.size(1))
+
+            if bad.any():
+                print("\n========== BAD BATCH ==========")
+                print("sequences.shape:", sequences.shape)
+                print("decoder_hidden.shape:", decoder_hidden.shape)
+
+                print("lengths min/max:", lengths.min().item(), lengths.max().item())
+                print("last_indices min/max:", last_indices.min().item(), last_indices.max().item())
+
+                print("bad positions:", torch.where(bad)[0].tolist())
+                print("bad lengths:", lengths[bad].tolist())
+                print("bad last_indices:", last_indices[bad].tolist())
+
+                print("decoder_hidden time dimension:", decoder_hidden.size(1))
+                print("max valid index:", decoder_hidden.size(1) - 1)
+
+                print("lengths[:20]:", lengths[:20].tolist())
+                print("last_indices[:20]:", last_indices[:20].tolist())
+
+                raise ValueError("Invalid last_indices detected")
             decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
