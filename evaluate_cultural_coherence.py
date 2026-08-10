@@ -28,9 +28,9 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
 
     results = []
 
-    print("ι in vocab:", 'ι' in generator.vocab.char2idx)
+    print("ι in generator vocab:", 'ι' in generator.encoder.vocab.char2idx)
+    print("ι in generator idx2char:", 'ι' in generator.vocab.idx2char.values())
     print("ι index:", generator.vocab.char2idx.get('ι'))
-    print("ι in idx2char:", 'ι' in generator.vocab.idx2char.values())
     print("ι in evaluation vocab:", 'ι' in vocab.char2idx)
 
     with torch.no_grad():
