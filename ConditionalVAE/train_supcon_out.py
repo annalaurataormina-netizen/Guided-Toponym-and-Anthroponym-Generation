@@ -100,7 +100,13 @@ def train():
     '''
     model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_cd.pt'
     '''
+    '''
     model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}.pt'
+    '''
+    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_mmp.pt'
+    '''
+    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_lvds.pt'
+    '''
 
     print(model_name)
 
@@ -254,7 +260,21 @@ def train():
             )
 
             # SupCon loss
+            '''
             decoder_embedding = decoder_hidden.mean(dim=1)
+            '''
+
+            # SupCon loss (mean pooling with mask)
+            valid_lengths = lengths - 1
+            mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(0) < valid_lengths.unsqueeze(1))
+            decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
+
+            # SupCon loss (last timestep)
+            '''
+            last_indices = lengths - 2
+            decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
+            '''
+
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
             supcon_loss = supcon_criterion(
                 decoder_embedding.unsqueeze(1),
@@ -449,7 +469,13 @@ def train():
     '''
     base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_cd'
     '''
+    '''
     base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_bcf0t{beta_max}o{n_cycles}w{ratio}_t{temperature}_l{lambda_supcon}'
+    '''
+    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_mmp'
+    '''
+    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}_lvds'
+    '''
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")

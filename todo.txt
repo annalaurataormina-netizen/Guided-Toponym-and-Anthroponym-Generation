@@ -12,7 +12,7 @@ To do (model step):
 512, 32, 256, 1, 0.0005, 30 are the best hyperparams
 2. Put scripts together to evaluate model on the downstream task DONE
 evaluate_culture_coherence.py and the generate methods (require .pt file)
---> 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
+3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
 --> 4. Beam search? (11Aug)
 --> 5. Fictionary cultures? (11Aug)
 --> 6. Pick final model based on the downstream task (12Aug)
