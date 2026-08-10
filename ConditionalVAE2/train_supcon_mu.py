@@ -61,7 +61,7 @@ def train():
     # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.0025, 5
     # free_bits = 0.05
-    n_cycles, ratio = 2, 0.5
+    # n_cycles, ratio = 2, 0.5
     temperature, lambda_supcon = 0.1, 0.75
     culture_embed_dim = 64
     proj_hidden_dim, proj_output_dim = 256, 128
@@ -83,14 +83,16 @@ def train():
     print("Optimiser: Adam")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
-    # print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
-    print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
+    print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
+    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
     # print(f"Free bits with {free_bits}")
     print("No free bits")
     print(f"Character dropout at 25%")
     # print(f"Culture dropout at 15%")
     # print(f"Sampler: LabelBalancedBatchSampler")
     print("Contrastive loss: Supervised Contrastive Loss (SupCon) on mu with projection head")
+    print(f"Projection hidden dimension: {proj_hidden_dim}")
+    print(f"Projection output dimension: {proj_output_dim}")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
     print(f"Sampler: standard")
@@ -207,16 +209,16 @@ def train():
             warmup_steps = len(train_dataloader) * n_epochs_ramp_up
 
             # Linear annealing
-            '''
             if global_step < warmup_steps:
                 beta = beta_max * global_step / warmup_steps
             else:
                 beta = beta_max
-            '''
 
             # Cyclical annealing
+            '''
             total_steps = len(train_dataloader) * epochs
             beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
+            '''
 
             sequences, lengths, labels = train_batch
             sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
@@ -230,7 +232,7 @@ def train():
 
             # Forward pass
             # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
-            logits, decoder_hidden, mu, logvar = model(sequences, lengths, labels)
+            logits, decoder_hidden, mu, logvar, projection = model(sequences, lengths, labels)
 
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
@@ -250,24 +252,8 @@ def train():
             )
 
             # SupCon loss
-            '''
-            decoder_embedding = decoder_hidden.mean(dim=1)
-            '''
-
-            # SupCon loss (mean pooling with mask)
-            valid_lengths = (lengths - 1).to(decoder_hidden.device)
-            mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(
-                0) < valid_lengths.unsqueeze(1))
-            decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
-
-            # SupCon loss (last timestep)
-            '''
-            last_indices = (lengths - 1).to(decoder_hidden.device)
-            decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
-            '''
-
-            decoder_embedding = F.normalize(decoder_embedding, dim=1)
-            supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
+            projection = F.normalize(projection, dim=1)
+            supcon_loss = supcon_criterion(projection.unsqueeze(1), labels)
 
             # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * SupCon Loss
             loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
@@ -310,7 +296,7 @@ def train():
                         sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
                         target = sequences[:, 1:]
-                        logits, decoder_hidden, mu, logvar = model(sequences, lengths, labels)
+                        logits, decoder_hidden, mu, logvar, projection = model(sequences, lengths, labels)
 
                         reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
 
@@ -327,12 +313,8 @@ def train():
                         '''
 
                         # SupCon loss
-                        decoder_embedding = decoder_hidden.mean(dim=1)
-                        decoder_embedding = F.normalize(decoder_embedding, dim=1)
-                        supcon_loss = supcon_criterion(
-                            decoder_embedding.unsqueeze(1),
-                            labels
-                        )
+                        projection = F.normalize(projection, dim=1)
+                        supcon_loss = supcon_criterion(projection.unsqueeze(1), labels)
 
                         loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
 

@@ -32,7 +32,7 @@ class ConditionalVAE2(nn.Module):
         )
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor, labels: torch.Tensor) -> tuple[
-        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # Encode input into latent distribution and sample z
         z, mu, logvar = self.encoder(x, lengths, labels)
 
