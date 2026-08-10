@@ -274,17 +274,6 @@ def train():
             # SupCon loss (last timestep)
             last_indices = (lengths - 2).to(decoder_hidden.device)
             batch_indices = torch.arange(decoder_hidden.size(0))
-            print(
-                "INDEX CHECK:",
-                "hidden =", decoder_hidden.shape,
-                "batch_indices =", batch_indices.shape,
-                "last_indices =", last_indices.shape,
-                "last min/max =", last_indices.min().item(), last_indices.max().item()
-            )
-            assert batch_indices.max().item() < decoder_hidden.size(0)
-            assert last_indices.max().item() < decoder_hidden.size(1)
-            assert batch_indices.min().item() >= 0
-            assert last_indices.min().item() >= 0
             decoder_embedding = decoder_hidden.cpu()[batch_indices, last_indices.cpu()].to(decoder_hidden.device)
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
