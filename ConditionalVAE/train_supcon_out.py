@@ -265,21 +265,18 @@ def train():
             '''
 
             # SupCon loss (mean pooling with mask)
-            valid_lengths = lengths - 1
+            valid_lengths = (lengths - 1).to(decoder_hidden.device)
             mask = (torch.arange(decoder_hidden.size(1), device=decoder_hidden.device).unsqueeze(0) < valid_lengths.unsqueeze(1))
             decoder_embedding = (decoder_hidden * mask.unsqueeze(-1)).sum(dim=1) / valid_lengths.unsqueeze(1)
 
             # SupCon loss (last timestep)
             '''
-            last_indices = lengths - 2
+            last_indices = (lengths - 1).to(decoder_hidden.device)
             decoder_embedding = decoder_hidden[torch.arange(decoder_hidden.size(0), device=decoder_hidden.device), last_indices]
             '''
 
             decoder_embedding = F.normalize(decoder_embedding, dim=1)
-            supcon_loss = supcon_criterion(
-                decoder_embedding.unsqueeze(1),
-                labels
-            )
+            supcon_loss = supcon_criterion(decoder_embedding.unsqueeze(1), labels)
 
             # Total Loss = Reconstruction loss + Beta * KL Divergence + Lambda * SupCon Loss
             loss = reconstruction_loss + beta * kl_loss + lambda_supcon * supcon_loss
