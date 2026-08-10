@@ -75,6 +75,10 @@ class CharVocab:
 
 if __name__ == '__main__':
     vocab = CharVocab(ALLOWED_CHARS)
+    print(ALLOWED_CHARS)
+    print(vocab.char2idx)
     print(vocab.encode('hello'))
     print(vocab.decode(vocab.encode('hello')))
     assert vocab.encode('hello') != vocab.decode(vocab.encode('world'))
+    c = 'ι'
+    print(vocab.char2idx['ι'])
