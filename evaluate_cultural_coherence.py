@@ -28,11 +28,6 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
 
     results = []
 
-    print("ι in generator vocab:", 'ι' in generator.encoder.vocab.char2idx)
-    print("ι in generator idx2char:", 'ι' in generator.encoder.vocab.idx2char.values())
-    print("ι index:", generator.encoder.vocab.char2idx.get('ι'))
-    print("ι in evaluation vocab:", 'ι' in vocab.char2idx)
-
     with torch.no_grad():
         for language, label in sorted(language_to_id.items(), key=lambda x: x[1]):
 
@@ -41,6 +36,10 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
             train_examples = culture_sizes[label]
 
             generated = generator.generate(culture=old_label, n=n_per_culture, max_length=50)
+
+            for name in generated:
+                if 'ι' in name:
+                    print("FOUND IOTA:", repr(name))
 
             dataset = NameDataset([[name, label] for name in generated], vocab)
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
