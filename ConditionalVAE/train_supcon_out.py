@@ -242,41 +242,6 @@ def train():
             # Returns (batch_size, seq_len, len(vocab)), (batch_size, latent_dim), (batch_size, latent_dim)
             logits, decoder_hidden, mu, logvar = model(sequences, lengths, labels)
 
-            print("AFTER MODEL", global_step, flush=True)
-
-            print("sequences:", sequences.shape, flush=True)
-            print("sequences min/max:", sequences.min().item(), sequences.max().item(), flush=True)
-            print("vocab size:", len(vocab), flush=True)
-
-            print("labels min/max:", labels.min().item(), labels.max().item(), flush=True)
-            print("num cultures:", num_cultures, flush=True)
-
-            print("decoder_hidden:", decoder_hidden.shape, flush=True)
-            print("lengths min/max:", lengths.min().item(), lengths.max().item(), flush=True)
-
-            last_indices = (lengths - 2).to(decoder_hidden.device)
-
-            print("last_indices min/max:",
-                  last_indices.min().item(),
-                  last_indices.max().item(),
-                  flush=True)
-
-            assert last_indices.min().item() >= 0
-            assert last_indices.max().item() < decoder_hidden.size(1)
-
-            print("INDEX CHECK PASSED", flush=True)
-
-            batch_indices = torch.arange(
-                decoder_hidden.size(0),
-                device=decoder_hidden.device
-            )
-
-            print("ABOUT TO INDEX", flush=True)
-
-            decoder_embedding = decoder_hidden[batch_indices, last_indices]
-
-            print("INDEXING PASSED", flush=True)
-
             # reshape converts logits from (batch, seq_len, len(vocab)) to (batch * seq_len, len(vocab))
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
             # CrossEntropyLoss internally applies log_softmax to logits and computes the negative log likelihood loss
