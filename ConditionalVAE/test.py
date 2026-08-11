@@ -1,3 +1,5 @@
+import json
+
 import editdistance
 import torch
 import torch.nn as nn
@@ -27,20 +29,23 @@ def test():
     names = load_all(culture=True)
 
     # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 64, 0.0015, 100, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
+    # n_cycles, ratio = 2, 0.5
     culture_embed_dim = 64
+    temperature, lambda_supcon = 0.1, 0.75
 
-    model_name = f'ConditionalVAE/models/best_model_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_ced{culture_embed_dim}.pt'
-    checkpoint = torch.load(model_name, map_location=device)
-    language_to_id = checkpoint["language_to_id"]
+    model_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+
+    with open("language_to_id.json", "r") as f:
+        language_to_id = json.load(f)
+
     num_cultures = len(language_to_id)
 
     # Recreate the model architecture first, then load the weights from the saved model
     model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
-    model.load_state_dict(checkpoint["model_state_dict"])
+    model.load_state_dict(torch.load(model_name, map_location=device))
 
     # List of name_romanised, culture label after normalising (i.e., splitting diacritics)
     names_normalised = [

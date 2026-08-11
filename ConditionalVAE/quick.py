@@ -12,20 +12,19 @@ def quick():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.0025, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
-    n_cycles, ratio = 2, 0.5
-    temperature, lambda_supcon = 0.1, 0.75
+    # n_cycles, ratio = 2, 0.5
     culture_embed_dim = 64
+    temperature, lambda_supcon = 0.1, 0.75
 
-    model_name = f'ConditionalVAE/models/best_model_supcon_out_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
+    model_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
 
     print(f"Model name: {model_name}")
 
-    checkpoint = torch.load(model_name, map_location=device)
-
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
+
     num_cultures = len(language_to_id)
 
     vocab = CharVocab(ALLOWED_CHARS)
@@ -37,7 +36,7 @@ def quick():
     model.eval()
 
     with torch.no_grad():
-        name = "Giovanni"
+        name = "Palermo"
         source_culture = "Italian"
 
         encoded = vocab.encode(normalise(name))
