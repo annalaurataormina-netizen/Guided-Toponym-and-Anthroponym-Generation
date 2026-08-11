@@ -3,12 +3,14 @@ import json
 import editdistance
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.NameDataset import NameDataset
+from ContrastiveVAE.losses import SupConLoss
 from utils import load_all, normalise
 from .ConditionalVAE import ConditionalVAE
 
@@ -71,12 +73,16 @@ def test():
     # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
 
+    # SupCon criterion
+    supcon_criterion = SupConLoss(temperature=temperature)
+
     # Tracks the number of batches
     global_step = 0
 
     # Loss tracking
     total_reconstruction_loss = 0
     total_kl_loss = 0
+    total_supcon_loss = 0
 
     # Levenshtein distance tracking
     total_lev = 0
@@ -131,21 +137,32 @@ def test():
             # KL divergence
             kl_loss = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
 
+            # SupCon loss
+            pad_idx = vocab.char2idx['<PAD>']
+            mask = (target != pad_idx).unsqueeze(-1)  # (batch, seq_len, 1)
+            embedding = (logits * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+            embedding = F.normalize(embedding, dim=1)
+            features = embedding.unsqueeze(1)
+            supcon_loss = supcon_criterion(features, labels)
+
             global_step += 1
 
             total_reconstruction_loss += reconstruction_loss.item()
             total_kl_loss += kl_loss.item()
+            total_supcon_loss += supcon_loss.item()
 
             # Prints the loss for every batch
             print(
                 f"Step {global_step}, "
                 f"Reconstruction loss = {reconstruction_loss.item():.4f}, "
                 f"KL divergence = {kl_loss.item():.4f}, "
+                f"SupCon loss = {supcon_loss.item():.4f}, "
                 f"Avg normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
             )
 
     print(f"Avg reconstruction loss: {total_reconstruction_loss / len(test_dataloader):.4f}")
     print(f"Avg KL divergence: {total_kl_loss / len(test_dataloader):.4f}")
+    print(f"Avg SupCon loss: {total_supcon_loss / len(test_dataloader):.4f}")
     print(f"Avg normalised Levenshtein distance: {total_lev / total_count:.4f}")
 
 
