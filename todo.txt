@@ -13,21 +13,21 @@ To do (model step):
 2. Put scripts together to evaluate model on the downstream task DONE
 evaluate_culture_coherence.py and the generate methods (require .pt file)
 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
---> 4. Beam search? (11-12Aug)
---> 5. Fictionary cultures? (11-12Aug)
---> 6. Pick final model based on the downstream task (11-12Aug)
+4. Pick final model based on the downstream task (11Aug)
+--> 5. Beam search? (12Aug)
+--> 6. Fictionary cultures? (12Aug)
 
 To do (grid search step):
 1. Work on grid search script (add culture embedding size, all hyperparams to the model name!)
 2. Push grid search
 
 To do (generation step):
-1. Think (5 names, get latent reps, get the average, sample from there + bear in mind the shape of the distribution)
-2. Put script together (beam search?)
+1. Put script together (beam search?)
 
 To do (final evaluation step):
 1. Think about pronounceability (train n-gram language model)
 2. Think about cultural consistency (cultural classifier, silhouette score, neighbors)
 3. Think about novelty and diversity
-4. Train auxiliary models properly
-5. Get scripts together
+4. Fictional cultures
+5. Train auxiliary models properly
+6. Get scripts together

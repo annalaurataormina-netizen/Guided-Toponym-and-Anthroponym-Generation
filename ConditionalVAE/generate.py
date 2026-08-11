@@ -75,22 +75,14 @@ def generate():
     print(f"Total cultures: {num_cultures}")
     print(f"Cultures evaluated: {len(valid_cultures)}")
 
-    n_samples_per_culture = 1000
+    n_samples_per_culture = 100
     generated_by_culture = {}
 
     with torch.no_grad():
 
         for culture_id in valid_cultures:
 
-            generated = []
-
-            for _ in range(n_samples_per_culture):
-
-                z = torch.randn(1, latent_dim, device=device)
-                label = torch.tensor([culture_id], device=device)
-                name = model.decoder.generate(z, label)
-                generated.append(name)
-
+            generated = model.generate(culture_id, n_samples_per_culture, max_length=50)
             generated_by_culture[culture_id] = generated
 
     print(f"Generated {len(valid_cultures) * n_samples_per_culture} names")
