@@ -13,9 +13,9 @@ To do (model step):
 2. Put scripts together to evaluate model on the downstream task DONE
 evaluate_culture_coherence.py and the generate methods (require .pt file)
 3. Try other Conditional VAE approaches/try other Contrastive VAE approaches/combine the 2? (5-11Aug)
---> 4. Beam search? (11Aug)
---> 5. Fictionary cultures? (11Aug)
---> 6. Pick final model based on the downstream task (12Aug)
+--> 4. Beam search? (11-12Aug)
+--> 5. Fictionary cultures? (11-12Aug)
+--> 6. Pick final model based on the downstream task (11-12Aug)
 
 To do (grid search step):
 1. Work on grid search script (add culture embedding size, all hyperparams to the model name!)

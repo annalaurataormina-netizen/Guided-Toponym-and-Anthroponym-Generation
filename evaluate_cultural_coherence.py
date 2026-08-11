@@ -204,7 +204,7 @@ if __name__ == "__main__":
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
     # free_bits = 0.05
     # n_cycles, ratio = 2, 0.5
-    # culture_embed_dim = 64
+    culture_embed_dim = 64
     temperature, lambda_supcon = 0.1, 0.75
     # margin, lambda_triplet = 1.0, 0.75
     generator = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
