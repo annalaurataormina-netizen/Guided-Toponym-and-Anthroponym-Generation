@@ -18,7 +18,7 @@ evaluate_culture_coherence.py and the generate methods (require .pt file)
 --> 6. Pick final model based on the downstream task (12Aug)
 
 To do (grid search step):
-1. Work on grid search script (add culture embedding size to the model name!)
+1. Work on grid search script (add culture embedding size, all hyperparams to the model name!)
 2. Push grid search
 
 To do (generation step):
