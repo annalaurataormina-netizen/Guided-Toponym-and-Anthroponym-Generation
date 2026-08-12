@@ -19,7 +19,6 @@ class nGram:
         name = '<' + x[0] + '>'
         culture = x[1]
         probability = 1.0
-        count = 0
 
         for i in range(len(name) - self.n + 1):
             context = name[i:i + self.n - 1]
@@ -28,6 +27,3 @@ class nGram:
             if total == 0:
                 return 0.0
             probability *= (self.counts[(culture, context)][next_char] / total)
-            count += 1
-
-        return probability ** (1 / count)
