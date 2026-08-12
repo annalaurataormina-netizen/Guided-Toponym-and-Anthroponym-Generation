@@ -37,16 +37,24 @@ class ConditionalVAE(nn.Module):
         # The decoder reconstructs the sequence from z using teacher forcing
         return logits, decoder_hidden, mu, logvar
 
-    def generate(self, culture, n, max_length=50):
+    @torch.no_grad()
+    def generate(self, culture=None, culture_embedding=None, n=1, max_length=50):
         self.eval()
 
         device = next(self.parameters()).device
 
-        with torch.no_grad():
-            z = torch.randn(n, self.latent_dim, device=device)
+        z = torch.randn(n, self.latent_dim, device=device)
 
+        if culture_embedding is not None:
+            culture_embedding = culture_embedding.to(device)
+            culture_embedding = culture_embedding.expand(n, -1)
+
+        elif culture is not None:
             labels = torch.full((n,), culture, dtype=torch.long, device=device)
+            culture_embedding = self.decoder.culture_embedding(labels)
 
-            names = self.decoder.generate(z, labels, max_length)
+        else:
+            raise ValueError("Either culture or culture_embedding must be provided.")
 
+        names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
         return names

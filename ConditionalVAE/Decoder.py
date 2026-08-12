@@ -92,9 +92,7 @@ class Decoder(nn.Module):
         return logits, out
 
     @torch.no_grad()
-    def generate(self, z: torch.Tensor, labels: torch.Tensor, max_len=50):
-
-        culture_embedding = self.culture_embedding(labels)
+    def generate(self, z: torch.Tensor, culture_embedding: torch.Tensor, max_len=50):
 
         decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 

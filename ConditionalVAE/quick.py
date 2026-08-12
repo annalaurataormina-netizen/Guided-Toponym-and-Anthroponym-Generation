@@ -36,7 +36,7 @@ def quick():
     model.eval()
 
     with torch.no_grad():
-        name = "Palermo"
+        name = "Micino Pallozzino"
         source_culture = "Italian"
 
         encoded = vocab.encode(normalise(name))
@@ -45,20 +45,34 @@ def quick():
         length = torch.tensor([x.size(1)], dtype=torch.long, device=device)
 
         source_label = torch.tensor([language_to_id[source_culture]], dtype=torch.long, device=device)
+        source_embedding = model.decoder.culture_embedding(source_label)
 
         z, mu, logvar = model.encoder(x, length, source_label)
         z = mu
 
-        reconstruction = model.decoder.generate(z, source_label)
-
+        reconstruction = model.decoder.generate(z, culture_embedding=source_embedding)
         print(f"Reconstruction ({source_culture}): {reconstruction}")
 
+        '''
         for target_culture in ["Chinese", "Italian", "French", "Japanese", "German", "Spanish"]:
             target_label = torch.tensor([language_to_id[target_culture]], dtype=torch.long, device=device)
-
             generated = model.decoder.generate(z, target_label)
-
             print(f"{source_culture} -> {target_culture}: {generated}")
+        '''
+
+        culture_1 = "Italian"
+        culture_2 = "Italian"
+        percentage_culture_1 = 50
+        culture_id_1 = language_to_id[culture_1]
+        culture_id_2 = language_to_id[culture_2]
+        target_culture = f'{percentage_culture_1}% {culture_1} {100 - percentage_culture_1}% {culture_2}'
+        italian_embedding = model.decoder.culture_embedding(torch.tensor([culture_id_1], device=device))
+        german_embedding = model.decoder.culture_embedding(torch.tensor([culture_id_2], device=device))
+        target_embedding = (italian_embedding + german_embedding) / 2
+        generated = model.decoder.generate(z, culture_embedding=target_embedding)
+        print(f"{source_culture} -> {target_culture}: {generated}")
+
+        # print(model.generate(culture_embedding=target_embedding))
 
 
 if __name__ == "__main__":

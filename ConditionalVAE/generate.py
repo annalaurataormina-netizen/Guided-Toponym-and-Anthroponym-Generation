@@ -82,7 +82,7 @@ def generate():
 
         for culture_id in valid_cultures:
 
-            generated = model.generate(culture_id, n_samples_per_culture, max_length=50)
+            generated = model.generate(culture=culture_id, n=n_samples_per_culture, max_length=50)
             generated_by_culture[culture_id] = generated
 
     print(f"Generated {len(valid_cultures) * n_samples_per_culture} names")
