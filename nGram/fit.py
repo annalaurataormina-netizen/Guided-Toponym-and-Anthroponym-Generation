@@ -15,8 +15,10 @@ def fit():
     for n in range(2, 5):
         model = nGram(n)
         model.fit(names_normalised)
-        name = ['Anna', 'Italian']
-        print(model.sequence_probability(name))
+
+        names = [['Anna', 'Italian'], ['XXX', 'Italian'], ['A B C', 'Italian']]
+        for name in names:
+            print(model.sequence_probability(name))
 
 
 if __name__ == '__main__':
