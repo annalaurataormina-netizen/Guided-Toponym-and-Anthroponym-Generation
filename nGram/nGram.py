@@ -27,3 +27,5 @@ class nGram:
             if total == 0:
                 return 0.0
             probability *= (self.counts[(culture, context)][next_char] / total)
+
+        return probability
