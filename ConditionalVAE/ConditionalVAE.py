@@ -73,10 +73,9 @@ class ConditionalVAE(nn.Module):
         with torch.no_grad():
 
             culture_mu = self.culture_stats[culture]["mean"].to(device)
-            culture_cov = self.culture_stats[culture]["cov"].to(device)
+            culture_std = self.culture_stats[culture]["std"].to(device)
 
-            dist = torch.distributions.MultivariateNormal(culture_mu, covariance_matrix=culture_cov)
-            z = dist.sample((n,))
+            z = culture_mu + culture_std * torch.randn(n, self.latent_dim, device=device)
 
             if culture_embedding is not None:
                 culture_embedding = culture_embedding.to(device)
