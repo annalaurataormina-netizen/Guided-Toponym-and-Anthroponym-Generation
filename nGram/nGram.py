@@ -26,11 +26,11 @@ class nGram:
             for (culture, context), counter in self.counts.items()
         }
 
-        with open(f"{self.n}-gram_fit.json", "w") as f:
+        with open(f"nGram/models/{self.n}-gram_fit.json", "w") as f:
             json.dump(data, f)
 
     def load(self):
-        with open(f"{self.n}-gram_fit.json", "r") as f:
+        with open(f"nGram/models/{self.n}-gram_fit.json", "r") as f:
             data = json.load(f)
 
         self.counts = defaultdict(Counter)
