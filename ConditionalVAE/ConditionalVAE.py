@@ -38,12 +38,11 @@ class ConditionalVAE(nn.Module):
         return logits, decoder_hidden, mu, logvar
 
     @torch.no_grad()
-    def generate(self, culture=None, culture_embedding=None, n=1, max_length=50):
+    def generate(self, culture=None, culture_embedding=None, n=1, max_length=50, temperature=1):
         self.eval()
 
         device = next(self.parameters()).device
 
-        temperature = 0.2
         z = temperature * torch.randn(n, self.latent_dim, device=device)
 
         if culture_embedding is not None:

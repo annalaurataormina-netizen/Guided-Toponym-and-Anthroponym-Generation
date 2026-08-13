@@ -42,10 +42,11 @@ def test():
     for n in range(2, 4):
         model = nGram(n)
         model.load()
-        generated = generator.generate(culture=culture_id, n=50, max_length=50)
         print(f"N = {n}")
-        for name in generated:
-            print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
+        for t in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            generated = generator.generate(culture=culture_id, n=50, max_length=50, temperature=t)
+            for name in generated:
+                print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
 
 
 if __name__ == "__main__":
