@@ -9,8 +9,13 @@ from .Encoder import Encoder
 class ConditionalVAE(nn.Module):
     def __init__(self, vocab: CharVocab, embed_dim: int, hidden_dim_encoder: int, hidden_dim_decoder: int,
                  num_layers_encoder: int, num_layers_decoder: int, latent_dim: int, num_cultures: int,
-                 culture_embed_dim: int):
+                 culture_embed_dim: int, culture_stats_path=None):
         super().__init__()
+
+        if culture_stats_path is not None:
+            self.culture_stats = torch.load(culture_stats_path, map_location="cpu")
+        else:
+            self.culture_stats = None
 
         self.latent_dim = latent_dim
 
@@ -39,6 +44,7 @@ class ConditionalVAE(nn.Module):
 
     @torch.no_grad()
     def generate(self, culture=None, culture_embedding=None, n=1, max_length=50, temperature=1):
+        '''
         self.eval()
 
         device = next(self.parameters()).device
@@ -58,3 +64,30 @@ class ConditionalVAE(nn.Module):
 
         names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
         return names
+        '''
+
+        self.eval()
+
+        device = next(self.parameters()).device
+
+        with torch.no_grad():
+
+            culture_mu = self.culture_stats[culture]["mean"].to(device)
+            culture_cov = self.culture_stats[culture]["cov"].to(device)
+
+            dist = torch.distributions.MultivariateNormal(culture_mu, covariance_matrix=culture_cov)
+            z = dist.sample((n,))
+
+            if culture_embedding is not None:
+                culture_embedding = culture_embedding.to(device)
+                culture_embedding = culture_embedding.expand(n, -1)
+
+            elif culture is not None:
+                labels = torch.full((n,), culture, dtype=torch.long, device=device)
+                culture_embedding = self.decoder.culture_embedding(labels)
+
+            else:
+                raise ValueError("Either culture or culture_embedding must be provided.")
+
+            names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
+            return names
