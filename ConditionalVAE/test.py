@@ -108,6 +108,8 @@ def test():
 
             print("MU:", mu.mean().item(), mu.std().item(), mu.min().item(), mu.max().item())
             print("LOGVAR:", logvar.mean().item(), logvar.std().item(), logvar.min().item(), logvar.max().item())
+            print("MU mean per dim:", mu.mean(dim=0))
+            print("MU std per dim:", mu.std(dim=0))
 
             kl_dim = 0.5 * (
                     mu.pow(2) + logvar.exp() - logvar - 1
