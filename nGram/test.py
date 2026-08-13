@@ -102,7 +102,7 @@ def test():
 
     for temperature, generated in generated_for_italian.items():
         print(f"\nTemperature: {temperature}")
-        for name in generated:
+        for name in generated[:100]:
             print(name)
 
 
