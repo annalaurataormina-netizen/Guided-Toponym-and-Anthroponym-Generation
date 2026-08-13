@@ -62,7 +62,7 @@ def train():
     batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.008, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
-    temperature, lambda_supcon = 0.1, 0.75
+    temperature, lambda_supcon = 0.1, 0.50
     culture_embed_dim = 64
 
     # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
