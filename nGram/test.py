@@ -40,12 +40,14 @@ def test():
     generator.to(device)
     generator.eval()
 
-    n = 2
-    model = nGram(n)
-    model.load()
-    generated = generator.generate(culture=culture_id, n=50, max_length=50)
-    for name in generated:
-        print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
+    for n in range(2, 4):
+        model = nGram(n)
+        model.load()
+        generated = generator.generate(culture=culture_id, n=50, max_length=50)
+        print(f"N = {n}")
+        for name in generated:
+            print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
+
 
 if __name__ == "__main__":
     test()
