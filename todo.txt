@@ -1,8 +1,8 @@
 Steps:
 1. Model (4d 4-12Aug)
 --> 2. Grid search (5d 13-20Aug)
-3. Generation (1d 14Aug)
-4. Final evaluation (3d 17-20Aug)
+3. Generation (1d 18Aug)
+4. Final evaluation (3d 19-20Aug)
 5. Report (5d 21-28Aug)
 6. UI (5d 31Aug-4Sep) [filter down output?]
 7. Deadline: 9Sep
@@ -16,10 +16,10 @@ evaluate_culture_coherence.py and the generate methods (require .pt file)
 4. Pick final model based on the downstream task (11Aug) DONE
 
 To do (grid search step):
-1. n-gram language model DONE
---> 2. Work on grid search script (add culture embedding size, all hyperparams to the model name, also character dropout, starting beta, number of cycles to get to the final beta!)
-3. Push grid search
-4. Ablation
+--> 1. n-gram language model [Thu 13Aug]
+2. Work on grid search script [Thu 13Aug / Fri 14Aug]
+3. Push grid search [Fri 14Aug]
+4. Ablation/Final (optimiser, character dropout, bidirectional) [19Aug]
 
 To do (final generation step):
 1. Put script together (beam search and/or stochastic sampling)

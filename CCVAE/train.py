@@ -1,3 +1,4 @@
+import argparse
 import json
 import random
 
@@ -21,31 +22,6 @@ from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
 
 
-# -------------------------------------------------------------------------
-# Contrastive learning is applied to the decoder output/hidden representation instead:
-#
-#     name -> encoder -> z -> decoder output -> SupCon loss
-#
-# This does not directly force the latent space itself to contain cultural
-# structure. Instead, it encourages the decoder representations (after
-# combining the latent representation with the cultural condition) to be
-# organised according to culture.
-#
-# Therefore, the key difference is where the supervision is applied:
-#
-# - Applying SupCon to mu encourages the encoder to encode culture in the
-#   latent space.
-#
-# - Applying SupCon to decoder outputs encourages the conditional decoder
-#   representations to be culturally distinguishable.
-#
-# The two approaches answer different questions: this version asks whether
-# the latent representation itself captures cultural information, whereas
-# the decoder-output version asks whether the generated representation after
-# conditioning on culture reflects the cultural label.
-# -------------------------------------------------------------------------
-
-
 def train():
     # Set seed for reproducibility
     seed = 1996
@@ -58,18 +34,32 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # Model hyperparameters (there's also dropout, L2 regularisation, Adam vs other optimisers)
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 4, 0.5
-    temperature, lambda_supcon = 0.1, 0.75
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--lr", type=float, required=True)
+    parser.add_argument("--beta_max", type=float, required=True)
+    parser.add_argument("--lambda_supcon", type=float, required=True)
+
+    args = parser.parse_args()
+
+    # Model hyperparameters
+    batch_size = 512
+    embed_dim = 64
+    hidden_dim_encoder = 64
+    hidden_dim_decoder = 32
+    num_layers_encoder = 2
+    num_layers_decoder = 1
+    latent_dim = 32
+    lr = args.lr # grid search
+    epochs = 40
+    patience = 10
+    beta_max = args.beta_max # grid search
+    n_epochs_ramp_up = 5
+    temperature = 0.1
+    lambda_supcon = args.lambda_supcon # grid search
     culture_embed_dim = 64
 
-    # Hyperparameter used for early stopping: if performance doesn't improve for patience times when evaluating
-    # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
-    patience = 10
-
-    model_name = (f'ConditionalVAE/models/best_model_cond_supcon_logits_'
+    model_name = (f'CCVAE/models/best_model_cond_supcon_logits_'
                   f'bi_'
                   f'bs{batch_size}_'
                   f'ed{embed_dim}_'
@@ -87,6 +77,7 @@ def train():
                   f'l{lambda_supcon}.pt'
                   )
 
+    print(f"Model name: {model_name}")
     print("Contrastive loss: Supervised Contrastive Loss (SupCon) on logits without projection head")
     print(f"Batch size: {batch_size}")
     print(f"Sampler: standard")
@@ -102,11 +93,7 @@ def train():
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
     print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
-    # print(f"Cyclical ramp-up of beta from 0 to {beta_max} over {n_cycles} cycles and with ratio of {ratio}")
-    # print(f"Free bits with {free_bits}")
-    # print("No free bits")
     print(f"Character dropout at 25%")
-    # print(f"Culture dropout at 15%")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
     print(f"Dimension of culture embedding: {culture_embed_dim}")
@@ -138,15 +125,6 @@ def train():
     # Same seed as the one used to split the dataset into train, validation and test, for consistency
     g = torch.Generator()
     g.manual_seed(seed)
-
-    # DataLoader with LabelBalancedBatchSampler
-    '''
-    labels = [label for _, _, label in train_dataset]
-    batch_sampler = LabelBalancedBatchSampler(labels=labels, batch_size=batch_size, samples_per_class=4)
-    # Shuffling means that batches are random, which is important when training the model
-    train_dataloader = DataLoader(train_dataset, batch_sampler=batch_sampler, generator=g)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    '''
 
     # Plain DataLoader
     # Shuffling means that batches are random, which is important when training the model
@@ -224,12 +202,6 @@ def train():
             else:
                 beta = beta_max
 
-            # Cyclical annealing
-            '''
-            total_steps = len(train_dataloader) * epochs
-            beta = cyclical_beta(global_step, total_steps, n_cycles, ratio, beta_max)
-            '''
-
             sequences, lengths, labels = train_batch
             sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
@@ -248,13 +220,6 @@ def train():
             # reshape converts target from (batch, seq_len) to (batch * seq_len,)
             # CrossEntropyLoss internally applies log_softmax to logits and computes the negative log likelihood loss
             reconstruction_loss = criterion(logits.reshape(-1, len(vocab)), target.reshape(-1))
-
-            # KL divergence (w/free bits)
-            '''
-            kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-            kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
-            kl_loss = kl_per_dim.sum(dim=1).mean()
-            '''
 
             # KL divergence (w/o free bits)
             kl_loss = -0.5 * torch.mean(
@@ -318,13 +283,6 @@ def train():
                         kl_loss = -0.5 * torch.mean(
                             torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
                         )
-
-                        # KL divergence (w/free bits)
-                        '''
-                        kl_per_dim = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-                        kl_per_dim = torch.clamp(kl_per_dim, min=free_bits)
-                        kl_loss = kl_per_dim.sum(dim=1).mean()
-                        '''
 
                         # SupCon loss
                         pad_idx = vocab.char2idx['<PAD>']
@@ -460,7 +418,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("Total Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/total_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"CCVAE/plots/total_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -472,7 +430,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("VAE Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/vae_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"CCVAE/plots/vae_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -484,7 +442,7 @@ def train():
     plt.ylabel("Loss")
     plt.title("SupCon Loss over time")
     plt.legend()
-    plt.savefig(f"ConditionalVAE/plots/supcon_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
+    plt.savefig(f"CCVAE/plots/supcon_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
     model.eval()
