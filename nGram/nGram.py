@@ -71,6 +71,6 @@ class nGram:
         log_probabilities = {}
 
         for culture in cultures:
-            log_probabilities[culture] = self.sequence_log_probability([name, culture])
+            log_probabilities[culture] = self.sequence_log_probability((name, culture))
 
         return log_probabilities
