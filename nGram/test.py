@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 
 import torch
 
@@ -6,6 +7,7 @@ from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from nGram.nGram import nGram
+from utils import load_all
 
 
 def test():
@@ -33,9 +35,19 @@ def test():
     generator.to(device)
     generator.eval()
 
+    names = load_all(culture=True)
+
+    culture_counts = Counter(
+        language
+        for _, language in names
+    )
+
     generated_for_italian = {}
 
     for language, language_id in language_to_id.items():
+
+        if culture_counts[language] < 1000:
+            pass
 
         for n in range(2, 4):
             model = nGram(n)
@@ -81,6 +93,7 @@ def test():
 
                 print(
                     f"Language: {language} | "
+                    f"Counts: {culture_counts[language]} | "
                     f"Temperature: {t:.1f} | "
                     f"% -inf: {percentage_inf:.2f}% | "
                     f"Average log-probability: {average_log_probability:.4f} | "

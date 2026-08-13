@@ -59,6 +59,9 @@ class nGram:
             count += 1
             log_probability += math.log(self.counts[(culture, context)][next_char] / total)
 
+        if count == 0:
+            return float('-inf')
+
         return log_probability / count
 
     '''
