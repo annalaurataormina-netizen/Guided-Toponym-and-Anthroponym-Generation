@@ -82,6 +82,6 @@ if __name__ == "__main__":
 
     culture_stats = compute_culture_stats(model, dataloader, device)
 
-    torch.save(culture_stats, "ConditionalVAE/culture_stats.pt")
+    torch.save(culture_stats, f"ConditionalVAE/culture_stats_{beta_max}.pt")
 
     print(f"Saved statistics for {len(culture_stats)} cultures")
