@@ -19,7 +19,7 @@ def compute_culture_stats(model, dataloader, device):
 
     with torch.no_grad():
         for sequences, lengths, labels in dataloader:
-            sequences, lengths = sequences.to(device), lengths.cpu()
+            sequences, lengths, labels = sequences.to(device), lengths.cpu(), labels.to(device)
 
             _, mu, _ = model.encoder(sequences, lengths, labels)
 
