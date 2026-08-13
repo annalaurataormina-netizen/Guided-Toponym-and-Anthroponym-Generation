@@ -35,7 +35,7 @@ def test():
     for n in range(2, 5):
         model = nGram(n)
         model.load()
-        culture = "Italian"
+        culture = "Japanese"
         culture_id = language_to_id[culture]
         generated = generator.generate(culture=culture_id, n=50, max_length=50)
         for name in generated:
