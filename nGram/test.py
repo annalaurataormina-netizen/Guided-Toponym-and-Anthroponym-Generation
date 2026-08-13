@@ -36,5 +36,5 @@ def test():
         for name in generated:
             print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
 
-if __name__ == "main":
+if __name__ == "__main__":
     test()
