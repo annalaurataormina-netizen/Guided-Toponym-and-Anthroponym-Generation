@@ -69,27 +69,10 @@ def train():
     # the model (done every 2000 batches) on the entire validation set, then early stopping is triggered
     patience = 10
 
-    model_name = (f'ConditionalVAE/models/best_model_cond_supcon_logits_'
-                  f'bi_'
-                  f'bs{batch_size}_'
-                  f'ed{embed_dim}_'
-                  f'hde{hidden_dim_encoder}_'
-                  f'hdd{hidden_dim_decoder}_'
-                  f'nle{num_layers_encoder}_'
-                  f'nld{num_layers_decoder}_'
-                  f'ld{latent_dim}_'
-                  f'lr{lr}adam_'
-                  f'ep{epochs}es{patience}_'
-                  f'cd0.25_'
-                  f'blf0t{beta_max}o{n_epochs_ramp_up}_'
-                  f'ced{culture_embed_dim}_'
-                  f't{temperature}_'
-                  f'l{lambda_supcon}.pt'
-                  )
+    model_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
 
     print("Contrastive loss: Supervised Contrastive Loss (SupCon) on logits without projection head")
     print(f"Batch size: {batch_size}")
-    print(f"Sampler: standard")
     print(f"Embedding dimension: {embed_dim}")
     print(f"Hidden dimension of the encoder: {hidden_dim_encoder}")
     print(f"Hidden dimension of the decoder: {hidden_dim_decoder}")
@@ -109,7 +92,7 @@ def train():
     # print(f"Culture dropout at 15%")
     print(f"Temperature: {temperature}")
     print(f"Lambda: {lambda_supcon}")
-    print(f"Dimension of culture embedding: {culture_embed_dim}")
+    print(f"Sampler: standard")
 
     # Vocabulary of characters
     vocab = CharVocab(ALLOWED_CHARS)
