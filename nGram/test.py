@@ -34,7 +34,7 @@ def test():
         culture_id = language_to_id[culture]
         generated = generator.generate(culture=culture_id, n=50, max_length=50)
         for name in generated:
-            print(f"Name: {name}, Log-probability: {model.log_probability((name, culture))}")
+            print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
 
 if __name__ == "main":
     test()
