@@ -1,4 +1,3 @@
-import argparse
 import json
 import random
 
@@ -22,7 +21,7 @@ from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
 
 
-def train():
+def train(lr=0.0015):
     # Set seed for reproducibility
     seed = 1996
     random.seed(seed)
@@ -32,15 +31,8 @@ def train():
 
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     print(f"Using device: {device}")
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--lr", type=float, required=True)
-    parser.add_argument("--beta_max", type=float, required=True)
-    parser.add_argument("--lambda_supcon", type=float, required=True)
-
-    args = parser.parse_args()
 
     # Model hyperparameters
     batch_size = 512
@@ -50,16 +42,16 @@ def train():
     num_layers_encoder = 2
     num_layers_decoder = 1
     latent_dim = 32
-    lr = args.lr # grid search
+    lr = lr  # grid search
     epochs = 40
     patience = 10
-    beta_max = args.beta_max # grid search
+    beta_max = 0.005
     n_epochs_ramp_up = 5
     temperature = 0.1
-    lambda_supcon = args.lambda_supcon # grid search
+    lambda_supcon = 0.75
     culture_embed_dim = 64
 
-    model_name = (f'CCVAE/models/best_model_cond_supcon_logits_'
+    model_name = (f'CCVAE/models/best_model_conditional_supcon_logits_'
                   f'bi_'
                   f'bs{batch_size}_'
                   f'ed{embed_dim}_'
@@ -78,7 +70,7 @@ def train():
                   )
 
     print(f"Model name: {model_name}")
-    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on logits without projection head")
+    print("Contrastive loss: Supervised Contrastive Loss (SupCon) on logits w/o projection head")
     print(f"Batch size: {batch_size}")
     print(f"Sampler: standard")
     print(f"Embedding dimension: {embed_dim}")
@@ -445,8 +437,10 @@ def train():
     plt.savefig(f"CCVAE/plots/supcon_supcon_logits_{base_fig_name}.png", bbox_inches="tight")
     plt.close()
 
+    model.load_state_dict(torch.load(model_name, map_location=device))
     model.eval()
 
+    return model, train_names
 
-if __name__ == "__main__":
-    train()
+
+

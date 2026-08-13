@@ -1,74 +1,19 @@
-import json
-
 import editdistance
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
-from AE.CharVocab import CharVocab
-from AE.config import ALLOWED_CHARS
 from ContrastiveVAE.NameDataset import NameDataset
 from ContrastiveVAE.losses import SupConLoss
-from utils import load_all, normalise
-from .ConditionalVAE import ConditionalVAE
-
-'''
-IN ORDER TO RUN, ADJUST THE HYPERPARAMETERS BELOW SO THAT THE RIGHT MODEL IS LOADED.
-'''
 
 
-def test():
-    # Set device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
-
-    # Vocabulary of characters
-    vocab = CharVocab(ALLOWED_CHARS)
-
-    # Toponyms and Anthroponyms (list of name_romanised)
-    names = load_all(culture=True)
-
-    # Model hyperparameters
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
-    # free_bits = 0.05
-    # n_cycles, ratio = 2, 0.5
-    culture_embed_dim = 64
-    temperature, lambda_supcon = 0.1, 0.75
-
-    model_name = f'ConditionalVAE/models/best_model_supcon_logits_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}.pt'
-
-    with open("language_to_id.json", "r") as f:
-        language_to_id = json.load(f)
-
-    num_cultures = len(language_to_id)
-
-    # Recreate the model architecture first, then load the weights from the saved model
-    model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
-                           num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
-    model.load_state_dict(torch.load(model_name, map_location=device))
-
-    # List of name_romanised, culture label after normalising (i.e., splitting diacritics)
-    names_normalised = [
-        [normalise(name), language_to_id[lang]]
-        for name, lang in names
-    ]
-
-    # 80/10/10 split of the dataset into train/validation/test (uses same seed as when training the model)
-    _, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
-    _, test_names = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)
+def test(model, test_names, vocab, temperature=0.1):
 
     # Test dataset
     test_dataset = NameDataset(test_names, vocab)
 
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-    print(f"Model name: {model_name}")
-
-    # Put the model in evaluation mode if you're doing inference
-    model.to(device)
-    model.eval()
+    test_dataloader = DataLoader(test_dataset, batch_size=model.batch_size, shuffle=False)
 
     # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])
@@ -87,6 +32,8 @@ def test():
     # Levenshtein distance tracking
     total_lev = 0
     total_count = 0
+
+    device = model.device
 
     with torch.no_grad():
         for test_batch in test_dataloader:
@@ -151,7 +98,7 @@ def test():
             total_kl_loss += kl_loss.item()
             total_supcon_loss += supcon_loss.item()
 
-            # Prints the loss for every batch
+            '''
             print(
                 f"Step {global_step}, "
                 f"Reconstruction loss = {reconstruction_loss.item():.4f}, "
@@ -159,12 +106,10 @@ def test():
                 f"SupCon loss = {supcon_loss.item():.4f}, "
                 f"Avg normalised Levenshtein distance: {batch_lev / batch_count:.4f}"
             )
+            '''
 
-    print(f"Avg reconstruction loss: {total_reconstruction_loss / len(test_dataloader):.4f}")
-    print(f"Avg KL divergence: {total_kl_loss / len(test_dataloader):.4f}")
-    print(f"Avg SupCon loss: {total_supcon_loss / len(test_dataloader):.4f}")
-    print(f"Avg normalised Levenshtein distance: {total_lev / total_count:.4f}")
-
-
-if __name__ == "__main__":
-    test()
+    return({"Avg reconstruction loss": total_reconstruction_loss / len(test_dataloader),
+            "Avg KL divergence": total_kl_loss / len(test_dataloader),
+            "Avg SupCon loss": total_supcon_loss / len(test_dataloader),
+            "Avg normalised Levenshtein distance": total_lev / total_count
+    })
