@@ -31,10 +31,19 @@ def compute_culture_stats(model, dataloader, device):
     for culture, latents in culture_latents.items():
         latents = torch.stack(latents)
 
+        mean = latents.mean(dim=0)
+
+        if len(latents) > 1:
+            std = latents.std(dim=0, unbiased=False) + 1e-6
+            cov = torch.cov(latents.T)
+        else:
+            std = torch.ones_like(mean)
+            cov = torch.eye(latents.shape[1])
+
         culture_stats[culture] = {
-            "mean": latents.mean(dim=0),
-            "std": latents.std(dim=0) + 1e-6,
-            "cov": torch.cov(latents.T)
+            "mean": mean,
+            "std": std,
+            "cov": cov
         }
 
     return culture_stats
