@@ -20,6 +20,12 @@ def test():
 
     num_cultures = len(language_to_id)
 
+    culture = "Italian"
+    culture_id = language_to_id[culture]
+
+    print("Italian ID:", culture_id)
+    print("Number of cultures:", num_cultures)
+
     vocab = CharVocab(ALLOWED_CHARS)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -35,8 +41,6 @@ def test():
     for n in range(2, 5):
         model = nGram(n)
         model.load()
-        culture = "Japanese"
-        culture_id = language_to_id[culture]
         generated = generator.generate(culture=culture_id, n=50, max_length=50)
         for name in generated:
             print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")
