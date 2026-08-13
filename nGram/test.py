@@ -44,6 +44,7 @@ def test():
         model.load()
         print(f"N = {n}")
         for t in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            print(f"Temperature: {t}")
             generated = generator.generate(culture=culture_id, n=50, max_length=50, temperature=t)
             for name in generated:
                 print(f"Name: {name}, Log-probability: {model.sequence_log_probability((name, culture))}")

@@ -16,7 +16,7 @@ evaluate_culture_coherence.py and the generate methods (require .pt file)
 4. Pick final model based on the downstream task (11Aug) DONE
 
 To do (grid search step):
---> 1. n-gram language model [Thu 13Aug]
+1. n-gram language model [Thu 13Aug] DONE
 2. Work on grid search script [Thu 13Aug / Fri 14Aug]
 3. Push grid search [Fri 14Aug]
 4. Ablation/Final (optimiser, character dropout, bidirectional) [19Aug]
