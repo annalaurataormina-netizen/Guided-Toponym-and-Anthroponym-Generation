@@ -1,7 +1,6 @@
 import json
 
 import torch
-from torch import device
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS

@@ -106,6 +106,15 @@ def test():
             # logits, mu, logvar are (batch_size, seq_len, len(vocab))
             logits, _, mu, logvar = model(sequences, lengths, labels)
 
+            print("MU:", mu.mean().item(), mu.std().item(), mu.min().item(), mu.max().item())
+            print("LOGVAR:", logvar.mean().item(), logvar.std().item(), logvar.min().item(), logvar.max().item())
+
+            kl_dim = 0.5 * (
+                    mu.pow(2) + logvar.exp() - logvar - 1
+            ).mean(dim=0)
+
+            print("KL per dim:", kl_dim.mean().item(), kl_dim.min().item(), kl_dim.max().item())
+
             # Convert predicted indices to characters
             pred_indices = logits.argmax(dim=-1)
 
