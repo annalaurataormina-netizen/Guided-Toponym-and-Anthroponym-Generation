@@ -66,10 +66,10 @@ if __name__ == "__main__":
 
     dataset = NameDataset(names_normalised, vocab)
 
-    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.005, 5
+    batch_size, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder, num_layers_decoder, latent_dim, lr, epochs, beta_max, n_epochs_ramp_up = 512, 64, 64, 32, 2, 1, 32, 0.0015, 100, 0.008, 5
     # free_bits = 0.05
     # n_cycles, ratio = 4, 0.5
-    temperature, lambda_supcon = 0.1, 0.75
+    temperature, lambda_supcon = 0.1, 0.50
     culture_embed_dim = 64
 
     with open("language_to_id.json", "r") as f:
@@ -91,6 +91,6 @@ if __name__ == "__main__":
 
     culture_stats = compute_culture_stats(model, dataloader, device)
 
-    torch.save(culture_stats, f"ConditionalVAE/culture_stats_{beta_max}.pt")
+    torch.save(culture_stats, f"ConditionalVAE/culture_stats_{beta_max}_{lambda_supcon}.pt")
 
     print(f"Saved statistics for {len(culture_stats)} cultures")
