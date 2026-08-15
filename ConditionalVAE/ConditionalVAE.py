@@ -74,7 +74,7 @@ class ConditionalVAE(nn.Module):
             culture_mu = self.culture_stats[culture]["mean"].to(device)
             culture_std = self.culture_stats[culture]["std"].to(device)
 
-            z = culture_mu + culture_std * torch.randn(n, self.latent_dim, device=device)
+            z = culture_mu + temperature * culture_std * torch.randn(n, self.latent_dim, device=device)
 
             if culture_embedding is not None:
                 culture_embedding = culture_embedding.to(device)

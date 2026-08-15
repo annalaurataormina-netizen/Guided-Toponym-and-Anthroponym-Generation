@@ -17,15 +17,14 @@ evaluate_culture_coherence.py and the generate methods (require .pt file)
 
 To do (grid search step):
 1. n-gram language model [Thu 13Aug] DONE
-2. Work on grid search script [Thu 13Aug]
-{Currently trying different betas (0.020), lambda (0.50) and generation methods (mu and cov).}
---> 3. Push grid search (grid_search_1, grid_search_2) [Fri 14Aug]
-4. Ablation/Final? (optimiser, character dropout, bidirectional) [18Aug]
+2. Work on grid search script [Thu 13Aug] DONE
+{Currently trying different betas (0.020), lambda (0.50) and generation methods (mu and std).}
+--> 3. Push grid search (grid_search_1, grid_search_2) [Fri-Sun 14-16]
 
-To do (final generation step):
-1. Put script together (beam search and/or stochastic sampling)
+--> To do (final generation step):
+1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!))
 
-To do (final evaluation step):
+--> To do (final evaluation step):
 1. Pronounceability
 2. Cultural consistency
 3. Novelty & diversity
