@@ -1,5 +1,5 @@
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 
 import torch
 
@@ -42,12 +42,11 @@ def test():
         for _, language in names
     )
 
+    results = defaultdict(dict)
+
     generated_for_italian = {}
 
     for language, language_id in language_to_id.items():
-
-        if culture_counts[language] < 1000:
-            pass
 
         for n in range(2, 4):
             model = nGram(n)
@@ -91,6 +90,12 @@ def test():
                 else:
                     average_log_probability = float("-inf")
 
+                results[(n, t)][language] = {
+                    "count": culture_counts[language],
+                    "percentage_inf": percentage_inf,
+                    "average_log_probability": average_log_probability,
+                }
+
                 print(
                     f"Language: {language} | "
                     f"Counts: {culture_counts[language]} | "
@@ -98,6 +103,94 @@ def test():
                     f"% -inf: {percentage_inf:.2f}% | "
                     f"Average log-probability: {average_log_probability:.4f} | "
                     f"Valid: {len(valid_log_probabilities)}/1000"
+                )
+
+
+    thresholds = {
+        "All": 0,
+        ">=1000": 1000,
+        ">=10000": 10000,
+    }
+
+    for n in range(2, 4):
+
+        print(f"\n{'=' * 70}")
+        print(f"N = {n}")
+        print(f"{'=' * 70}")
+
+        for t in [
+            0.1, 0.2, 0.3, 0.4, 0.5,
+            0.6, 0.7, 0.8, 0.9, 1.0
+        ]:
+
+            culture_results = results[(n, t)]
+
+            print(f"\nTemperature: {t:.1f}")
+
+            for group_name, min_count in thresholds.items():
+
+                selected = [
+                    result
+                    for result in culture_results.values()
+                    if result["count"] >= min_count
+                ]
+
+                if not selected:
+                    continue
+
+                macro_inf = sum(
+                    result["percentage_inf"]
+                    for result in selected
+                ) / len(selected)
+
+                valid_log_probs = [
+                    result["average_log_probability"]
+                    for result in selected
+                    if result["average_log_probability"] is not None
+                ]
+
+                if valid_log_probs:
+                    macro_log_prob = (
+                        sum(valid_log_probs)
+                        / len(valid_log_probs)
+                    )
+                else:
+                    macro_log_prob = float("-inf")
+
+                total_weight = sum(
+                    result["count"]
+                    for result in selected
+                )
+
+                weighted_inf = sum(
+                    result["percentage_inf"] * result["count"]
+                    for result in selected
+                ) / total_weight
+
+                weighted_log_probs = [
+                    result
+                    for result in selected
+                    if result["average_log_probability"] is not None
+                ]
+
+                if weighted_log_probs:
+                    weighted_log_prob = sum(
+                        result["average_log_probability"] * result["count"]
+                        for result in weighted_log_probs
+                    ) / sum(
+                        result["count"]
+                        for result in weighted_log_probs
+                    )
+                else:
+                    weighted_log_prob = float("-inf")
+
+                print(
+                    f"  {group_name}: "
+                    f"{len(selected)} cultures | "
+                    f"Macro % -inf: {macro_inf:.2f}% | "
+                    f"Weighted % -inf: {weighted_inf:.2f}% | "
+                    f"Macro avg log-P: {macro_log_prob:.4f} | "
+                    f"Weighted avg log-P: {weighted_log_prob:.4f}"
                 )
 
     for temperature, generated in generated_for_italian.items():
