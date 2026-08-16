@@ -15,11 +15,13 @@ def evaluate_cultural_coherence(
 ):
     min_samples = 1000
 
+    id_to_language = {id: language for language, id in language_to_id.items()}
+
     # Keep only cultures with at least min_samples training examples
     names_normalised = [
         [name, label]
         for name, label in names_normalised
-        if culture_counts[label] >= min_samples
+        if culture_counts[id_to_language[label]] >= min_samples
     ]
 
     remaining_cultures = sorted(

@@ -1,9 +1,11 @@
 import json
 
+import editdistance
 import torch
 
 from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
+from nGram.nGram import nGram
 from utils import normalise
 from .ConditionalVAE import ConditionalVAE
 
@@ -84,11 +86,34 @@ def quick():
     #    print(name)
     '''
 
+    threshold = 0.5
 
-    generated = model.generate(culture=language_to_id["Italian"], culture_embedding=None, n=10, max_length=50, temperature=0.5)
-    for name in generated:
-        print(name)
+    for t in [0.3, 0.4, 0.6, 0.7, 0.8, 0.9]:
+        spaces = 0
+        capitals = 0
+        duplicates = 0
+        pairs = 0
+        generated = model.generate(culture=language_to_id["Italian"], culture_embedding=None, n=1000, max_length=50, temperature=t)
+        for i in range(len(generated)):
+            for j in range(i + 1, len(generated)):
 
+                distance = (
+                    editdistance.eval(
+                        generated[i],
+                        generated[j]
+                    )
+                    / max(
+                        len(generated[i]),
+                        len(generated[j])
+                    )
+                )
+
+                if distance <= threshold:
+                    duplicates += 1
+
+                pairs += 1
+
+        print(f"temperature: {t}; spaces: {spaces}; capitals: {capitals}; duplicate rate: {duplicates / pairs * 100}%")
     '''
     with torch.no_grad():
         name = "Anna"

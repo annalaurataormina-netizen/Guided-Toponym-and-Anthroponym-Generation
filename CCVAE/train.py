@@ -20,11 +20,6 @@ from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
 
-# Fix hyperparams
-# Temperature
-# Add path if using the other generation method
-# Fix the generation method in ConditionalVAE
-
 def train(lr=0.0015):
     # Set seed for reproducibility
     seed = 1996
@@ -47,9 +42,9 @@ def train(lr=0.0015):
     num_layers_decoder = 1
     latent_dim = 32
     lr = lr  # grid search
-    epochs = 40
+    epochs = 50
     patience = 10
-    beta_max = 0.005
+    beta_max = 0.025
     n_epochs_ramp_up = 5
     temperature = 0.1
     lambda_supcon = 0.75

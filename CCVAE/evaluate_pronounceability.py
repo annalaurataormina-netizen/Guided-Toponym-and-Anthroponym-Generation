@@ -70,9 +70,9 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
         ) / total_weight
 
         results[n] = {
-            "Average log-probability": math.exp(average_log_probability),
+            "Average log-probability": average_log_probability,
             "Percentage of -inf": average_percentage_inf,
-            "Weighted average log-probability": math.exp(weighted_average_log_probability),
+            "Weighted average log-probability": weighted_average_log_probability,
             "Weighted percentage of -inf": weighted_average_percentage_inf,
         }
 

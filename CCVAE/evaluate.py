@@ -11,10 +11,6 @@ from CCVAE.evaluate_pronounceability import evaluate_pronounceability
 from CCVAE.test import test
 from utils import load_all, normalise
 
-# Temperature
-# How many names you generate per culture
-# Max_length
-
 def evaluate(model, lr, train_names):
     '''
     for the final evaluation, you wanna be more granular
@@ -29,11 +25,16 @@ def evaluate(model, lr, train_names):
     names = load_all(culture=True)
 
     names_normalised = [
-        [normalise(name), language_to_id[lang]]
+        [normalise(name), lang]
         for name, lang in names
     ]
 
-    culture_counts = Counter(label for _, label in train_names)
+    culture_counts = Counter(label for _, label in names_normalised)
+
+    names_normalised = [
+        [name, language_to_id[lang]]
+        for name, lang in names_normalised
+    ]
 
     # 80/10/10 split of the dataset into train/validation/test (uses same seed as when training the model)
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
@@ -43,7 +44,7 @@ def evaluate(model, lr, train_names):
     generated_per_language = {}
 
     for language, language_id in language_to_id.items():
-        generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50)
+        generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50, temperature=0.6)
 
     with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}.txt", "w") as f:
         f.write(f"Learning rate: {lr}\n")
