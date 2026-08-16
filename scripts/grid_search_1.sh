@@ -25,4 +25,4 @@ echo "Running learning rate = $LEARNING_RATE"
 
 source venv/bin/activate
 
-python3 -m CCVAE.train --lr "$LEARNING_RATE"
+python3 -m CCVAE.grid_search --lr "$LEARNING_RATE"

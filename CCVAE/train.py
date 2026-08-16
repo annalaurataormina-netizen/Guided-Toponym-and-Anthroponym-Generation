@@ -20,6 +20,10 @@ from ContrastiveVAE.NameDataset import NameDataset
 from AE.config import ALLOWED_CHARS
 from utils import load_all, normalise
 
+# Fix hyperparams
+# Temperature
+# Add path if using the other generation method
+# Fix the generation method in ConditionalVAE
 
 def train(lr=0.0015):
     # Set seed for reproducibility
@@ -401,7 +405,22 @@ def train(lr=0.0015):
             f"Avg lambda-adjusted SupCon loss per epoch: {sum(epoch_train_supcon_losses_adj) / len(epoch_train_supcon_losses_adj):.4f}"
         )
 
-    base_fig_name = f'loss_bs{batch_size}_ed{embed_dim}_hde{hidden_dim_encoder}_hdd{hidden_dim_decoder}_nle{num_layers_encoder}_nld{num_layers_decoder}_ld{latent_dim}_lr{lr}_ep{epochs}_blf0t{beta_max}_t{temperature}_l{lambda_supcon}'
+    base_fig_name = f'loss_'
+    f'bi_'
+    f'bs{batch_size}_'
+    f'ed{embed_dim}_'
+    f'hde{hidden_dim_encoder}_'
+    f'hdd{hidden_dim_decoder}_'
+    f'nle{num_layers_encoder}_'
+    f'nld{num_layers_decoder}_'
+    f'ld{latent_dim}_'
+    f'lr{lr}adam_'
+    f'ep{epochs}es{patience}_'
+    f'cd0.25_'
+    f'blf0t{beta_max}o{n_epochs_ramp_up}_'
+    f'ced{culture_embed_dim}_'
+    f't{temperature}_'
+    f'l{lambda_supcon}'
 
     plt.figure(figsize=(8, 5))
     plt.plot(train_steps, train_losses, label="Training")

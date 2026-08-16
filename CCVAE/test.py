@@ -7,8 +7,9 @@ from torch.utils.data import DataLoader
 from ContrastiveVAE.NameDataset import NameDataset
 from ContrastiveVAE.losses import SupConLoss
 
+# Temperature
 
-def test(model, test_names, vocab, temperature=0.1):
+def test(model, test_names, vocab):
 
     # Test dataset
     test_dataset = NameDataset(test_names, vocab)

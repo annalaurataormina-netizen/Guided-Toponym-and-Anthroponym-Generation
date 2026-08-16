@@ -11,6 +11,9 @@ from CCVAE.evaluate_pronounceability import evaluate_pronounceability
 from CCVAE.test import test
 from utils import load_all, normalise
 
+# Temperature
+# How many names you generate per culture
+# Max_length
 
 def evaluate(model, lr, train_names):
     '''
@@ -36,8 +39,7 @@ def evaluate(model, lr, train_names):
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
     _, test_names = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)
 
-    # generate for each culture
-
+    # generate for each language
     generated_per_language = {}
 
     for language, language_id in language_to_id.items():
@@ -51,12 +53,12 @@ def evaluate(model, lr, train_names):
 
         f.write("PRONOUNCEABILITY")
         f.write(
-            evaluate_pronounceability(generated_per_language, culture_counts))  # calculated per language, then averaged
+            evaluate_pronounceability(generated_per_language, culture_counts))
 
         f.write("NOVELTY & DIVERSITY")
         f.write(evaluate_novelty_and_diversity(generated_per_language, train_names,
-                                               culture_counts))  # calculated per language, then averaged
+                                               culture_counts))
 
         f.write("CULTURAL COHERENCE")
         f.write(evaluate_cultural_coherence(generated_per_language, language_to_id, model.device, vocab,
-                                            names_normalised))  # calculated per language, then averaged
+                                            names_normalised, culture_counts))

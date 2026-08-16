@@ -1,11 +1,7 @@
 import editdistance
 
 
-def evaluate_novelty_and_diversity(
-    generated_per_language,
-    train_names,
-    culture_counts
-):
+def evaluate_novelty_and_diversity(generated_per_language, train_names, culture_counts):
     train_names_per_culture = {}
 
     for name, language in train_names:
@@ -104,6 +100,16 @@ def evaluate_novelty_and_diversity(
         for language in languages
     ) / total_weight
 
+    all_generated_names = [
+        name
+        for generated_names in generated_per_language.values()
+        for name in generated_names
+    ]
+
+    culture_agnostic_exact_duplicate_rate = (
+            1 - len(set(all_generated_names)) / len(all_generated_names)
+    )
+
     return {
         "Exact novelty": avg_novelty,
         "Weighted exact novelty": weighted_novelty,
@@ -113,4 +119,6 @@ def evaluate_novelty_and_diversity(
 
         "Duplicate rate": avg_near_duplicate_rate,
         "Weighted duplicate rate": weighted_near_duplicate_rate,
+
+        "Duplicate rate (culture-agnostic)": culture_agnostic_exact_duplicate_rate,
     }

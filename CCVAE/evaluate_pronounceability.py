@@ -7,7 +7,7 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
 
     results = {}
 
-    for n in range(2, 4):
+    for n in range(2, 5):
         model = nGram(n)
         model.load()
 
@@ -70,9 +70,9 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
         ) / total_weight
 
         results[n] = {
-            "Average probability": math.exp(average_log_probability),
+            "Average log-probability": math.exp(average_log_probability),
             "Percentage of -inf": average_percentage_inf,
-            "Weighted average probability": math.exp(weighted_average_log_probability),
+            "Weighted average log-probability": math.exp(weighted_average_log_probability),
             "Weighted percentage of -inf": weighted_average_percentage_inf,
         }
 
