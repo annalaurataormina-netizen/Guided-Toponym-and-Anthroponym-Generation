@@ -44,6 +44,7 @@ class ConditionalVAE(nn.Module):
 
     @torch.no_grad()
     def generate(self, culture=None, culture_embedding=None, n=1, max_length=50, temperature=1):
+        '''
         self.eval()
 
         device = next(self.parameters()).device
@@ -63,7 +64,6 @@ class ConditionalVAE(nn.Module):
 
         names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
         return names
-
         '''
         self.eval()
 
@@ -89,4 +89,3 @@ class ConditionalVAE(nn.Module):
 
             names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
             return names
-        '''
