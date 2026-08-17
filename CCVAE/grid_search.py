@@ -1,12 +1,7 @@
 import argparse
-import json
 
-import torch
-
-from AE.CharVocab import CharVocab
-from AE.config import ALLOWED_CHARS
 from CCVAE.evaluate import evaluate
-from ConditionalVAE.ConditionalVAE import ConditionalVAE
+from CCVAE.train import train
 
 
 def grid_search():
@@ -15,6 +10,7 @@ def grid_search():
     args = parser.parse_args()
     lr = args.lr
 
+    '''
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     vocab = CharVocab(ALLOWED_CHARS)
@@ -61,8 +57,9 @@ def grid_search():
     model = ConditionalVAE(vocab, embed_dim, hidden_dim_encoder, hidden_dim_decoder, num_layers_encoder,
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
     model.load_state_dict(torch.load(model_name, map_location=device))
+    '''
 
-    # model, train_names = train(lr)
+    model, train_names = train(lr)
 
     evaluate(model, lr)
 
