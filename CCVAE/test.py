@@ -14,7 +14,7 @@ def test(model, test_names, vocab):
     # Test dataset
     test_dataset = NameDataset(test_names, vocab)
 
-    test_dataloader = DataLoader(test_dataset, batch_size=model.batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=512, shuffle=False)
 
     # Use cross entropy loss to train the model, ignoring <PAD> characters
     criterion = nn.CrossEntropyLoss(ignore_index=vocab.char2idx['<PAD>'])

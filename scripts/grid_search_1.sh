@@ -2,7 +2,7 @@
 #SBATCH --job-name=lr_grid
 #SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/out/evaluate_cultural_coherence_%A_%a.out
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/err/evaluate_cultural_coherence_%A_%a.err
-#SBATCH --array=0-4%
+#SBATCH --array=0-3%
 
 LEARNING_RATES=(
     0.0001

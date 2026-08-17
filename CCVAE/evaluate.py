@@ -11,7 +11,8 @@ from CCVAE.evaluate_pronounceability import evaluate_pronounceability
 from CCVAE.test import test
 from utils import load_all, normalise
 
-def evaluate(model, lr, train_names):
+
+def evaluate(model, lr):
     '''
     for the final evaluation, you wanna be more granular
     you also wanna evaluate ability to generate names from fictional cultures
