@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=lr_grid
-#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/out/CCVAE/grid_search_%A_%a.out
+#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/CCVAE/out/grid_search_%A_%a.out
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/CCVAE/err/grid_search_%A_%a.err
 #SBATCH --array=4-9%
 
