@@ -1,0 +1,2 @@
+Learning rate: 0.00075
+TEST

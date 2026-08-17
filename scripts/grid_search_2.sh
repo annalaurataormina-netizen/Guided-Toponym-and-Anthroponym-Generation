@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lr_grid
-#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/out/evaluate_cultural_coherence_%A_%a.out
-#SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/err/evaluate_cultural_coherence_%A_%a.err
+#SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/out/CCVAE/grid_search_%A_%a.out
+#SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/CCVAE/err/grid_search_%A_%a.err
 #SBATCH --array=4-9%
 
 LEARNING_RATES=(
