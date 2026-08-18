@@ -50,24 +50,32 @@ def evaluate(model, lr):
     with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}.txt", "w") as f:
         f.write(f"Learning rate: {lr}\n")
 
-        f.write("TEST")
+        f.write("\nTEST\n")
         test_results = test(model, test_names, vocab)
         for k, v in test_results.items():
-            f.write(f"{k}: {v}\n")
+            f.write(f"{k}: {v:.4f}\n")
 
-        f.write("PRONOUNCEABILITY")
+        f.write("\nPRONOUNCEABILITY\n")
         pronounceability_results = evaluate_pronounceability(generated_per_language, culture_counts)
-        for k, v in pronounceability_results.items():
-            f.write(f"{k}: {v}\n")
+        for n, groups in pronounceability_results.items():
+            f.write(f"{n}-gram\n")
+            for group, metrics in groups.items():
+                f.write(
+                    f"{group}: "
+                    f"Macro % -inf: {metrics['% of -inf']:.2f}% "
+                    f"Weighted % -inf: {metrics['Weighted % of -inf']:.2f}% "
+                    f"Macro avg log-probability: {metrics['Avg log-probability']:.4f} "
+                    f"Weighted avg log-probability: {metrics['Weighted avg log-probability']:.4f}\n"
+                )
 
-        f.write("NOVELTY & DIVERSITY")
+        f.write("\nNOVELTY & DIVERSITY\n")
         novelty_and_diversity_results = evaluate_novelty_and_diversity(generated_per_language, train_names,
                                                culture_counts)
         for k, v in novelty_and_diversity_results.items():
-            f.write(f"{k}: {v}\n")
+            f.write(f"{k}: {v*100:.2f}%\n")
 
-        f.write("CULTURAL COHERENCE")
+        f.write("\nCULTURAL COHERENCE (on languages with more than 1000 samples)\n")
         cultural_coherence_results = evaluate_cultural_coherence(generated_per_language, language_to_id, next(model.parameters()).device, vocab,
                                             names_normalised, culture_counts)
         for k, v in cultural_coherence_results.items():
-            f.write(f"{k}: {v}\n")
+            f.write(f"{k}: {v*100:.2f}%\n")
