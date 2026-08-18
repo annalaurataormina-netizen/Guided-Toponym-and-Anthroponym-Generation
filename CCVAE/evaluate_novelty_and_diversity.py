@@ -41,6 +41,9 @@ def evaluate_novelty_and_diversity(generated_per_language, train_names, culture_
         for i in range(len(generated_names)):
             for j in range(i + 1, len(generated_names)):
 
+                if len(generated_names[i]) == 0 and len(generated_names[j]) == 0:
+                    continue
+
                 distance = (
                     editdistance.eval(
                         generated_names[i],
