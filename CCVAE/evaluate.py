@@ -67,7 +67,7 @@ def evaluate(model, lr):
             f.write(f"{k}: {v}\n")
 
         f.write("CULTURAL COHERENCE")
-        cultural_coherence_results = evaluate_cultural_coherence(generated_per_language, language_to_id, model.device, vocab,
+        cultural_coherence_results = evaluate_cultural_coherence(generated_per_language, language_to_id, next(model.parameters()).device, vocab,
                                             names_normalised, culture_counts)
         for k, v in cultural_coherence_results.items():
             f.write(f"{k}: {v}\n")
