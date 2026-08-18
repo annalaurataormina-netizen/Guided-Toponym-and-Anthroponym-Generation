@@ -2,7 +2,7 @@
 #SBATCH --job-name=lr_grid
 #SBATCH --out=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/CCVAE/out/grid_search_%A_%a.out
 #SBATCH --error=/vol/bitbucket/at2225/Guided-Toponym-and-Anthroponym-Generation/CCVAE/err/grid_search_%A_%a.err
-#SBATCH --array=0-1%
+#SBATCH --array=1-1%
 
 LEARNING_RATES=(
     0.0001
