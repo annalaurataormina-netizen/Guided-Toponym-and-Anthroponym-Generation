@@ -51,16 +51,23 @@ def evaluate(model, lr):
         f.write(f"Learning rate: {lr}\n")
 
         f.write("TEST")
-        f.write(test(model, test_names, vocab))
+        test_results = test(model, test_names, vocab)
+        for k, v in test_results.items():
+            f.write(f"{k}: {v}\n")
 
         f.write("PRONOUNCEABILITY")
-        f.write(
-            evaluate_pronounceability(generated_per_language, culture_counts))
+        pronounceability_results = evaluate_pronounceability(generated_per_language, culture_counts)
+        for k, v in pronounceability_results.items():
+            f.write(f"{k}: {v}\n")
 
         f.write("NOVELTY & DIVERSITY")
-        f.write(evaluate_novelty_and_diversity(generated_per_language, train_names,
-                                               culture_counts))
+        novelty_and_diversity_results = evaluate_novelty_and_diversity(generated_per_language, train_names,
+                                               culture_counts)
+        for k, v in novelty_and_diversity_results.items():
+            f.write(f"{k}: {v}\n")
 
         f.write("CULTURAL COHERENCE")
-        f.write(evaluate_cultural_coherence(generated_per_language, language_to_id, model.device, vocab,
-                                            names_normalised, culture_counts))
+        cultural_coherence_results = evaluate_cultural_coherence(generated_per_language, language_to_id, model.device, vocab,
+                                            names_normalised, culture_counts)
+        for k, v in cultural_coherence_results.items():
+            f.write(f"{k}: {v}\n")
