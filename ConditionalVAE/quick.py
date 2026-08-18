@@ -86,6 +86,7 @@ def quick():
     #    print(name)
     '''
 
+    '''
     threshold = 0.5
 
     for t in [0.3, 0.4, 0.6, 0.7, 0.8, 0.9]:
@@ -114,6 +115,8 @@ def quick():
                 pairs += 1
 
         print(f"temperature: {t}; spaces: {spaces}; capitals: {capitals}; duplicate rate: {duplicates / pairs * 100}%")
+    '''
+
     '''
     with torch.no_grad():
         name = "Anna"

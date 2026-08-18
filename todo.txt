@@ -1,11 +1,12 @@
 Steps:
 1. Model (4d 4-12Aug)
---> 2. Grid search (5d 16-17Aug)
-3. Generation (1d 18Aug)
+2. Grid search (5d 16-17Aug)
+--> 3. Generation (1d 18Aug)
 4. Final evaluation (1d 19/20Aug)
 5. Report (5d 21-28Aug)
 6. UI (5d 31Aug-4Sep) [filter down output?]
-7. Deadline: 9Sep
+7. Clean up scripts
+8. Deadline: 9Sep
 
 To do (model step):
 1. Train sequence classifier (4Aug) DONE
@@ -23,7 +24,7 @@ To do (grid search step):
 --> To do (final generation step):
 1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!))
 
---> To do (final evaluation step):
+To do (final evaluation step):
 1. Pronounceability
 2. Cultural consistency
 3. Novelty & diversity

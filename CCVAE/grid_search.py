@@ -63,7 +63,7 @@ def grid_search():
                            num_layers_decoder, latent_dim, num_cultures, culture_embed_dim)
     model.load_state_dict(torch.load(model_name, map_location=device))
 
-    # model, train_names = train(lr)
+    model, train_names = train(lr)
 
     evaluate(model, lr)
 
