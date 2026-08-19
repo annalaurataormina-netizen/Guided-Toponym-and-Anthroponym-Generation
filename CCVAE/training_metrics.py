@@ -11,47 +11,50 @@ def parse_log(input_file):
     epochs = []
     levenshtein = []
 
+    number = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)"
+
     # ---------------------------------------------------------
     # Step-level metrics
     # ---------------------------------------------------------
     step_pattern = re.compile(
-        r"Epoch (\d+)/\d+, Step ([\d,]+), Beta = ([\d.]+), "
-        r"Avg validation loss \(full validation set\) = ([\d.]+), "
-        r"Avg validation reconstruction loss \(full validation set\) = ([\d.]+), "
-        r"Avg validation KL divergence \(full validation set\) = ([\d.]+), "
-        r"Avg validation beta-adjusted KL divergence \(full validation set\) = ([\d.]+), "
-        r"Avg validation SupCon loss \(full validation set\) = ([\d.]+), "
-        r"Avg validation lambda-adjusted SupCon loss \(full validation set\) = ([\d.]+), "
-        r"Avg training loss \(last 2000 batches\) = ([\d.]+), "
-        r"Avg training reconstruction loss \(last 2000 batches\) = ([\d.]+), "
-        r"Avg training beta-adjusted KL divergence \(last 2000 batches\) = ([\d.]+), "
-        r"Avg training SupCon loss \(last 2000 batches\) = ([\d.]+), "
-        r"Avg training lambda-adjusted SupCon loss \(last 2000 batches\) = ([\d.]+)"
+        rf"Epoch (\d+)/\d+, Step ([\d,]+), Beta = ({number}), "
+        rf"Avg validation loss \(full validation set\) = ({number}), "
+        rf"Avg validation reconstruction loss \(full validation set\) = ({number}), "
+        rf"Avg validation KL divergence \(full validation set\) = ({number}), "
+        rf"Avg validation beta-adjusted KL divergence \(full validation set\) = ({number}), "
+        rf"Avg validation SupCon loss \(full validation set\) = ({number}), "
+        rf"Avg validation lambda-adjusted SupCon loss \(full validation set\) = ({number}), "
+        rf"Avg training loss \(last 2000 batches\) = ({number}), "
+        rf"Avg training reconstruction loss \(last 2000 batches\) = ({number}), "
+        rf"Avg training beta-adjusted KL divergence \(last 2000 batches\) = ({number}), "
+        rf"Avg training SupCon loss \(last 2000 batches\) = ({number}), "
+        rf"Avg training lambda-adjusted SupCon loss \(last 2000 batches\) = ({number})"
     )
 
     # ---------------------------------------------------------
     # Epoch-level metrics
     # ---------------------------------------------------------
     epoch_pattern = re.compile(
-        r"Epoch (\d+)/\d+, "
-        r"Avg train loss per epoch: ([\d.]+), "
-        r"Avg reconstruction loss per epoch: ([\d.]+), "
-        r"Avg KL divergence per epoch: ([\d.]+), "
-        r"Avg beta-adjusted KL divergence per epoch: ([\d.]+), "
-        r"Avg SupCon loss per epoch: ([\d.]+), "
-        r"Avg lambda-adjusted SupCon loss per epoch: ([\d.]+)"
+        rf"Epoch (\d+)/\d+, "
+        rf"Avg train loss per epoch: ({number}), "
+        rf"Avg reconstruction loss per epoch: ({number}), "
+        rf"Avg KL divergence per epoch: ({number}), "
+        rf"Avg beta-adjusted KL divergence per epoch: ({number}), "
+        rf"Avg SupCon loss per epoch: ({number}), "
+        rf"Avg lambda-adjusted SupCon loss per epoch: ({number})"
     )
 
     # ---------------------------------------------------------
     # Levenshtein
     # ---------------------------------------------------------
     levenshtein_pattern = re.compile(
-        r"Epoch (\d+)/\d+, Step ([\d,]+), "
-        r"Avg normalised Levenshtein distance "
-        r"\(portion of validation set\) = ([\d.]+)"
+        rf"Epoch (\d+)/\d+, Step ([\d,]+), "
+        rf"Avg normalised Levenshtein distance "
+        rf"\(portion of validation set\) = ({number})"
     )
 
     with input_file.open("r", encoding="utf-8") as f:
+
         for line in f:
 
             # =========================
@@ -132,26 +135,36 @@ def parse_log(input_file):
                     "Normalised Levenshtein": float(distance),
                 })
 
-    # Convert to DataFrames
+    # ---------------------------------------------------------
+    # Create DataFrames
+    # ---------------------------------------------------------
+
     steps_df = pd.DataFrame(steps)
-    epochs_df = pd.DataFrame(epochs)
+
+    epochs_df = pd.DataFrame(
+        epochs,
+        columns=[
+            "Epoch",
+            "Train Loss",
+            "Train Recon",
+            "Train KL",
+            "Train SupCon",
+        ],
+    )
+
     levenshtein_df = pd.DataFrame(levenshtein)
 
     # ---------------------------------------------------------
-    # Add validation metrics to epoch table
-    #
-    # There are multiple validation measurements per epoch.
-    # We use the LAST validation measurement recorded in each
-    # epoch.
+    # Add final validation metrics for each epoch
     # ---------------------------------------------------------
-    if not steps_df.empty:
+
+    if not steps_df.empty and not epochs_df.empty:
 
         final_validation = (
             steps_df
             .sort_values(["Epoch", "Step"])
-            .groupby("Epoch")
+            .groupby("Epoch", as_index=False)
             .last()
-            .reset_index()
         )
 
         final_validation = final_validation[
@@ -170,9 +183,20 @@ def parse_log(input_file):
             how="left",
         )
 
+    else:
+        # Ensure these columns exist even if there are no step rows
+        for column in [
+            "Val Loss",
+            "Val Recon",
+            "Val β-KL",
+            "Val SupCon",
+        ]:
+            epochs_df[column] = None
+
     # ---------------------------------------------------------
     # Reconstruction table
     # ---------------------------------------------------------
+
     reconstruction_df = epochs_df[
         [
             "Epoch",
@@ -186,24 +210,31 @@ def parse_log(input_file):
 
     # ---------------------------------------------------------
     # Levenshtein table
-    #
-    # There should normally be one measurement per epoch.
-    # Keep the last one if there are multiple.
     # ---------------------------------------------------------
-    levenshtein_df = (
-        levenshtein_df
-        .sort_values(["Epoch", "Step"])
-        .groupby("Epoch")
-        .last()
-        .reset_index()
-    )
 
-    levenshtein_df = levenshtein_df[
-        [
-            "Epoch",
-            "Normalised Levenshtein",
+    if not levenshtein_df.empty:
+
+        levenshtein_df = (
+            levenshtein_df
+            .sort_values(["Epoch", "Step"])
+            .groupby("Epoch", as_index=False)
+            .last()
+        )
+
+        levenshtein_df = levenshtein_df[
+            [
+                "Epoch",
+                "Normalised Levenshtein",
+            ]
         ]
-    ]
+
+    else:
+        levenshtein_df = pd.DataFrame(
+            columns=[
+                "Epoch",
+                "Normalised Levenshtein",
+            ]
+        )
 
     return (
         steps_df,

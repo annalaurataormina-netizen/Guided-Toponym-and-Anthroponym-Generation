@@ -1,8 +1,8 @@
 Steps:
 1. Model (4d 4-12Aug)
 2. Grid search (5d 16-17Aug)
---> 3. Final evaluation (1d 18/19Aug)
-4. Generation (1d 20Aug)
+3. Final evaluation (1d 18/19Aug)
+--> 4. Generation (1d 20Aug)
 5. Report (5d 21-28Aug)
 6. UI (5d 31Aug-4Sep) [filter down output? how to generate?]
 7. Clean up scripts
