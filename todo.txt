@@ -21,12 +21,12 @@ To do (grid search step):
 2. Work on grid search script [Thu 13Aug] DONE
 3. Push grid search (grid_search_1, grid_search_2) [Fri-Sun 14-16] DONE
 
---> To do (final evaluation step):
+To do (final evaluation step):
 1. Pronounceability (DONE)
 2. Cultural consistency (DONE)
 3. Novelty & diversity (DONE)
 4. Fictional cultures (see notes: culture embedding space, use n-gram model to evaluate) (DONE)
-5. Geometry (WIP)
+5. Geometry (DONE)
 
 To do (final generation step):
 1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!); try using the classifier as a first step)

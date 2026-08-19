@@ -50,7 +50,7 @@ def train(lr=0.0015):
     lambda_supcon = 0.75
     culture_embed_dim = 64
 
-    model_name = (f'CCVAE/best_model_conditional_supcon_logits_'
+    model_name = (f'CCVAE/models/best_model_conditional_supcon_logits_'
                   f'bi_'
                   f'bs{batch_size}_'
                   f'ed{embed_dim}_'
