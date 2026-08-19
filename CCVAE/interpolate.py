@@ -10,6 +10,7 @@ from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from ContrastiveVAE.NameDataset import NameDataset
+from nGram.nGram import nGram
 from utils import load_all, normalise, compute_novelty, compute_ngram_coverage
 
 
@@ -47,6 +48,8 @@ def interpolate():
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
 
+    id_to_language = {id: lang for lang, id in language_to_id.items()}
+
     names_normalised = [
         [normalise(name), language_to_id[lang]]
         for name, lang in names
@@ -70,6 +73,7 @@ def interpolate():
     vocab = CharVocab(ALLOWED_CHARS)
 
     test_dataset = NameDataset(test_names, vocab)
+    train_dataset = NameDataset(train_names, vocab)
 
     # ---------------------------------------------------------
     # Model hyperparameters
@@ -164,10 +168,19 @@ def interpolate():
     # Interpolation
     # ---------------------------------------------------------
 
-    n_trajectories = 500
+    n_trajectories = 1000
 
     interpolations = []
     generated = []
+    ngram2 = nGram(n=2)
+    ngram2.load()
+    ngram3 = nGram(n=3)
+    ngram3.load()
+    ngram4 = nGram(n=4)
+    ngram4.load()
+    ngram2_probabilities = []
+    ngram3_probabilities = []
+    ngram4_probabilities = []
 
     with torch.no_grad():
 
@@ -192,8 +205,8 @@ def interpolate():
                 "generated": [],
             }
 
-            x1, length1, label1 = test_dataset[i]
-            x2, length2, label2 = test_dataset[j]
+            x1, length1, label = test_dataset[i]
+            x2, length2, label = test_dataset[j]
 
             x1 = x1.unsqueeze(0).to(device)
             x2 = x2.unsqueeze(0).to(device)
@@ -208,8 +221,8 @@ def interpolate():
                 device=device
             )
 
-            label1 = torch.tensor(
-                [label1],
+            label = torch.tensor(
+                [label],
                 dtype=torch.long,
                 device=device
             )
@@ -218,17 +231,17 @@ def interpolate():
             _, mu1, _ = model.encoder(
                 x1,
                 length1,
-                label1
+                label
             )
 
             _, mu2, _ = model.encoder(
                 x2,
                 length2,
-                label1
+                label
             )
 
             # Use ONE fixed culture embedding for the whole trajectory
-            culture_embedding = model.decoder.culture_embedding(label1)
+            culture_embedding = model.decoder.culture_embedding(label)
 
             # Interpolate between the two latent representations
             for alpha in torch.linspace(0.1, 0.9, 9):
@@ -253,6 +266,10 @@ def interpolate():
                 )
 
                 trajectory["generated"].append(name)
+
+                ngram2_probabilities.append(ngram2.sequence_log_probability((name, id_to_language[culture])))
+                ngram3_probabilities.append(ngram3.sequence_log_probability((name, id_to_language[culture])))
+                ngram4_probabilities.append(ngram4.sequence_log_probability((name, id_to_language[culture])))
 
             interpolations.append(trajectory)
 
@@ -388,20 +405,45 @@ def interpolate():
 
     print()
 
+
+
     for n in (2, 3, 4):
 
+        if n == 2:
+            ngram_probabilities = ngram2_probabilities
+        if n == 3:
+            ngram_probabilities = ngram3_probabilities
+        if n == 4:
+            ngram_probabilities = ngram4_probabilities
+
+        finite_total = 0.00
+        finite_count = 0
+
+        for p in ngram_probabilities:
+            if p != float("-inf"):
+                finite_total += p
+                finite_count += 1
+
+        average = finite_total / finite_count if finite_count != 0 else "N/A"
+        percentage_inf = 1 - finite_count / len(ngram_probabilities)
+
         print(
-            f"{n}-gram coverage: "
-            f"{compute_ngram_coverage(
-                generated,
-                test_dataset,
-                n
-            ):.2%}"
+            f"{n}-gram: "
+            f"{average:.4f} "
+            f"{percentage_inf * 100:.2f}%"
         )
 
     # ---------------------------------------------------------
     # Novelty
     # ---------------------------------------------------------
+
+    print(
+        f"Novelty wrt train data: "
+        f"{compute_novelty(
+            generated,
+            train_dataset
+        ):.2%}"
+    )
 
     print(
         f"Novelty wrt test data: "
@@ -427,7 +469,9 @@ def interpolate():
 
     print(
         f"Unique rate (among generated names): "
-        f"{len(set(generated)) / len(generated):.2%}"
+        f"{len(set(generated)) / len(generated):.2%}\n"
+        f"Repetition rate (among generated names): "
+        f"{(len(generated)-len(set(generated))) / len(generated):.2%}"
     )
 
     print(

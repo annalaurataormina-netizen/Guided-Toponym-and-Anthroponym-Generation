@@ -211,6 +211,7 @@ def evaluate_latent_space():
     }
 
     thresholds = {
+        "All": 0,
         ">=100": 100,
         ">=1000": 1000,
         ">=10000": 10000,
@@ -319,6 +320,9 @@ def evaluate_latent_space():
         # -----------------------------------------------------
         # 10-NN purity
         # -----------------------------------------------------
+
+        print()
+        print("10-NN PURITY")
 
         for metric in ["euclidean", "cosine", "manhattan", "correlation"]:
 
