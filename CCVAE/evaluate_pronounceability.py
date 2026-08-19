@@ -11,35 +11,22 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
         model.load()
 
         culture_log_probs = {}
-        culture_percentage_inf = {}
 
         # ---------------------------------------------------------
-        # Calculate statistics for each culture
+        # Calculate average log-probability for each culture
         # ---------------------------------------------------------
 
         for language, names in generated_names_per_language.items():
+
             log_probs = [
                 model.sequence_log_probability((name, language))
                 for name in names
             ]
 
-            finite = [
-                x for x in log_probs
-                if x != float("-inf")
-            ]
-
-            # Ignore -inf when calculating the average.
-            # If everything is -inf, mark the culture as invalid.
             culture_log_probs[language] = (
-                sum(finite) / len(finite)
-                if finite
+                sum(log_probs) / len(log_probs)
+                if log_probs
                 else None
-            )
-
-            # Still report how many scores were -inf.
-            culture_percentage_inf[language] = (
-                    100 * (len(log_probs) - len(finite))
-                    / len(log_probs)
             )
 
         # Cultures for which we have generated names
@@ -56,14 +43,13 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
 
         def calculate_metrics(selected_languages):
 
-            # Cultures with at least one finite score
             valid_languages = [
                 language
                 for language in selected_languages
                 if culture_log_probs[language] is not None
             ]
 
-            # Average log-probability across valid cultures
+            # Macro average across cultures
             average_log_probability = (
                 sum(
                     culture_log_probs[language]
@@ -74,18 +60,8 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
                 else None
             )
 
-            # Average % of -inf across all selected cultures
-            average_percentage_inf = (
-                sum(
-                    culture_percentage_inf[language]
-                    for language in selected_languages
-                )
-                / len(selected_languages)
-                if selected_languages
-                else None
-            )
-
-            # Weighted log-probability
+            # Weighted average across cultures,
+            # weighted by number of training examples
             total_weight = sum(
                 culture_counts[language]
                 for language in valid_languages
@@ -102,35 +78,12 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
                 else None
             )
 
-            # Weighted % of -inf
-            total_weight_all = sum(
-                culture_counts[language]
-                for language in selected_languages
-            )
-
-            weighted_average_percentage_inf = (
-                sum(
-                    culture_percentage_inf[language]
-                    * culture_counts[language]
-                    for language in selected_languages
-                )
-                / total_weight_all
-                if total_weight_all > 0
-                else None
-            )
-
             return {
                 "Avg log-probability":
                     average_log_probability,
 
-                "% of -inf":
-                    average_percentage_inf,
-
                 "Weighted avg log-probability":
                     weighted_average_log_probability,
-
-                "Weighted % of -inf":
-                    weighted_average_percentage_inf,
             }
 
         # ---------------------------------------------------------

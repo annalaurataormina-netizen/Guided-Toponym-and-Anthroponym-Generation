@@ -56,16 +56,19 @@ def evaluate(model, lr):
             f.write(f"{k}: {v:.4f}\n")
 
         f.write("\nPRONOUNCEABILITY\n")
-        pronounceability_results = evaluate_pronounceability(generated_per_language, culture_counts)
+        pronounceability_results = evaluate_pronounceability(
+            generated_per_language,
+            culture_counts
+        )
         for n, groups in pronounceability_results.items():
             f.write(f"{n}-gram\n")
             for group, metrics in groups.items():
                 f.write(
                     f"{group}: "
-                    f"Macro % -inf: {metrics['% of -inf']:.2f}% "
-                    f"Weighted % -inf: {metrics['Weighted % of -inf']:.2f}% "
-                    f"Macro avg log-probability: {metrics['Avg log-probability']:.4f} "
-                    f"Weighted avg log-probability: {metrics['Weighted avg log-probability']:.4f}\n"
+                    f"Macro avg log-probability: "
+                    f"{metrics['Avg log-probability']:.4f} "
+                    f"Weighted avg log-probability: "
+                    f"{metrics['Weighted avg log-probability']:.4f}\n"
                 )
 
         f.write("\nNOVELTY & DIVERSITY\n")

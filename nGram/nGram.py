@@ -47,17 +47,27 @@ class nGram:
     def sequence_log_probability(self, x):
         name = '<' + x[0] + '>'
         culture = x[1]
+
+        alpha = 0.1
         log_probability = 0.0
         count = 0
+
+        vocab_size = len(self.vocabulary)
 
         for i in range(len(name) - self.n + 1):
             context = name[i:i + self.n - 1]
             next_char = name[i + self.n - 1]
-            total = sum(self.counts[(culture, context)].values())
-            if total == 0 or self.counts[(culture, context)][next_char] == 0:
-                return float('-inf')
+
+            counter = self.counts[(culture, context)]
+            total = sum(counter.values())
+
+            probability = (
+                    (counter[next_char] + alpha)
+                    / (total + alpha * vocab_size)
+            )
+
+            log_probability += math.log(probability)
             count += 1
-            log_probability += math.log(self.counts[(culture, context)][next_char] / total)
 
         if count == 0:
             return float('-inf')
