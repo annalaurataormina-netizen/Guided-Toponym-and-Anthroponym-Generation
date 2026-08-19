@@ -315,6 +315,6 @@ def save_tables(input_file, output_dir="training_metrics"):
 
 if __name__ == "__main__":
     save_tables(
-        input_file="CCVAE/evaluation_results/evaluation_results_lr0.0005.txt",
-        output_dir="training_metrics",
+        input_file="CCVAE/out/grid_search_275502_1.out",
+        output_dir="CCVAE/training_metrics",
     )
