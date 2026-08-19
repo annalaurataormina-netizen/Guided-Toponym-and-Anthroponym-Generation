@@ -49,10 +49,17 @@ class nGram:
         culture = x[1]
 
         alpha = 0.1
+
         log_probability = 0.0
         count = 0
 
-        vocab_size = len(self.vocabulary)
+        # Build vocabulary from all characters observed during training
+        vocabulary = set()
+
+        for (_, context), counter in self.counts.items():
+            vocabulary.update(counter.keys())
+
+        vocab_size = len(vocabulary)
 
         for i in range(len(name) - self.n + 1):
             context = name[i:i + self.n - 1]
