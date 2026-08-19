@@ -73,7 +73,7 @@ if __name__ == "__main__":
     num_layers_encoder = 2
     num_layers_decoder = 1
     latent_dim = 32
-    lr = lr  # grid search
+    lr = 0.0005
     epochs = 100
     patience = 10
     beta_max = 0.025
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                   f'nle{num_layers_encoder}_'
                   f'nld{num_layers_decoder}_'
                   f'ld{latent_dim}_'
-                  f'lr{lr}adamW_'
+                  f'lr{lr}adam_'
                   f'ep{epochs}es{patience}_'
                   f'cd0.25_'
                   f'blf0t{beta_max}o{n_epochs_ramp_up}_'
