@@ -40,8 +40,6 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
             if language in culture_counts
         ]
 
-        from nGram.nGram import nGram
-
         def evaluate_pronounceability(generated_names_per_language, culture_counts):
 
             results = {}
