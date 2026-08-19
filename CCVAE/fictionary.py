@@ -82,7 +82,7 @@ def fictional_culture():
     num_layers_decoder = 1
     latent_dim = 32
     lr = 0.0005
-    epochs = 50
+    epochs = 100
     patience = 10
     beta_max = 0.025
     n_epochs_ramp_up = 5
