@@ -49,7 +49,7 @@ def grid_search():
                   f'nle{num_layers_encoder}_'
                   f'nld{num_layers_decoder}_'
                   f'ld{latent_dim}_'
-                  f'lr{lr}adamW_'
+                  f'lr{lr}adam_'
                   f'ep{epochs}es{patience}_'
                   f'cd0.25_'
                   f'blf0t{beta_max}o{n_epochs_ramp_up}_'
