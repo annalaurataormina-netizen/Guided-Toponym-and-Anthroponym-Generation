@@ -47,7 +47,7 @@ def evaluate(model, lr):
     for language, language_id in language_to_id.items():
         generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50, temperature=0.6)
 
-    with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}_adamW.txt", "w") as f:
+    with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}_adam.txt", "w") as f:
         f.write(f"Learning rate: {lr}\n")
 
         f.write("\nTEST\n")
