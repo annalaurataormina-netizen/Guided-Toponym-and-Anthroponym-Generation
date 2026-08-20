@@ -101,3 +101,12 @@ class nGram:
             return float('-inf')
 
         return log_probability / count
+
+    def sequence_log_probability_per_culture(self, name):
+        cultures = set([culture for (culture, context) in self.counts.keys()])
+        log_probabilities = {}
+
+        for culture in cultures:
+            log_probabilities[culture] = self.sequence_log_probability((name, culture))
+
+        return log_probabilities
