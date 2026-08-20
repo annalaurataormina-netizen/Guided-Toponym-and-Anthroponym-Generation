@@ -59,7 +59,7 @@ def train(lr=0.0015):
                   f'nle{num_layers_encoder}_'
                   f'nld{num_layers_decoder}_'
                   f'ld{latent_dim}_'
-                  f'lr{lr}adamW_'
+                  f'lr{lr}adam_'
                   f'ep{epochs}es{patience}_'
                   f'cd0.25_'
                   f'blf0t{beta_max}o{n_epochs_ramp_up}_'
@@ -80,7 +80,7 @@ def train(lr=0.0015):
     print(f"Latent dimension: {latent_dim}")
     print(f"Learning rate: {lr}")
     print(f"Epochs: {epochs}")
-    print("Optimiser: AdamW")
+    print("Optimiser: Adam")
     print("Bidirectional encoder")
     print(f"Early stopping (with patience {patience})")
     print(f"Linear ramp-up of beta over the first {n_epochs_ramp_up} epochs from 0 to {beta_max}")
@@ -142,7 +142,7 @@ def train(lr=0.0015):
     supcon_criterion = SupConLoss(temperature=temperature)
 
     # Adam (Adaptive Moment Estimation) dynamically adjusts the learning rate for every parameter in the model
-    optimiser = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimiser = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Training losses, one for each batch
     train_steps = []
@@ -410,7 +410,7 @@ def train(lr=0.0015):
         f'nle{num_layers_encoder}_'
         f'nld{num_layers_decoder}_'
         f'ld{latent_dim}_'
-        f'lr{lr}adamW_'
+        f'lr{lr}adam_'
         f'ep{epochs}es{patience}_'
         f'cd0.25_'
         f'blf0t{beta_max}o{n_epochs_ramp_up}_'
