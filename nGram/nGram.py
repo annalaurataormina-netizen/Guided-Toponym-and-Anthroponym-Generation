@@ -8,6 +8,8 @@ class nGram:
     def __init__(self, n: int):
         self.n = n
         self.counts = defaultdict(Counter)
+        self.context_totals = {}
+        self.vocab_size = 0
 
     def fit(self, x):
 
@@ -20,7 +22,26 @@ class nGram:
 
                 self.counts[(culture, context)][next_char] += 1
 
+        self._precompute_statistics()
+
+    def _precompute_statistics(self):
+
+        # Total number of observations for each (culture, context)
+        self.context_totals = {
+            key: sum(counter.values())
+            for key, counter in self.counts.items()
+        }
+
+        # Vocabulary only needs to be calculated once
+        vocabulary = set()
+
+        for counter in self.counts.values():
+            vocabulary.update(counter.keys())
+
+        self.vocab_size = len(vocabulary)
+
     def save(self):
+
         data = {
             f"{culture}|{context}": dict(counter)
             for (culture, context), counter in self.counts.items()
@@ -30,6 +51,7 @@ class nGram:
             json.dump(data, f)
 
     def load(self):
+
         with open(f"nGram/models/{self.n}-gram_fit.json", "r") as f:
             data = json.load(f)
 
@@ -39,12 +61,10 @@ class nGram:
             culture, context = key.split("|", 1)
             self.counts[(culture, context)] = Counter(counter)
 
-    '''
-    x is a list or a tuple, where the first element is the name normalised, the second element is the culture
-    example, x = ['Anna', 'Italian']
-    '''
+        self._precompute_statistics()
 
     def sequence_log_probability(self, x):
+
         name = '<' + x[0] + '>'
         culture = x[1]
 
@@ -53,24 +73,25 @@ class nGram:
         log_probability = 0.0
         count = 0
 
-        # Build vocabulary from all characters observed during training
-        vocabulary = set()
-
-        for (_, context), counter in self.counts.items():
-            vocabulary.update(counter.keys())
-
-        vocab_size = len(vocabulary)
-
         for i in range(len(name) - self.n + 1):
+
             context = name[i:i + self.n - 1]
             next_char = name[i + self.n - 1]
 
-            counter = self.counts[(culture, context)]
-            total = sum(counter.values())
+            key = (culture, context)
+
+            counter = self.counts.get(key)
+
+            if counter is None:
+                total = 0
+                next_char_count = 0
+            else:
+                total = self.context_totals[key]
+                next_char_count = counter.get(next_char, 0)
 
             probability = (
-                    (counter[next_char] + alpha)
-                    / (total + alpha * vocab_size)
+                (next_char_count + alpha)
+                / (total + alpha * self.vocab_size)
             )
 
             log_probability += math.log(probability)
@@ -80,17 +101,3 @@ class nGram:
             return float('-inf')
 
         return log_probability / count
-
-    '''
-    x is a string, after normalisation
-    example, x = 'Anna'
-    '''
-
-    def sequence_log_probability_per_culture(self, name):
-        cultures = set([culture for (culture, context) in self.counts.keys()])
-        log_probabilities = {}
-
-        for culture in cultures:
-            log_probabilities[culture] = self.sequence_log_probability((name, culture))
-
-        return log_probabilities
