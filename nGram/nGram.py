@@ -98,7 +98,7 @@ class nGram:
             count += 1
 
         if count == 0:
-            return float('-inf')
+            return None
 
         return log_probability / count
 

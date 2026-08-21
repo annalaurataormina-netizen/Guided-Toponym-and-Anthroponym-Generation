@@ -11,6 +11,7 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
         model.load()
 
         culture_log_probs = {}
+        culture_none_percentages = {}
 
         # ---------------------------------------------------------
         # Calculate average log-probability for each culture
@@ -23,9 +24,25 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
                 for name in names
             ]
 
-            culture_log_probs[language] = (
-                sum(log_probs) / len(log_probs)
+            # Keep only names that could be scored
+            valid_log_probs = [
+                log_prob
+                for log_prob in log_probs
+                if log_prob is not None
+            ]
+
+            # Percentage of generated names that could not be scored
+            culture_none_percentages[language] = (
+                100 * (len(log_probs) - len(valid_log_probs))
+                / len(log_probs)
                 if log_probs
+                else 0
+            )
+
+            # Average using only valid names
+            culture_log_probs[language] = (
+                sum(valid_log_probs) / len(valid_log_probs)
+                if valid_log_probs
                 else None
             )
 
@@ -78,12 +95,26 @@ def evaluate_pronounceability(generated_names_per_language, culture_counts):
                 else None
             )
 
+            # Average percentage of unscorable generated names
+            average_none_percentage = (
+                sum(
+                    culture_none_percentages[language]
+                    for language in selected_languages
+                )
+                / len(selected_languages)
+                if selected_languages
+                else None
+            )
+
             return {
                 "Avg log-probability":
                     average_log_probability,
 
                 "Weighted avg log-probability":
                     weighted_average_log_probability,
+
+                "Avg % None":
+                    average_none_percentage,
             }
 
         # ---------------------------------------------------------
