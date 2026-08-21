@@ -4,49 +4,49 @@ TEST
 Avg reconstruction loss: 0.6804
 Avg KL divergence: 29.2125
 Avg SupCon loss: 3.7459
-Avg normalised Levenshtein distance: 0.2257
+Avg normalised Levenshtein distance: 0.2256
 
 PRONOUNCEABILITY
 2-gram
-All: Macro % -inf: 77.19% Weighted % -inf: 8.13% Macro avg log-probability: -inf Weighted avg log-probability: -inf
->=1000: Macro % -inf: 25.43% Weighted % -inf: 8.01% Macro avg log-probability: -2.6871 Weighted avg log-probability: -2.5423
->=10000: Macro % -inf: 17.93% Weighted % -inf: 7.53% Macro avg log-probability: -2.6501 Weighted avg log-probability: -2.5380
+All: Macro avg log-probability: -3.9607 Weighted avg log-probability: -2.6100 Avg % None: 0.00%
+>=1000: Macro avg log-probability: -2.9062 Weighted avg log-probability: -2.6084 Avg % None: 0.00%
+>=10000: Macro avg log-probability: -2.8064 Weighted avg log-probability: -2.6001 Avg % None: 0.00%
 3-gram
-All: Macro % -inf: 90.41% Weighted % -inf: 32.24% Macro avg log-probability: -inf Weighted avg log-probability: -inf
->=1000: Macro % -inf: 66.38% Weighted % -inf: 32.13% Macro avg log-probability: -2.4534 Weighted avg log-probability: -2.5045
->=10000: Macro % -inf: 52.26% Weighted % -inf: 31.04% Macro avg log-probability: -2.5499 Weighted avg log-probability: -2.5069
+All: Macro avg log-probability: -4.2571 Weighted avg log-probability: -2.8273 Avg % None: 0.00%
+>=1000: Macro avg log-probability: -3.3013 Weighted avg log-probability: -2.8251 Avg % None: 0.00%
+>=10000: Macro avg log-probability: -3.1207 Weighted avg log-probability: -2.8114 Avg % None: 0.00%
 4-gram
-All: Macro % -inf: 97.08% Weighted % -inf: 68.06% Macro avg log-probability: -inf Weighted avg log-probability: -inf
->=1000: Macro % -inf: 89.70% Weighted % -inf: 68.01% Macro avg log-probability: -inf Weighted avg log-probability: -inf
->=10000: Macro % -inf: 83.93% Weighted % -inf: 67.37% Macro avg log-probability: -inf Weighted avg log-probability: -inf
+All: Macro avg log-probability: -4.4961 Weighted avg log-probability: -3.2865 Avg % None: 0.01%
+>=1000: Macro avg log-probability: -3.9037 Weighted avg log-probability: -3.2842 Avg % None: 0.00%
+>=10000: Macro avg log-probability: -3.6577 Weighted avg log-probability: -3.2650 Avg % None: 0.00%
 
 NOVELTY & DIVERSITY
 Exact novelty: 100.00%
 Weighted exact novelty: 100.00%
-Exact diversity: 97.19%
-Weighted exact diversity: 99.96%
-Duplicate rate: 2.54%
+Exact diversity: 97.22%
+Weighted exact diversity: 99.98%
+Duplicate rate: 2.52%
 Weighted duplicate rate: 0.04%
-Duplicate rate (culture-agnostic): 3.38%
+Duplicate rate (culture-agnostic): 3.34%
 
 CULTURAL COHERENCE (on languages with more than 1000 samples)
-Average generation accuracy: 15.45%
-Average top-2 generation accuracy: 22.48%
-Average top-3 generation accuracy: 27.36%
-Average top-4 generation accuracy: 31.13%
-Average top-5 generation accuracy: 34.42%
-Average top-6 generation accuracy: 37.16%
-Average top-7 generation accuracy: 39.67%
-Average top-8 generation accuracy: 41.92%
-Average top-9 generation accuracy: 44.11%
-Average top-10 generation accuracy: 46.12%
-Weighted generation accuracy: 27.50%
-Weighted top-2 generation accuracy: 38.77%
-Weighted top-3 generation accuracy: 45.19%
-Weighted top-4 generation accuracy: 50.10%
-Weighted top-5 generation accuracy: 54.23%
-Weighted top-6 generation accuracy: 57.43%
-Weighted top-7 generation accuracy: 60.32%
-Weighted top-8 generation accuracy: 62.77%
-Weighted top-9 generation accuracy: 65.55%
-Weighted top-10 generation accuracy: 67.69%
+Average generation accuracy: 15.37%
+Average top-2 generation accuracy: 22.47%
+Average top-3 generation accuracy: 27.38%
+Average top-4 generation accuracy: 31.28%
+Average top-5 generation accuracy: 34.61%
+Average top-6 generation accuracy: 37.48%
+Average top-7 generation accuracy: 40.05%
+Average top-8 generation accuracy: 42.44%
+Average top-9 generation accuracy: 44.60%
+Average top-10 generation accuracy: 46.61%
+Weighted generation accuracy: 27.95%
+Weighted top-2 generation accuracy: 38.79%
+Weighted top-3 generation accuracy: 44.92%
+Weighted top-4 generation accuracy: 49.95%
+Weighted top-5 generation accuracy: 53.73%
+Weighted top-6 generation accuracy: 57.11%
+Weighted top-7 generation accuracy: 60.27%
+Weighted top-8 generation accuracy: 63.03%
+Weighted top-9 generation accuracy: 65.52%
+Weighted top-10 generation accuracy: 67.84%
