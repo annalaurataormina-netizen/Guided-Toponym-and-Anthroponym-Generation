@@ -168,6 +168,8 @@ def interpolate():
     # Interpolation
     # ---------------------------------------------------------
 
+    beam_size = 3
+
     n_trajectories = 1000
 
     interpolations = []
@@ -254,7 +256,13 @@ def interpolate():
                 names_generated = model.decoder.generate(
                     z,
                     culture_embedding=culture_embedding,
-                    max_len=50
+                    max_len=50,
+                    beam_size=beam_size,
+                    culture=culture,
+                    ngram2=ngram2,
+                    ngram3=ngram3,
+                    ngram4=ngram4,
+                    cultures=[culture]
                 )
 
                 name = names_generated[0]

@@ -43,7 +43,7 @@ class ConditionalVAE(nn.Module):
         return logits, decoder_hidden, mu, logvar
 
     @torch.no_grad()
-    def generate(self, culture=None, culture_embedding=None, n=1, max_length=50, temperature=1):
+    def generate(self, culture=None, culture_embedding=None, n=1, max_length=50, temperature=1, ngram2=None, ngram3=None, ngram4=None, cultures=None, culture_weights=None, beam_size=1):
         self.eval()
 
         device = next(self.parameters()).device
@@ -61,7 +61,17 @@ class ConditionalVAE(nn.Module):
         else:
             raise ValueError("Either culture or culture_embedding must be provided.")
 
-        names = self.decoder.generate(z, culture_embedding=culture_embedding, max_len=max_length)
+        names = self.decoder.generate(
+            z,
+            culture_embedding=culture_embedding,
+            max_len=max_length,
+            ngram2=ngram2,
+            ngram3=ngram3,
+            ngram4=ngram4,
+            cultures=cultures,
+            culture_weights=culture_weights,
+            beam_size=beam_size
+        )
         return names
 
         '''

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from AE.CharVocab import CharVocab
+from nGram.nGram import nGram
 
 
 class Decoder(nn.Module):
@@ -90,8 +91,18 @@ class Decoder(nn.Module):
         return logits, out
 
     @torch.no_grad()
-    def generate(self, z: torch.Tensor, culture_embedding: torch.Tensor, max_len=50):
-
+    def generate(
+            self,
+            z: torch.Tensor,
+            culture_embedding: torch.Tensor,
+            max_len=50,
+            beam_size=1,
+            ngram2=None,
+            ngram3=None,
+            ngram4=None,
+            cultures=None,
+            culture_weights=None
+    ):
         decoder_condition = torch.cat([z, culture_embedding], dim=-1)
 
         batch_size = z.size(0)
@@ -102,59 +113,206 @@ class Decoder(nn.Module):
         h0 = h0.view(self.num_layers, batch_size, self.hidden_dim)
         c0 = c0.view(self.num_layers, batch_size, self.hidden_dim)
 
-        # Start with <SOS>
-        x = torch.full(
-            (batch_size, 1),
-            self.vocab.char2idx['<SOS>'],
-            dtype=torch.long,
-            device=z.device
-        )
+        eos_token = self.vocab.char2idx['<EOS>']
+        sos_token = self.vocab.char2idx['<SOS>']
 
-        h, c = h0, c0
-
-        # One list per generated name
-        generated = [[] for _ in range(batch_size)]
-
-        finished = [False] * batch_size
-
-        for _ in range(max_len):
-
-            emb = self.embedding(x)
-
-            z_rep = z.unsqueeze(1).repeat(1, emb.size(1), 1)
-            culture_rep = culture_embedding.unsqueeze(1).repeat(
-                1, emb.size(1), 1
-            )
-
-            rnn_input = torch.cat(
-                [emb, z_rep, culture_rep],
-                dim=-1
-            )
-
-            out, (h, c) = self.rnn(
-                rnn_input,
-                (h, c)
-            )
-
-            logits = self.fc(out[:, -1])
-
-            # (batch_size, 1)
-            x = logits.argmax(dim=-1, keepdim=True)
-
-            for i in range(batch_size):
-                if not finished[i]:
-                    token = x[i].item()
-
-                    if token == self.vocab.char2idx['<EOS>']:
-                        finished[i] = True
-                    else:
-                        generated[i].append(token)
-
-            # Stop early if all sequences finished
-            if all(finished):
-                break
-
-        return [
-            self.vocab.decode(tokens)
-            for tokens in generated
+        ngram_vocabulary = [
+            '>' if self.vocab.idx2char[i] == '<EOS>'
+            else self.vocab.idx2char[i]
+            for i in range(len(self.vocab))
         ]
+
+        beta2, beta3, beta4 = 0.10, 0.10, 0.10
+
+        results = []
+
+        for i in range(batch_size):
+
+            # Each beam:
+            # (tokens, score, h, c, finished)
+            beams = [
+                (
+                    [],
+                    0.0,
+                    h0[:, i:i + 1, :],
+                    c0[:, i:i + 1, :],
+                    False
+                )
+            ]
+
+            for _ in range(max_len):
+
+                candidates = []
+
+                for tokens, score, h, c, finished in beams:
+
+                    # Don't expand beams that already produced EOS
+                    if finished:
+                        candidates.append(
+                            (tokens, score, h, c, True)
+                        )
+                        continue
+
+                    # Previous token
+                    if len(tokens) == 0:
+                        x = torch.tensor(
+                            [[sos_token]],
+                            dtype=torch.long,
+                            device=z.device
+                        )
+                    else:
+                        x = torch.tensor(
+                            [[tokens[-1]]],
+                            dtype=torch.long,
+                            device=z.device
+                        )
+
+                    emb = self.embedding(x)
+
+                    z_i = z[i:i + 1]
+                    culture_i = culture_embedding[i:i + 1]
+
+                    rnn_input = torch.cat(
+                        [emb, z_i.unsqueeze(1), culture_i.unsqueeze(1)],
+                        dim=-1
+                    )
+
+                    out, (new_h, new_c) = self.rnn(
+                        rnn_input,
+                        (h, c)
+                    )
+
+                    logits = self.fc(out[:, -1])
+
+                    # Convert CVAE logits into log probabilities
+                    cvae_log_probs = torch.log_softmax(
+                        logits,
+                        dim=-1
+                    ).squeeze(0)
+
+                    # -------------------------------------------------
+                    # N-gram guidance
+                    # -------------------------------------------------
+
+                    if (
+                        ngram2 is not None
+                        and ngram3 is not None
+                        and ngram4 is not None
+                        and cultures is not None
+                    ):
+
+                        prefix = '<' + self.vocab.decode(tokens)
+
+                        guided_log_probs = cvae_log_probs.clone()
+
+                        if len(prefix) >= 1:
+                            log_probs_2 = torch.tensor(
+                                ngram2.next_char_log_probabilities(
+                                    prefix,
+                                    cultures,
+                                    ngram_vocabulary,
+                                    culture_weights
+                                ),
+                                dtype=torch.float32,
+                                device=z.device
+                            )
+
+                            guided_log_probs += beta2 * log_probs_2
+
+                        if len(prefix) >= 2:
+                            log_probs_3 = torch.tensor(
+                                ngram3.next_char_log_probabilities(
+                                    prefix,
+                                    cultures,
+                                    ngram_vocabulary,
+                                    culture_weights
+                                ),
+                                dtype=torch.float32,
+                                device=z.device
+                            )
+
+                            guided_log_probs += beta3 * log_probs_3
+
+                        if len(prefix) >= 3:
+                            log_probs_4 = torch.tensor(
+                                ngram4.next_char_log_probabilities(
+                                    prefix,
+                                    cultures,
+                                    ngram_vocabulary,
+                                    culture_weights
+                                ),
+                                dtype=torch.float32,
+                                device=z.device
+                            )
+
+                            guided_log_probs += beta4 * log_probs_4
+
+                    else:
+                        guided_log_probs = cvae_log_probs
+
+                    # -------------------------------------------------
+                    # Keep best next tokens
+                    # -------------------------------------------------
+
+                    top_log_probs, top_tokens = torch.topk(
+                        guided_log_probs,
+                        beam_size
+                    )
+
+                    for j in range(beam_size):
+
+                        token = top_tokens[j].item()
+                        token_log_prob = top_log_probs[j].item()
+
+                        new_tokens = tokens.copy()
+
+                        new_finished = (
+                            token == eos_token
+                        )
+
+                        if not new_finished:
+                            new_tokens.append(token)
+
+                        new_score = score + token_log_prob
+
+                        candidates.append(
+                            (
+                                new_tokens,
+                                new_score,
+                                new_h.clone(),
+                                new_c.clone(),
+                                new_finished
+                            )
+                        )
+
+                # -----------------------------------------------------
+                # Keep the best beams
+                # -----------------------------------------------------
+
+                candidates.sort(
+                    key=lambda beam: beam[1] / (max(len(beam[0]), 1)),
+                    reverse=True
+                )
+
+                beams = candidates[:beam_size]
+
+                # Stop if every beam has finished
+                if all(beam[4] for beam in beams):
+                    break
+
+            # ---------------------------------------------------------
+            # Length-normalised final ranking
+            # ---------------------------------------------------------
+
+            best_beam = max(
+                beams,
+                key=lambda beam: (
+                    beam[1] / max(len(beam[0]), 1)
+                )
+            )
+
+            results.append(
+                self.vocab.decode(best_beam[0])
+            )
+
+        return results

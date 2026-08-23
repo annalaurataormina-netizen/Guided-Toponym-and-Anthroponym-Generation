@@ -347,11 +347,26 @@ def fictional_culture():
             # Generate names
             # -------------------------------------------------
 
+            beam_size = 3
+
+            ngram2, ngram3, ngram4 = nGram(2), nGram(3), nGram(4)
+            ngram2.load()
+            ngram3.load()
+            ngram4.load()
+
+            culture_weights = [0.5, 0.5]
+
             generated = model.generate(
                 culture_embedding=fictional_embedding,
                 n=n_generated,
                 max_length=50,
-                temperature=0.6
+                temperature=0.6,
+                ngram2=ngram2,
+                ngram3=ngram3,
+                ngram4=ngram4,
+                cultures=[culture_a, culture_b],
+                beam_size=beam_size,
+                culture_weights = culture_weights
             )
 
             # -------------------------------------------------

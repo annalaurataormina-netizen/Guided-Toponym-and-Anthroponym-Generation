@@ -12,10 +12,12 @@ from ConditionalVAE.ConditionalVAE import ConditionalVAE
 
 def grid_search():
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--lr", type=float, required=True)
-    args = parser.parse_args()
-    lr = args.lr
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--lr", type=float, required=True)
+    # args = parser.parse_args()
+    # lr = args.lr
+
+    lr = 0.0005
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -49,7 +51,7 @@ def grid_search():
                   f'nle{num_layers_encoder}_'
                   f'nld{num_layers_decoder}_'
                   f'ld{latent_dim}_'
-                  f'lr{lr}adamW_'
+                  f'lr{lr}adam_'
                   f'ep{epochs}es{patience}_'
                   f'cd0.25_'
                   f'blf0t{beta_max}o{n_epochs_ramp_up}_'

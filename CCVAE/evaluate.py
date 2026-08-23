@@ -9,6 +9,7 @@ from CCVAE.evaluate_cultural_coherence import evaluate_cultural_coherence
 from CCVAE.evaluate_novelty_and_diversity import evaluate_novelty_and_diversity
 from CCVAE.evaluate_pronounceability import evaluate_pronounceability
 from CCVAE.test import test
+from nGram.nGram import nGram
 from utils import load_all, normalise
 
 
@@ -17,6 +18,8 @@ def evaluate(model, lr):
     for the final evaluation, you wanna be more granular
     you also wanna evaluate ability to generate names from fictional cultures
     '''
+
+    beam_size = 3
 
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
@@ -44,10 +47,15 @@ def evaluate(model, lr):
     # generate for each language
     generated_per_language = {}
 
-    for language, language_id in language_to_id.items():
-        generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50, temperature=0.6)
+    ngram2, ngram3, ngram4 = nGram(2), nGram(3), nGram(4)
+    ngram2.load()
+    ngram3.load()
+    ngram4.load()
 
-    with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}_adamW.txt", "w") as f:
+    for language, language_id in language_to_id.items():
+        generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50, temperature=0.6, beam_size=beam_size, cultures=[language], ngram2=ngram2, ngram3=ngram3, ngram4=ngram4)
+
+    with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}_bs{beam_size}.txt", "w") as f:
         f.write(f"Learning rate: {lr}\n")
 
         f.write("\nTEST\n")

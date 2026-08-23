@@ -110,3 +110,39 @@ class nGram:
             log_probabilities[culture] = self.sequence_log_probability((name, culture))
 
         return log_probabilities
+
+    def next_char_log_probabilities(self, prefix, cultures, vocabulary, weights=None):
+        alpha = 0.1
+        context = prefix[-self.n + 1:]
+
+        if weights is None:
+            weights = [1.0 / len(cultures)] * len(cultures)
+
+        log_probs = []
+
+        for char in vocabulary:
+
+            combined_log_prob = 0.0
+
+            for culture, weight in zip(cultures, weights):
+
+                key = (culture, context)
+                counter = self.counts.get(key)
+
+                if counter is None:
+                    total = 0
+                    char_count = 0
+                else:
+                    total = self.context_totals[key]
+                    char_count = counter.get(char, 0)
+
+                probability = (
+                    (char_count + alpha)
+                    / (total + alpha * self.vocab_size)
+                )
+
+                combined_log_prob += weight * math.log(probability)
+
+            log_probs.append(combined_log_prob)
+
+        return log_probs
