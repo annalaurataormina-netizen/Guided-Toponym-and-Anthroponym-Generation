@@ -168,7 +168,7 @@ def interpolate():
     # Interpolation
     # ---------------------------------------------------------
 
-    beam_size = 3
+    beam_size = 20
 
     n_trajectories = 1000
 
@@ -258,11 +258,10 @@ def interpolate():
                     culture_embedding=culture_embedding,
                     max_len=50,
                     beam_size=beam_size,
-                    culture=culture,
+                    cultures=[culture],
                     ngram2=ngram2,
                     ngram3=ngram3,
                     ngram4=ngram4,
-                    cultures=[culture]
                 )
 
                 name = names_generated[0]

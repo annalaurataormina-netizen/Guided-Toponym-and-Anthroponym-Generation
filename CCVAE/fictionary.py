@@ -347,7 +347,7 @@ def fictional_culture():
             # Generate names
             # -------------------------------------------------
 
-            beam_size = 3
+            beam_size = 20
 
             ngram2, ngram3, ngram4 = nGram(2), nGram(3), nGram(4)
             ngram2.load()

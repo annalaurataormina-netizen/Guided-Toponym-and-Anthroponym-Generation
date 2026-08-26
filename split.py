@@ -6,7 +6,11 @@ from utils import load_all, normalise
 def split():
     names = load_all(culture=True)
 
+<<<<<<< Updated upstream
     names_normalised = [normalise(n[1]) for n in names]
+=======
+    names_normalised = [[n[0], normalise(n[1])] for n in names]
+>>>>>>> Stashed changes
 
     train_names, temp_names = train_test_split(names_normalised, test_size=0.2, random_state=1996, shuffle=True)
     val_names, test_names = train_test_split(temp_names, test_size=0.5, random_state=1996, shuffle=True)

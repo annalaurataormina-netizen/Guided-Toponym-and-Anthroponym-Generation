@@ -19,7 +19,7 @@ def evaluate(model, lr):
     you also wanna evaluate ability to generate names from fictional cultures
     '''
 
-    beam_size = 3
+    beam_size = 20
 
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
