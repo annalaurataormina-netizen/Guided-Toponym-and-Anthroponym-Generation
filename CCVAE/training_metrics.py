@@ -308,11 +308,14 @@ def save_tables(input_file, output_dir="training_metrics"):
             index=False,
         )
 
+
     print(f"Saved results to {output_dir}/")
     print(f"Steps:          {len(steps_df)} rows")
     print(f"Epochs:         {len(epochs_df)} rows")
     print(f"Reconstruction: {len(reconstruction_df)} rows")
     print(f"Levenshtein:    {len(levenshtein_df)} rows")
+
+
 
 
 if __name__ == "__main__":

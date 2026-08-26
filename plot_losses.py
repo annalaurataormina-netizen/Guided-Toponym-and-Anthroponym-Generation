@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.font_manager as fm
+
 
 def plot():
     df = pd.read_csv("CCVAE/training_metrics/steps.csv")
@@ -25,7 +27,7 @@ def plot():
     axes[2].plot(df["Step"] / 1000, df["Train SupCon"], label="Training")
     axes[2].plot(df["Step"] / 1000, df["Val SupCon"], label="Validation")
     axes[2].set_ylabel("SupCon loss")
-    axes[2].set_xlabel("Training step (×1000)")
+    axes[2].set_xlabel("Training step (in thousands)")
 
     fig.legend(
         ["Training", "Validation"],
@@ -51,6 +53,26 @@ def plot():
     axes[1].spines["top"].set_visible(False)
     axes[1].spines["bottom"].set_visible(False)
     axes[2].spines["top"].set_visible(False)
+
+    # Mark end of beta ramp-up
+    ramp_end = 66  # 60,000 training steps
+
+    for ax in axes:
+        ax.axvline(
+            ramp_end,
+            linestyle="--",
+            linewidth=1,
+            color="grey"
+        )
+
+    axes[0].text(
+        ramp_end + 3,
+        axes[0].get_ylim()[1] * 0.9,
+        r"$\beta$ ramp-up ends",
+        rotation=90,
+        va="top",
+        color="grey"
+    )
 
     fig.subplots_adjust(hspace=0)
     fig.align_ylabels(axes)
