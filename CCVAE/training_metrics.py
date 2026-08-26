@@ -85,10 +85,12 @@ def parse_log(input_file):
                     "Step": int(step.replace(",", "")),
                     "Train Loss": float(train_loss),
                     "Train Recon": float(train_recon),
+                    "Train KL": float(train_beta_kl) / float(beta),
                     "Train β-KL": float(train_beta_kl),
                     "Train SupCon": float(train_supcon),
                     "Val Loss": float(val_loss),
                     "Val Recon": float(val_recon),
+                    "Val KL": float(val_kl),
                     "Val β-KL": float(val_beta_kl),
                     "Val SupCon": float(val_supcon),
                 })
