@@ -1,3 +1,5 @@
+import unicodedata
+
 from .config import ALLOWED_CHARS
 
 
@@ -81,6 +83,20 @@ class CharVocab:
 if __name__ == '__main__':
     vocab = CharVocab(ALLOWED_CHARS)
     print(ALLOWED_CHARS)
+    print(len(set(vocab.char2idx.keys())))
+    combining = 0
+    print(type(vocab.char2idx.keys()))
+    for char in vocab.char2idx.keys():
+        if len(char) != 1:
+            print(char)
+            continue
+        cat = unicodedata.category(char)
+        block = unicodedata.name(char, '')
+        print(cat, block)
+        if cat == 'Mn':
+            combining += 1
+    print(combining)
+
     print(vocab.char2idx)
     print(vocab.encode('hello'))
     print(vocab.decode(vocab.encode('hello')))

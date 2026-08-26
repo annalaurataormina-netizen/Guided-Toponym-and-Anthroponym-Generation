@@ -2,11 +2,11 @@ Steps:
 1. Model (4d 4-12Aug)
 2. Grid search (5d 16-17Aug)
 3. Final evaluation (1d 18/19Aug)
---> 4. Generation (1d 21Aug)
+4. Generation (1d 21Aug)
 --> 5. Report (5d 24-28Aug)
-6. UI (5d 31Aug-4Sep) [filter down output? how to generate?]
-7. Clean up scripts (loss sourced from elsewhere?)
-8. Deadline: 9Sep
+--> 6. UI (5d 31Aug-4Sep) [filter down output? how to generate?]
+7. Clean up scripts (loss sourced from elsewhere?) (8Sep)
+8. Deadline (9Sep)
 
 To do (model step):
 1. Train sequence classifier (4Aug) DONE
@@ -29,4 +29,4 @@ To do (final evaluation step):
 5. Geometry (DONE)
 
 To do (final generation step):
-1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!); try using the classifier as a first step)
+1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!); try using the classifier as a first step) (DONE)
