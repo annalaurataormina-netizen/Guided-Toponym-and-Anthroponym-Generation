@@ -137,7 +137,7 @@ def quick():
     '''
 
     culture1 = "Italian"
-    culture2 = "Spanish"
+    culture2 = "Japanese"
     ngram2 = nGram(2)
     ngram2.load()
     ngram3 = nGram(3)
@@ -150,7 +150,10 @@ def quick():
     culture_embedding = (0.5 * model.decoder.culture_embedding(torch.tensor(id1, device=device))
             + 0.5 * model.decoder.culture_embedding(torch.tensor(id2, device=device)))
 
-    generated = model.generate(culture_embedding=culture_embedding, temperature=0.6, n=10, ngram2=ngram2, ngram3=ngram3, ngram4=ngram4, cultures=[culture1, culture2])
+    # generated = model.generate(culture_embedding=culture_embedding, temperature=0.6, n=10, ngram2=ngram2, ngram3=ngram3, ngram4=ngram4, cultures=[culture1, culture2])
+
+    generated = model.generate(culture_embedding=culture_embedding, temperature=0.6, n=10)
+
     for n in generated:
         print(n)
 

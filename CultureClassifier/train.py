@@ -49,6 +49,8 @@ def train():
     with open("language_to_id.json", "r") as f:
         language_to_id = json.load(f)
 
+    print("Number of languages: ", len(language_to_id))
+
     # Normalise name (split diacritics) and replace language codes with integers
     names_normalised = [
         [normalise(name), language_to_id[lang]]
@@ -107,6 +109,7 @@ def train():
     classifier = CultureClassifier(vocab, embed_dim, hidden_dim, num_layers, num_cultures)
     classifier.to(device)
 
+    '''
     counts = Counter(label for _, label in train_names)
     class_weights = torch.tensor(
         [
@@ -179,19 +182,26 @@ def train():
 
         print(f"Epoch {epoch + 1}/{epochs}, ")
         print(f"Avg train loss per epoch: {sum(epoch_losses) / len(epoch_losses):.4f}")
+    '''
+
 
     classifier.eval()
 
+    '''
     val_pred_cultures = []
     val_labels = []
+    '''
 
     print(f"Number of cultures: {num_cultures}")
     print(f"Random accuracy: {1 / num_cultures}")
+
+    classifier_name = f'CultureClassifier/models/best_model_bs{batch_size}_ed{embed_dim}_hd{hidden_dim}_nl{num_layers}_lr{lr}_ep{epochs}_ms{min_samples}.pt'
 
     classifier.load_state_dict(
         torch.load(classifier_name, map_location=device)
     )
 
+    '''
     with torch.no_grad():
         for batch in val_dataloader:
             sequences, lengths, labels = batch
@@ -249,8 +259,9 @@ def train():
     print(f"Macro F1: {macro_f1:.4f}")
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
-    print(f"Classification report:\n{report}")
+    print(f"Classification report:\n{report}")  
     '''
+
     test_pred_cultures = []
     test_labels = []
 
@@ -262,7 +273,7 @@ def train():
             logits = classifier(sequences, lengths)
             pred_cultures_batch = logits.argmax(dim=-1)
             test_pred_cultures.append(pred_cultures_batch)
-            test_labels.append(labels_batch)
+            test_labels.append(labels)
 
     test_pred_cultures = torch.cat(test_pred_cultures)
     test_labels = torch.cat(test_labels)
@@ -312,7 +323,6 @@ def train():
     print(f"Weighted F1: {weighted_f1:.4f}")
     print(f"Confusion matrix:\n{conf_matrix}")
     print(f"Classification report:\n{report}")
-    '''
 
 
 if __name__ == "__main__":

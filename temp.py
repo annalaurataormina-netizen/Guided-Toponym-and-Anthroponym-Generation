@@ -24,6 +24,8 @@ def temp():
         if culture_counts[x[1]] >= min_samples
     ]
 
+    '''
+
     # Re-index remaining cultures
     remaining_cultures = sorted(
         set(label for _, label in names_normalised)
@@ -47,3 +49,7 @@ def temp():
 
     with open("language_to_id_filtered.json", "w") as f:
         f.write(language_to_id)
+    
+    '''
+
+    print(names_normalised)
