@@ -94,13 +94,19 @@ def evaluate_latent_space():
     print(f"Validation: {len(validation_names)}")
     print(f"Test:       {len(test_names)}")
 
+    # ---------------------------------------------------------
     # Number of training samples per culture
+    # Used for the weighted metrics
+    # ---------------------------------------------------------
+
     train_culture_counts = {
         culture: sum(
             1 for _, train_culture in train_names
             if train_culture == culture
         )
-        for culture in set(culture for _, culture in train_names)
+        for culture in set(
+            culture for _, culture in train_names
+        )
     }
 
     # ---------------------------------------------------------
@@ -211,6 +217,8 @@ def evaluate_latent_space():
     # ---------------------------------------------------------
 
     k = 10
+    samples_per_culture = 100
+    minimum_culture_size = 100
 
     # Number of test samples per culture
     culture_counts = {
@@ -218,181 +226,191 @@ def evaluate_latent_space():
         for culture in np.unique(y)
     }
 
-    sample_sizes = {
-        "All": None,
-        "100": 100,
-        "1,000": 1000,
-        "10,000": 10000,
-    }
+    # Only include cultures with at least 100 test samples
+    valid_cultures = [
+        culture
+        for culture, count in culture_counts.items()
+        if count >= minimum_culture_size
+    ]
+
+    print()
+    print("=" * 70)
+    print(
+        f"Languages with at least {minimum_culture_size} test samples: "
+        f"{len(valid_cultures)}"
+    )
+    print("=" * 70)
+
+    if len(valid_cultures) < 2:
+        print("Not enough cultures for evaluation.")
+        return
+
+    # ---------------------------------------------------------
+    # Sample exactly 100 test names per culture
+    # ---------------------------------------------------------
 
     rng = np.random.default_rng(seed)
 
+    sampled_indices = []
+
+    for culture in valid_cultures:
+
+        culture_indices = np.where(
+            y == culture
+        )[0]
+
+        selected = rng.choice(
+            culture_indices,
+            size=samples_per_culture,
+            replace=False
+        )
+
+        sampled_indices.extend(selected)
+
+    sampled_indices = np.array(sampled_indices)
+
+    X_eval = X[sampled_indices]
+    y_eval = y[sampled_indices]
+
+    print(
+        f"Samples per culture: {samples_per_culture}"
+    )
+
+    print(
+        f"Total samples used: {len(X_eval)}"
+    )
+
+    print(
+        f"Cultures used: {len(np.unique(y_eval))}"
+    )
+
     # ---------------------------------------------------------
-    # Evaluate each threshold
+    # Silhouette score
     # ---------------------------------------------------------
 
-    for sample_size_name, sample_size in sample_sizes.items():
+    print()
+    print("=" * 70)
+    print("SILHOUETTE SCORE")
+    print("=" * 70)
 
-        if sample_size is None:
-            valid_cultures = list(culture_counts.keys())
-        else:
-            valid_cultures = [
-                culture
-                for culture, count in culture_counts.items()
-                if count >= sample_size
+    for metric in [
+        "euclidean",
+        "cosine",
+        "manhattan",
+        "correlation"
+    ]:
+
+        silhouette = silhouette_samples(
+            X_eval,
+            y_eval,
+            metric=metric
+        )
+
+        # Overall: every sample has equal weight
+        overall_silhouette = silhouette.mean()
+
+        # Per-culture scores
+        per_culture_silhouette = {
+            culture: silhouette[y_eval == culture].mean()
+            for culture in np.unique(y_eval)
+        }
+
+        # Macro: every culture has equal weight
+        macro_silhouette = np.mean(
+            list(per_culture_silhouette.values())
+        )
+
+        # Weighted: weight cultures by their training-set size
+        weighted_silhouette = np.average(
+            list(per_culture_silhouette.values()),
+            weights=[
+                train_culture_counts.get(culture, 0)
+                for culture in per_culture_silhouette
+            ]
+        )
+
+        print(f"{metric}:")
+        print(f"  Overall:  {overall_silhouette:.4f}")
+        print(f"  Macro:    {macro_silhouette:.4f}")
+        print(f"  Weighted: {weighted_silhouette:.4f}")
+
+    # ---------------------------------------------------------
+    # 10-NN purity
+    # ---------------------------------------------------------
+
+    print()
+    print("=" * 70)
+    print("10-NN PURITY")
+    print("=" * 70)
+
+    for metric in [
+        "euclidean",
+        "cosine",
+        "manhattan",
+        "correlation"
+    ]:
+
+        neighbours = NearestNeighbors(
+            n_neighbors=k + 1,
+            metric=metric
+        )
+
+        neighbours.fit(X_eval)
+
+        _, indices = neighbours.kneighbors(
+            X_eval
+        )
+
+        sample_purities = np.zeros(
+            len(X_eval)
+        )
+
+        for i in range(len(X_eval)):
+
+            # Exclude the sample itself
+            neighbour_labels = y_eval[
+                indices[i][1:]
             ]
 
-        print()
-        print("=" * 70)
-        print(
-            f"{sample_size_name} samples per culture: "
-            f"{len(valid_cultures)} cultures"
-        )
-        print("=" * 70)
+            sample_purities[i] = np.mean(
+                neighbour_labels == y_eval[i]
+            )
 
-        if len(valid_cultures) < 2:
-            print("Not enough cultures for evaluation.")
-            continue
+        # Overall: every sample has equal weight
+        overall_purity = sample_purities.mean()
 
-        # -----------------------------------------------------
-        # Sample exactly the specified number of test names per culture
-        # -----------------------------------------------------
+        # Per-culture purity
+        per_culture_purity = {}
 
-        sampled_indices = []
+        for culture in np.unique(y_eval):
 
-        for culture in valid_cultures:
+            mask = y_eval == culture
 
-            culture_indices = np.where(
-                y == culture
-            )[0]
+            per_culture_purity[culture] = (
+                sample_purities[mask].mean()
+            )
 
-            if sample_size is None:
-                selected = culture_indices
-            else:
-                selected = rng.choice(
-                    culture_indices,
-                    size=sample_size,
-                    replace=False
-                )
-
-            sampled_indices.extend(selected)
-
-        sampled_indices = np.array(sampled_indices)
-
-        X_eval = X[sampled_indices]
-        y_eval = y[sampled_indices]
-
-        print(
-            f"Samples used: {len(X_eval)}"
+        # Macro: every culture has equal weight
+        macro_purity = np.mean(
+            list(per_culture_purity.values())
         )
 
-        # -----------------------------------------------------
-        # Silhouette
-        # ------------------x-----------------------------------
+        # Weighted: weight cultures by their training-set size
+        weighted_purity = np.average(
+            [
+                per_culture_purity[culture]
+                for culture in per_culture_purity
+            ],
+            weights=[
+                train_culture_counts.get(culture, 0)
+                for culture in per_culture_purity
+            ]
+        )
 
-        print()
-        print("SILHOUETTE SCORE")
-
-        for metric in ["euclidean", "cosine", "manhattan", "correlation"]:
-            silhouette = silhouette_samples(
-                X_eval,
-                y_eval,
-                metric=metric
-            )
-
-            overall_silhouette = silhouette.mean()
-
-            per_culture_silhouette = {
-                culture: silhouette[y_eval == culture].mean()
-                for culture in np.unique(y_eval)
-            }
-
-            macro_silhouette = np.mean(
-                list(per_culture_silhouette.values())
-            )
-
-            weighted_silhouette = np.average(
-                list(per_culture_silhouette.values()),
-                weights=[
-                    train_culture_counts.get(culture, 0)
-                    for culture in per_culture_silhouette
-                ]
-            )
-
-            print(f"{metric}:")
-            print(f"  Overall:  {overall_silhouette:.4f}")
-            print(f"  Macro:    {macro_silhouette:.4f}")
-            print(f"  Weighted: {weighted_silhouette:.4f}")
-
-        # -----------------------------------------------------
-        # 10-NN purity
-        # -----------------------------------------------------
-
-        print()
-        print("10-NN PURITY")
-
-        for metric in ["euclidean", "cosine", "manhattan", "correlation"]:
-
-            neighbours = NearestNeighbors(
-                n_neighbors=k + 1,
-                metric=metric
-            )
-
-            neighbours.fit(X_eval)
-
-            _, indices = neighbours.kneighbors(
-                X_eval
-            )
-
-            sample_purities = np.zeros(
-                len(X_eval)
-            )
-
-            for i in range(len(X_eval)):
-
-                neighbour_labels = y_eval[
-                    indices[i][1:]
-                ]
-
-                sample_purities[i] = np.mean(
-                    neighbour_labels == y_eval[i]
-                )
-
-            overall_purity = sample_purities.mean()
-
-            per_culture_purity = {}
-
-            for culture in np.unique(y_eval):
-
-                mask = y_eval == culture
-
-                per_culture_purity[culture] = (
-                    sample_purities[mask].mean()
-                )
-
-            # Macro: each culture gets equal weight
-            macro_purity = np.mean(
-                list(
-                    per_culture_purity.values()
-                )
-            )
-
-            # Weighted: each sample gets equal weight
-            weighted_purity = np.average(
-                [
-                    per_culture_purity[culture]
-                    for culture in per_culture_purity
-                ],
-                weights=[
-                    train_culture_counts.get(culture, 0)
-                    for culture in per_culture_purity
-                ]
-            )
-
-            print(f"{metric}:")
-            print(f"  Overall:  {overall_purity:.4f}")
-            print(f"  Macro:    {macro_purity:.4f}")
-            print(f"  Weighted: {weighted_purity:.4f}")
+        print(f"{metric}:")
+        print(f"  Overall:  {overall_purity:.4f}")
+        print(f"  Macro:    {macro_purity:.4f}")
+        print(f"  Weighted: {weighted_purity:.4f}")
 
 
 if __name__ == "__main__":
