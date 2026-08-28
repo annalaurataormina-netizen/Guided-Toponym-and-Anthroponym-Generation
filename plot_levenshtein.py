@@ -29,15 +29,23 @@ def plot():
 
     fig.tight_layout()
 
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "serif",
-        "text.latex.preamble": r"""
-            \usepackage[T1]{fontenc}
-            \usepackage[tt=false, type1=true]{libertine}
-            \usepackage[libertine]{newtxmath}
-        """,
-    })
+    ramp_end = 66
+
+    ax.axvline(
+        ramp_end,
+        linestyle="--",
+        linewidth=1,
+        color="grey"
+    )
+
+    ax.text(
+        ramp_end + 3,
+        ax.get_ylim()[1] * 0.9,
+        r"$\beta$ ramp-up ends",
+        rotation=90,
+        va="top",
+        color="grey"
+    )
 
     plt.savefig(
         "levenshtein_training.png",

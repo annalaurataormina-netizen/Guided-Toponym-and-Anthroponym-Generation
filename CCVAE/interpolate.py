@@ -50,9 +50,6 @@ def interpolate():
 
     id_to_language = {id: lang for lang, id in language_to_id.items()}
 
-    print(id_to_language[104])
-
-    '''
     names_normalised = [
         [normalise(name), language_to_id[lang]]
         for name, lang in names
@@ -171,7 +168,7 @@ def interpolate():
     # Interpolation
     # ---------------------------------------------------------
 
-    beam_size = 20
+    beam_size = 1
 
     n_trajectories = 1000
 
@@ -503,7 +500,6 @@ def interpolate():
         f"Step distance std deviation: "
         f"{statistics.stdev(smoothness_distances):.3f}"
     )
-    '''
 
 if __name__ == "__main__":
     interpolate()
