@@ -74,16 +74,16 @@ def evaluate_latent_space():
     # Recreate the 80/10/10 train/validation/test split
     # ---------------------------------------------------------
 
-    train_val_names, test_names = train_test_split(
+    train_names, temp_names = train_test_split(
         names_normalised,
         test_size=0.2,
         random_state=seed,
         shuffle=True
     )
 
-    train_names, validation_names = train_test_split(
-        train_val_names,
-        test_size=0.125,
+    validation_names, test_names = train_test_split(
+        temp_names,
+        test_size=0.5,
         random_state=seed,
         shuffle=True
     )
@@ -93,6 +93,15 @@ def evaluate_latent_space():
     print(f"Train:      {len(train_names)}")
     print(f"Validation: {len(validation_names)}")
     print(f"Test:       {len(test_names)}")
+
+    # Number of training samples per culture
+    train_culture_counts = {
+        culture: sum(
+            1 for _, train_culture in train_names
+            if train_culture == culture
+        )
+        for culture in set(culture for _, culture in train_names)
+    }
 
     # ---------------------------------------------------------
     # Use ONLY the test set for latent-space evaluation
@@ -201,7 +210,6 @@ def evaluate_latent_space():
     # Evaluation settings
     # ---------------------------------------------------------
 
-    max_samples_per_culture = 1000
     k = 10
 
     # Number of test samples per culture
@@ -210,11 +218,11 @@ def evaluate_latent_space():
         for culture in np.unique(y)
     }
 
-    thresholds = {
-        "All": 0,
-        ">=100": 100,
-        ">=1000": 1000,
-        ">=10000": 10000,
+    sample_sizes = {
+        "All": None,
+        "100": 100,
+        "1,000": 1000,
+        "10,000": 10000,
     }
 
     rng = np.random.default_rng(seed)
@@ -223,18 +231,21 @@ def evaluate_latent_space():
     # Evaluate each threshold
     # ---------------------------------------------------------
 
-    for threshold_name, min_samples in thresholds.items():
+    for sample_size_name, sample_size in sample_sizes.items():
 
-        valid_cultures = [
-            culture
-            for culture, count in culture_counts.items()
-            if count >= min_samples
-        ]
+        if sample_size is None:
+            valid_cultures = list(culture_counts.keys())
+        else:
+            valid_cultures = [
+                culture
+                for culture, count in culture_counts.items()
+                if count >= sample_size
+            ]
 
         print()
         print("=" * 70)
         print(
-            f"{threshold_name}: "
+            f"{sample_size_name} samples per culture: "
             f"{len(valid_cultures)} cultures"
         )
         print("=" * 70)
@@ -244,7 +255,7 @@ def evaluate_latent_space():
             continue
 
         # -----------------------------------------------------
-        # Sample up to 1,000 test names per culture
+        # Sample exactly the specified number of test names per culture
         # -----------------------------------------------------
 
         sampled_indices = []
@@ -255,22 +266,18 @@ def evaluate_latent_space():
                 y == culture
             )[0]
 
-            n = min(
-                len(culture_indices),
-                max_samples_per_culture
-            )
-
-            selected = rng.choice(
-                culture_indices,
-                size=n,
-                replace=False
-            )
+            if sample_size is None:
+                selected = culture_indices
+            else:
+                selected = rng.choice(
+                    culture_indices,
+                    size=sample_size,
+                    replace=False
+                )
 
             sampled_indices.extend(selected)
 
-        sampled_indices = np.array(
-            sampled_indices
-        )
+        sampled_indices = np.array(sampled_indices)
 
         X_eval = X[sampled_indices]
         y_eval = y[sampled_indices]
@@ -281,7 +288,7 @@ def evaluate_latent_space():
 
         # -----------------------------------------------------
         # Silhouette
-        # -----------------------------------------------------
+        # ------------------x-----------------------------------
 
         print()
         print("SILHOUETTE SCORE")
@@ -307,7 +314,7 @@ def evaluate_latent_space():
             weighted_silhouette = np.average(
                 list(per_culture_silhouette.values()),
                 weights=[
-                    np.sum(y_eval == culture)
+                    train_culture_counts.get(culture, 0)
                     for culture in per_culture_silhouette
                 ]
             )
@@ -377,7 +384,7 @@ def evaluate_latent_space():
                     for culture in per_culture_purity
                 ],
                 weights=[
-                    np.sum(y_eval == culture)
+                    train_culture_counts.get(culture, 0)
                     for culture in per_culture_purity
                 ]
             )
