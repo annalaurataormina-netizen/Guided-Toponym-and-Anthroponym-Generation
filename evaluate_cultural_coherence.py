@@ -35,7 +35,7 @@ def evaluate(generator, classifier, language_to_id, mapping, train_names, device
 
             train_examples = culture_sizes[label]
 
-            generated = generator.generate(culture=old_label, n=n_per_culture, max_length=50)
+            generated = generator.generate()
 
             data = [[name, label] for name in generated]
 

@@ -70,7 +70,7 @@ class ConditionalVAE(nn.Module):
             ngram4=ngram4,
             cultures=cultures,
             culture_weights=culture_weights,
-            beam_size=beam_size
+            beam_size=beam_size,
         )
         return names
 

@@ -53,7 +53,7 @@ def evaluate(model, lr):
     ngram4.load()
 
     for language, language_id in language_to_id.items():
-        generated_per_language[language] = model.generate(culture=language_id, n=1000, max_length=50, temperature=0.6, beam_size=beam_size, cultures=[language], ngram2=ngram2, ngram3=ngram3, ngram4=ngram4)
+        generated_per_language[language] = model.generate()
 
     with open(f"CCVAE/evaluation_results/evaluation_results_lr{lr}_bs{beam_size}.txt", "w") as f:
         f.write(f"Learning rate: {lr}\n")

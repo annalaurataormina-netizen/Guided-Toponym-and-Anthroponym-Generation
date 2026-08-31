@@ -5,7 +5,7 @@ Steps:
 4. Generation (1d 21Aug)
 --> 5. Report (5d 24-28Aug)
 --> 6. UI (5d 31Aug-4Sep) [filter down output? how to generate?]
-7. Clean up scripts (loss sourced from elsewhere?) (8Sep)
+7. Fix code (for sure, losses.py, otherwise only if times allows)
 8. Deadline (9Sep)
 
 To do (model step):
@@ -30,3 +30,14 @@ To do (final evaluation step):
 
 To do (final generation step):
 1. Put script together (beam search and/or stochastic sampling and/or other decoding methods (!); try using the classifier as a first step) (DONE)
+
+To do (report):
+- Acknowledgements (Sat)
+- Introduction (Sat)
+- Literature Review (Sat)
+- Methodology (Sun)
+- Evaluation (Mon)
+- Conclusion (Mon)
+- Declarations (Mon)
+- Turnitin (Mon eve)
+- Incorporate things from Tom and Crossland (respective day)
