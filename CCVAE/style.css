@@ -1,0 +1,98 @@
+body {
+    max-width: 600px;
+    margin: 50px auto 40px auto;
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 20px;
+    text-align: center;
+    color: #4a3b5c;
+}
+
+html, body {
+    min-height: 100vh;
+    /* background: linear-gradient(135deg, #f3e3f5 0%, #e6eefa 50%, #fbe8f0 100%); */
+    background-color: #f4f7fd;
+}
+
+h1 {
+    margin: 0 auto 0 auto;
+}
+
+h3 {
+    margin-top: 5px;
+    margin-bottom: 55px;
+    font-weight: 500;
+}
+
+label {
+    display: block;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+#number {
+    width: 50px;
+}
+
+#numberError, #weightError {
+    color: #d16b96;
+    margin: 10px auto;
+}
+
+button, input, select, span {
+    display: block;
+    margin: 10px auto;
+    color: #4a3b5c;
+    font-size: 15px;
+    font-family: inherit;
+    text-align: center;
+}
+
+#blendCheckbox {
+    margin: 10px auto;
+    accent-color: #a8c5e8;
+    font-size: 16px;
+    font-family: inherit;
+    text-align: center;
+}
+
+#generateBtn {
+    background-color: #a8c5e8;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 3px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 50px;
+    font-weight: 500;
+}
+
+#generateBtn:hover {
+    background-color: #c3d9f0;
+}
+
+#generateBtn:active {
+    background-color: #93b3dc;
+}
+
+#generateBtn:disabled {
+    background-color: #dbe7f5;
+    color: #a3b4c9;
+    cursor: not-allowed;
+}
+
+#weight {
+    accent-color: #a8c5e8;
+}
+
+#languagesLabel, #languagesOtherLabel, #weightLabel, #blendCheckboxLabel, #numberLabel {
+    font-weight: 500;
+}
+
+#results {
+    list-style-type: none;
+    margin: 50px auto 0 auto;
+    text-align: center;
+    padding-left: 0;
+}

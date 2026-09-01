@@ -1,4 +1,4 @@
-async function loadLanguages(elementId) {
+async function loadLanguages() {
     const response = await fetch("/api/languages");
     const languages = await response.json();
     const length = languages.languages.length;
@@ -6,24 +6,28 @@ async function loadLanguages(elementId) {
     for (let idx = 0; idx < length; idx++) {
         options += "<option>" + languages.languages[idx] + "</option>";
     }
-    document.getElementById(elementId).innerHTML = options;
+    document.getElementById("languages").innerHTML = options;
+    document.getElementById("languagesOther").innerHTML = options;
 }
 
 const limit = 100
 
 window.onload = function () {
-    loadLanguages("languages");
-    loadLanguages("languagesOther");
+    loadLanguages();
     document.getElementById("languagesOther").style.display = "none";
     document.getElementById("weight").style.display = "none";
 };
 
 async function generate() {
     document.getElementById("numberError").innerHTML = "";
-    document.getElementById("weightError").innerHTML = "";
-    document.getElementById("results").innerHTML = "Generating..."
     document.getElementById("generateBtn").disabled = true;
     const checkbox = document.getElementById("blendCheckbox");
+    if (checkbox.checked) {
+        document.getElementById("results").innerHTML = "Generating... 🦄"
+    }
+    else {
+        document.getElementById("results").innerHTML = "Generating... 🌍"
+    }
     checkbox.disabled = true;
     try {
         const number = document.getElementById("number").value;
@@ -34,7 +38,6 @@ async function generate() {
             return;
         }
         if (weight !== "" && (weight < 0 || weight > 1)) {
-            document.getElementById("weightError").innerHTML = "Enter a number between 0 and 1.";
             document.getElementById("results").innerHTML = ""
             return;
         }
@@ -72,10 +75,10 @@ async function generate() {
 function blend() {
     const checkbox = document.getElementById("blendCheckbox");
     if (checkbox.checked) {
-        document.getElementById("languagesOtherLabel").innerHTML = "Choose another language:";
-        document.getElementById("languagesOther").style.display = "inline-block";
-        document.getElementById("weight").style.display = "inline-block";
-        document.getElementById("weightLabel").innerHTML = "Weight:";
+        document.getElementById("languagesOtherLabel").innerHTML = "Another language";
+        document.getElementById("languagesOther").style.display = "block";
+        document.getElementById("weight").style.display = "block";
+        document.getElementById("weightLabel").innerHTML = "Weights";
         document.getElementById("weight").value = 0.5;
         updateWeightLabel()
         const number = document.getElementById("number").value;
@@ -95,9 +98,13 @@ function blend() {
         }
     }
     document.getElementById("numberError").innerHTML = "";
-    document.getElementById("weightError").innerHTML = "";
 }
 
 function updateWeightLabel() {
-    document.getElementById("weightNum").innerHTML = document.getElementById("weight").value;
+    const weight = document.getElementById("weight").value;
+    const languageDropdown = document.getElementById("languages");
+    const language = languageDropdown.options[languageDropdown.selectedIndex].text;
+    const languageOtherDropdown = document.getElementById("languagesOther");
+    const languageOther = languageOtherDropdown.options[languageOtherDropdown.selectedIndex].text;
+    document.getElementById("weightNum").innerHTML = `${weight} ${language} / ${(1 - weight).toFixed(1)} ${languageOther}`;
 }
