@@ -1,5 +1,4 @@
 import json
-from collections import Counter
 from typing import Dict, List, Optional
 
 import torch
@@ -10,7 +9,6 @@ from AE.CharVocab import CharVocab
 from AE.config import ALLOWED_CHARS
 from ConditionalVAE.ConditionalVAE import ConditionalVAE
 from nGram.nGram import nGram
-from utils import load_all
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 app = FastAPI()
@@ -28,16 +26,8 @@ culture_embed_dim = 64
 with open("language_to_id.json", "r") as f:
     language_to_id = json.load(f)
 
-dataset = load_all(culture=True)
-
-culture_counts = Counter(
-    language
-    for _, language in dataset
-)
-
-min_culture_names = 10000
-
-language_to_id_filtered = {l: i for l, i in language_to_id.items() if culture_counts[l] >= min_culture_names}
+with open("language_to_id_filtered.json", "r") as f:
+    language_to_id_filtered = json.load(f)
 
 model_name = "CCVAE/best_model_conditional_supcon_logits_bi_bs512_ed64_hde64_hdd32_nle2_nld1_ld32_lr0.0005adam_ep100es10_cd0.25_blf0t0.025o5_ced64_t0.1_l0.75.pt"
 
